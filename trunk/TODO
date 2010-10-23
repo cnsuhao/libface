@@ -1,0 +1,13 @@
+TODO List:
+
+What needs to be done is preprocessing of detected faces before recognition/training.
+
+- Right now, detected faces may be tilted, etc.
+To account for 2D rotation, we need to use eye cascades to get eye coordinates. Using eye positions, we can then rotate the face to look upright.
+The eye detection should be easy to implement, as OpenCV has eye cascades and the haarcascades class in libface should make things trival.
+
+- Illumination
+We need to use something like histogram equalization to make the intensity of images "proper". This can be done by equalizing the entire image first, and then equalizing the detected faces. OpenCV already provides a function named cvEqualizeHist (IplImage* in, IplImage* out), this is a one-liner modification.
+
+- Removing useless background info
+Some sort of masking can be applied to make the stuff other than the face in the detection result as black/white. If there is no already available solution for this, a simple ellipse covering the face would be okay.
