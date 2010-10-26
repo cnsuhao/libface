@@ -81,7 +81,7 @@ public:
 
     // OpenCV compatibility methods
 
-    std::vector<int> update(const IplImage* img, std::vector<Face>* faces, int scaleFactor = 1);
+    int update(const IplImage* img, std::vector<Face>* faces, int scaleFactor = 1);
     std::vector<Face> detectFaces(const IplImage* img, const CvSize& originalSize);
     std::vector<std::pair<int, double> > recognise(const IplImage* img, std::vector<Face>* faces_p, int scaleFactor=1);
 
@@ -109,8 +109,8 @@ public:
      *
      * @return o is return if update was successful.
      */
-    std::vector<int> update(const std::string& filename, std::vector<Face>* faces=NULL, int scaleFactor=1);
-    std::vector<int> update(const char* image, std::vector<Face>* faces, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
+    int update(const std::string& filename, std::vector<Face>* faces=NULL, int scaleFactor=1);
+    int update(const char* image, std::vector<Face>* faces, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
 
     /** Method to update the library with faces from the picture specified.
      *
@@ -121,7 +121,7 @@ public:
      *
      * @return o is return if update was successful.
      */
-    std::vector<int> update(std::vector<Face>* faces=NULL, int scaleFactor=1);
+    int update(std::vector<Face>* faces=NULL, int scaleFactor=1);
 
     /**
      *  Method to recognise faces in the given image. The array of faces will be updated with

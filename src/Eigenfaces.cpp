@@ -8,8 +8,8 @@
  * @brief   Eigenfaces parser
  * @section DESCRIPTION
  *
- * This class is somewhat based on an implementation of Eigenfaces in a tutorial, originally
- * done by Robin Hewitt.
+ * This class is an implementation of Eigenfaces. The image stored is the projection of the faces with the
+ * closest match. The relation in recognition is determined by the Eigen value when decomposed.
  *
  * @author Copyright (C) 2009-2010 by Alex Jironkin
  *         <a href="alexjironkin at gmail dot com">alexjironkin at gmail dot com</a>
@@ -68,795 +68,453 @@ class Eigenfaces::EigenfacesPriv
 
 public:
 
-    EigenfacesPriv()
-    {
-        CUT_OFF               = 10000000.0; //50000000.0;
-        UPPER_DIST            = 10000000;
-        LOWER_DIST            = 10000000;
+	EigenfacesPriv()
+	{
+		CUT_OFF               = 10000000.0; //50000000.0;
+		UPPER_DIST            = 10000000;
+		LOWER_DIST            = 10000000;
+		THRESHOLD             = 23000000.0;
+		FACE_WIDTH            = 120;
+		FACE_HEIGHT           = 120;
 
-        nTrainFaces           = 0;
-        nEigens               = 0;
+	}
 
-        //personNumTruthMat   = 0;          // Array of person numbers
-        pAvgTrainImg          = 0;
-        eigenValMat           = 0;
-        projectedTrainFaceMat = 0;
-    }
+	/**
+	 * Performs PCA on the current training data, projects the training faces, and stores them in a DB.
+	 */
+	void learn(int index, IplImage* newFace);
 
-    /**
-     * Performs PCA on the current training data, projects the training faces, and stores them in a DB.
-     */
-    void learn();
-
-    /**
-     * Performs PCA on the current training data
-     */
-    void doPCA();
-
-    /**
-     * Finds the nearest neighbor of a projected face of float* type, using the specified distance type
-     * @param projectedTestFace The projected test face whose neighbor is needed
-     * @param distance_type Euclidean = 0, Mahalanobis = 1
-     * @return A pair of the index (NOT ID) as int, and the least distance, as double (measure of certainity)
-     */
-    std::pair<int, double> findNearestNeighbor(float* projectedTestFace) const;
-
-    /**
-     * Converts integer to string, convenience function. TODO: Move to Utils
-     * @param x The integer to be converted to std::string
-     * @return Stringified version of integeer
-     */
-    inline string stringify(unsigned int x) const;
-    void clearImages(std::vector<IplImage*>& list);
-    void clearTrainingStructures();
+	/**
+	 * Converts integer to string, convenience function. TODO: Move to Utils
+	 * @param x The integer to be converted to std::string
+	 * @return Stringified version of integeer
+	 */
+	inline string stringify(unsigned int x) const;
 
 public:
 
-    int                    nTrainFaces;                // Number of training images
-    int                    nEigens;                    // Number of Eigenvalues
+	// Face data members, stored in the DB
+	std::vector<IplImage*> faceImgArr;                 // Array of face images
+	std::vector<int>       indexMap;
 
-    // Face data members, stored in the DB
-    std::vector<IplImage*> faceImgArr;                 // Array of face images
-    std::vector<int>       idArr;
+	// Config data members
+	std::string            configFile;
 
-    // Config data members
-    std::string            dbFile;
-    int                    dbNum;
-    int                    totalTrainedFaces;
-    std::string            configFile;
-
-    // To be used while calculating stuff
-    IplImage*              pAvgTrainImg;               // The Average Image
-    std::vector<IplImage*> eigenVectArr;               // The array of eigenvectors
-    CvMat*                 eigenValMat;                // eigenvalues
-    CvMat*                 projectedTrainFaceMat;      // Projected training faces
-
-    std::map<int, int>     indexIdMap;
-    std::map<int, int>     idCountMap;
-
-    double                 CUT_OFF;
-    double                 UPPER_DIST;
-    double                 LOWER_DIST;
+	double                 CUT_OFF;
+	double                 UPPER_DIST;
+	double                 LOWER_DIST;
+	double                 THRESHOLD;
+	int                    FACE_WIDTH;
+	int                    FACE_HEIGHT;
 };
-
-void Eigenfaces::EigenfacesPriv::clearImages(std::vector<IplImage*> &list)
-{
-    for (std::vector<IplImage*>::iterator it = list.begin(); it != list.end(); ++it)
-        cvReleaseImage(&(*it));
-    list.clear();
-}
-
-void Eigenfaces::EigenfacesPriv::clearTrainingStructures()
-{
-    cvReleaseImage(&pAvgTrainImg);             // The Average Image
-    clearImages(eigenVectArr);                 // The array of eigenvectors
-    cvReleaseMat(&eigenValMat);                // eigenvalues
-    cvReleaseMat(&projectedTrainFaceMat);      // Projected training faces
-}
 
 /**
  * Performs PCA on the current training data, projects the training faces, and stores them in a DB.
  */
-void Eigenfaces::EigenfacesPriv::learn()
-{
-    int i;
+void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
-    // Load the training data. This will store the image data in faceImgArr and return the number of faces in nTrainFaces.
-    // The person ID numebers will be stored in personNumTruthMat.
-    nTrainFaces = faceImgArr.size();
+	int i;
+	std::vector<IplImage*> tempFaces;
 
-    if(nTrainFaces == 1)
-    {
-        IplImage* junkImage = cvCreateImage(cvSize(faceImgArr[0]->width, faceImgArr[0]->height),
-                                            faceImgArr[0]->depth, 
-                                            faceImgArr[0]->nChannels);
+	tempFaces.push_back(faceImgArr.at(index));
 
-        // draw a line across it - it is claimed that cvCreateImage creates a blank image, we don't want that
-        cvLine(junkImage, cvPoint(1, 1), cvPoint(15, 15), cvScalar(255) );
+	float* projectedFace = (float*)malloc(sizeof(float));
 
-        IplImage* face = faceImgArr.at(0);
-        faceImgArr.clear();
+	CvSize size=cvSize(FACE_WIDTH, FACE_HEIGHT);
 
-        faceImgArr.push_back(junkImage);
-        indexIdMap[0]  = -1;
-        idCountMap[-1] = 1;
-        faceImgArr.push_back(face);
-        indexIdMap[1]  = 0;
-        idCountMap[0]  = 1;
+	//Set PCA's termination criterion
+	CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
+			1,0);
+	//Initialise pointer to the pointers with eigen objects
+	IplImage** eigenObjects = new IplImage *[2];
 
-        // Now, the faces are ordered as ID #0 => junk face, ID #1 => first real face, ID #3 => second real face, so on
-        nTrainFaces    += 1;
-    }
+	float* eigenValues;
+	//Initialize array with eigen values
+	if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) )
+		cout<<"Problems initializing eigenValues..."<<endl;
 
-/*
-    if(DEBUG)
-    {
-        cout << "Performing PCA..." << endl;
-    }
-*/
+	IplImage* pAvgTrainImg;
+	//Initialize pointer to the average image
+	if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) )
+		cout<<"Problems initializing pAvgTrainImg..."<<endl;
 
-    clearTrainingStructures();
+	for(i = 0; i < 2; i++ ){
+		eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
+		if(!(eigenObjects[i] ) )
+			cout<<"Problems initializing eigenObjects"<<endl;
+	}
 
-    // Do PCA
-    doPCA();
-/*
-    if (DEBUG)
-    {
-        cout << "PCA complete." << endl;
-    }
-*/
+	//Perform PCA
+	cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
+			CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
-    // Create a matrix to store the projected faces
-    projectedTrainFaceMat = cvCreateMat(nTrainFaces, nEigens, CV_32FC1);
 
-/*
-    if (DEBUG)
-    {
-        cout << "Projecting the training images..." << endl;
-    }
-*/
+	cvEigenDecomposite(tempFaces.at(0), 1, eigenObjects,
+			CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedFace );
 
-    // Project the training images onto the PCA subspace
-    for (i = 0; i < nTrainFaces; ++i)
-    {
-        // Perform the projection
-        cvEigenDecomposite( faceImgArr[i],
-                            nEigens,
-                            &eigenVectArr[0],
-                            0,
-                            0,
-                            pAvgTrainImg,
-                            projectedTrainFaceMat->data.fl + i*nEigens );
-    }
+	IplImage *proj = cvCreateImage(size, IPL_DEPTH_8U, 1);
+	cvEigenProjection(eigenObjects, 1,
+			CV_EIGOBJ_NO_CALLBACK, NULL, projectedFace, pAvgTrainImg, proj);
 
-/*
-    if (DEBUG)
-    {
-        cout << "Projection complete." << endl;
-        LibFaceUtils::printMatrix(projectedTrainFaceMat);
-    }
-*/
+	//LibFaceUtils::showImage(proj);
+
+	cvReleaseImage(&faceImgArr.at(index));
+	faceImgArr.at(index) = proj;
+
+	//free other stuff allocated above.
+	cvFree_(eigenValues);
+	free(projectedFace);
+
+	cvReleaseImage(&pAvgTrainImg);
+	cvReleaseImage(&eigenObjects[0]);
+	cvReleaseImage(&eigenObjects[1]);
+
+	tempFaces.clear();
 }
 
-void Eigenfaces::EigenfacesPriv::doPCA()
-{
-    CvTermCriteria calcLimit;
-    CvSize         faceImgSize;
+string Eigenfaces::EigenfacesPriv::stringify(unsigned int x) const {
+	ostringstream o;
+	if (!(o << x)) {
+		if (DEBUG)
+			cerr << "Could not convert" << endl;
+	}
 
-    // Set the number of eigenvalues to use
-    nEigens            = nTrainFaces - 1;
-
-    // Allocate the eigenvector images
-    faceImgSize.width  = faceImgArr[0]->width;
-    faceImgSize.height = faceImgArr[0]->height;
-
-    // Memory is cleared before calling this method
-
-    // Allocate memory for images
-    eigenVectArr = std::vector<IplImage*>(nEigens);
-
-    for (int i = 0; i < nEigens; ++i)
-    {
-        eigenVectArr[i] = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
-    }
-
-    // Allocate the eigenvalue array
-    eigenValMat  = cvCreateMat(1, nEigens, CV_32FC1);
-
-    // Allocate the average image
-    pAvgTrainImg = cvCreateImage(faceImgSize, IPL_DEPTH_32F, 1);
-
-    // Set PCA's termination criterion using cvTermCriteria - tell it to compute each eigenvalue and then stop
-    calcLimit    = cvTermCriteria(CV_TERMCRIT_ITER, nEigens, 1);
-
-/*
-    if (DEBUG)
-    {
-        cout << "Calculating the Average Image, Eigenvalues, and Eigenvectors..." << endl;
-    }
-*/
-    // Invoke cvCalcEigenObjects to compute average image, eigenvalues, and eigenvectors
-    cvCalcEigenObjects( nTrainFaces,
-                        (void*)&faceImgArr[0],
-                        (void*)&eigenVectArr[0],
-                        CV_EIGOBJ_NO_CALLBACK,
-                        0,
-                        NULL,
-                        &calcLimit,
-                        pAvgTrainImg,
-                        eigenValMat->data.fl );
-
-/*
-     if (DEBUG)
-     {
-         cout << "Calculation complete." << endl;
-     }
-*/
-}
-
-pair<int, double> Eigenfaces::EigenfacesPriv::findNearestNeighbor(float* projectedTestFace) const
-{
-    double least_distance;
-    int    iNearest = -1;
-
-    double leastDistSq = DBL_MAX;
-    int    i, iTrain;
-
-    for (iTrain = 0; iTrain < nTrainFaces; ++iTrain)
-    {
-        double distSq = 0;
-        for (i = 0; i < nEigens; ++i)
-        {
-            float d_i = projectedTestFace[i] - projectedTrainFaceMat->data.fl[iTrain * nEigens + i];
-            distSq    += d_i*d_i;
-        }
-
-        if (distSq < leastDistSq)
-        {
-            leastDistSq = distSq;
-            iNearest    = iTrain;
-        }
-    }
-
-    least_distance = leastDistSq;
-
-    return make_pair<int, double>(iNearest, least_distance);
-}
-
-string Eigenfaces::EigenfacesPriv::stringify(unsigned int x) const
-{
-    ostringstream o;
-    if (!(o << x))
-    {
-        if (DEBUG)
-        {
-            cerr << "Could not convert" << endl;
-        }
-    }
-    return o.str();
+	return o.str();
 }
 
 Eigenfaces::Eigenfaces(const string& dir)
-          : d(new EigenfacesPriv)
-{
-    d->indexIdMap.clear();
-    d->idCountMap.clear();
+: d(new EigenfacesPriv) {
 
-    struct stat stFileInfo;
-    d->configFile = dir + string("/libface-config.xml");
+	struct stat stFileInfo;
+	d->configFile = dir + string("/libface-config.xml");
 
-    if(DEBUG)
-        cout << "Config location: " << d->configFile << endl;
+	if(DEBUG)
+		cout << "Config location: " << d->configFile << endl;
 
-    int intStat = stat(d->configFile.c_str(),&stFileInfo);
-    if (intStat == 0)
-    {
-        if (DEBUG)
-        {
-            cout << "libface config file exists." << endl;
-        }
-        loadConfig(dir);
-    }
-    else
-    {
-        if (DEBUG)
-        {
-            cout << "libface config file does not exist." << endl;
-        }
-    }
+	int intStat = stat(d->configFile.c_str(),&stFileInfo);
+	if (intStat == 0) {
+		if (DEBUG)
+			cout << "libface config file exists." << endl;
+
+		loadConfig(dir);
+	} else {
+		if (DEBUG)
+			cout << "libface config file does not exist." << endl;
+	}
 }
 
-Eigenfaces::~Eigenfaces()
-{
-    d->clearImages(d->faceImgArr);
-    d->clearTrainingStructures();
+Eigenfaces::~Eigenfaces() {
 
-    for (std::vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
-        cvReleaseImage(&(*it));
+	for (std::vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
+		cvReleaseImage(&(*it));
+	d->faceImgArr.clear();
 
-    delete d;
+	d->indexMap.clear();
+
+	delete d;
 }
 
-map<string, string> Eigenfaces::getConfig()
-{
-    map<string, string> config;
-    int nIds = d->idCountMap.size();
-
-    char nEigensStr[5];
-    sprintf(nEigensStr,"%d", d->nEigens);
-    config["nEigens"]               = string(nEigensStr);
-
-    char nTrainStr[6];
-    sprintf(nTrainStr,"%d", d->nTrainFaces);
-    config["nTrainfaces"]           = string(nTrainStr);
-
-    char idCountStr[6];
-    sprintf(idCountStr,"%d", nIds);
-    config["nIds"]                  = string(idCountStr);
-
-    config["projectedTrainFaceMat"] = LibFaceUtils::matrixToString(d->projectedTrainFaceMat);
-    config["eigenValMat"]           = LibFaceUtils::matrixToString(d->eigenValMat);
-    config["avgTrainImg"]           = LibFaceUtils::imageToString(d->pAvgTrainImg);
-
-    for ( int i = 0; i < d->nTrainFaces; ++i )
-    {
-        char facename[200];
-        sprintf(facename, "person_%d", i);
-        config[string(facename)] = LibFaceUtils::imageToString(d->faceImgArr[i]);
-    }
-
-    for ( int j = 0; j < d->nEigens; ++j )
-    {
-        char varname[200];
-        sprintf(varname, "eigenVect_%d", j);
-        config[string(varname)] = LibFaceUtils::imageToString(d->eigenVectArr[j]);
-    }
-
-    for ( int k = 0; k < nIds; ++k )
-    {
-        char idname[200];
-        sprintf(idname, "indexIdMap_%d", k);
-        char data[5];
-        sprintf(data,"%d", d->indexIdMap[k]);
-        config[string(idname)] = string(data);
-    }
-
-    for ( int k = 0; k < nIds; ++k )
-    {
-        char idname[200];
-        int  id = d->indexIdMap[k];    // Retrieve Id from the indexIdMap
-        char data[5];
-        sprintf(data,"%d", d->idCountMap[id]);
-        sprintf(idname, "idCountMap_%d", id);
-        config[string(idname)] = string(data);
-    }
-
-    return config;
+int Eigenfaces::count() const {
+	return d->faceImgArr.size();
 }
 
-int Eigenfaces::loadConfig(const string& dir)
-{
-    d->configFile = dir + string("/libface-config.xml");
+map<string, string> Eigenfaces::getConfig() {
+	map<string, string> config;
 
-    if (DEBUG)
-    {
-        cout << "Load training data" << endl;
-    }
+	config["nIds"] = d->faceImgArr.size();
+	//config["FACE_WIDTH"] = sprintf(value, "%d",d->indexMap.at(i));;
 
-    CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.data(), 0, CV_STORAGE_READ);
+	for ( unsigned int i = 0; i < d->faceImgArr.size(); i++ ) {
+		char facename[200];
+		sprintf(facename, "person_%d", i);
+		config[string(facename)] = LibFaceUtils::imageToString(d->faceImgArr.at(i));
+	}
 
-    if (!fileStorage)
-    {
-        if (DEBUG)
-        {
-            cout << "Can't open config file for reading :" << d->configFile << endl;
-        }
-        return 1;
-    }
+	for ( unsigned int i = 0; i < d->indexMap.size(); i++ ) {
+		char facename[200];
+		sprintf(facename, "id_%d", i);
+		char value[10];
+		config[string(facename)] = sprintf(value, "%d",d->indexMap.at(i));
+	}
 
-    d->clearTrainingStructures();
-
-    d->nEigens               = cvReadIntByName(fileStorage,         0, "nEigens",               0);
-    d->nTrainFaces           = cvReadIntByName(fileStorage,         0, "nTrainFaces",           0);
-    int nIds                 = cvReadIntByName(fileStorage,         0, "nIds",                  0);
-    d->eigenValMat           = (CvMat*)cvReadByName(fileStorage,    0, "eigenValMat",           0);
-    d->projectedTrainFaceMat = (CvMat*)cvReadByName(fileStorage,    0, "projectedTrainFaceMat", 0);
-    d->pAvgTrainImg          = (IplImage*)cvReadByName(fileStorage, 0, "avgTrainImg",           0);
-    d->clearImages(d->eigenVectArr);
-    d->eigenVectArr          = std::vector<IplImage*>(d->nTrainFaces);
-
-    //LibFaceUtils::printMatrix(d->projectedTrainFaceMat);
-
-    for ( int i = 0; i < d->nTrainFaces; ++i )
-    {
-        char facename[200];
-        sprintf(facename, "person_%d", i);
-        d->faceImgArr.push_back( (IplImage*)cvReadByName(fileStorage, 0, facename, 0) );
-    }
-
-    for ( int j = 0; j < d->nEigens; ++j )
-    {
-        char varname[200];
-        sprintf(varname, "eigenVect_%d", j);
-        d->eigenVectArr[j] = (IplImage*)cvReadByName(fileStorage, 0, varname, 0);
-    }
-
-    for ( int k = 0; k < nIds; ++k )
-    {
-        char idname[200];
-        sprintf(idname, "indexIdMap_%d", k);
-        d->indexIdMap[k] = cvReadIntByName(fileStorage, 0, idname, 0);
-    }
-
-    for ( int k = 0; k < nIds; ++k)
-    {
-        char idname[200];
-        int id            = d->indexIdMap[k];    // Retrieve Id from the indexIdMap
-        sprintf(idname, "idCountMap_%d", id);
-        d->idCountMap[id] = cvReadIntByName(fileStorage, 0, idname, 0);
-
-        //cvWrite(fileStorage, idname, (int*)&d->idCountMap[k], cvAttrList(0,0));
-    }
-
-    // Release file storage
-    cvReleaseFileStorage(&fileStorage);
-
-    return 0;
+	return config;
 }
 
-int Eigenfaces::loadConfig(const map<string, string>& c)
-{
-    // FIXME: Because std::map has no convenient const accessor, make a copy.
-    map<string, string> config(c);
-    if (DEBUG)
-    {
-        cout<<"Load config data from a map"<<endl;
-    }
+int Eigenfaces::loadConfig(const string& dir) {
+	d->configFile = dir + string("/libface-config.xml");
 
-    d->clearTrainingStructures();
+	if (DEBUG)
+		cout << "Load training data" << endl;
 
-    d->nEigens      = atoi(config["nEigens"].c_str());
-    d->nTrainFaces  = atoi(config["nTrainFaces"].c_str());
-    int nIds     = atoi(config["nIds"].c_str());
+	CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.data(), 0, CV_STORAGE_READ);
+	cout << "opened" << endl;
+	if (!fileStorage) {
+		if (DEBUG)
+			cout << "Can't open config file for reading :" << d->configFile << endl;
+		return 1;
+	}
 
-    d->eigenValMat  = LibFaceUtils::stringToMatrix(config["eigenValMat"],CV_32FC1);
-    d->projectedTrainFaceMat = LibFaceUtils::stringToMatrix(config["projectedTrainFaceMat"],CV_32FC1);
+	//d->clearTrainingStructures();
 
-    d->pAvgTrainImg = LibFaceUtils::stringToImage(config["avgTrainImg"], IPL_DEPTH_32F, 1);
-    d->clearImages(d->eigenVectArr);
-    d->eigenVectArr = std::vector<IplImage*>(d->nTrainFaces);
+	int nIds = cvReadIntByName(fileStorage, 0, "nIds", 0), i;
+	d->FACE_WIDTH = cvReadIntByName(fileStorage, 0, "FACE_WIDTH",d->FACE_WIDTH);
+	d->FACE_HEIGHT = cvReadIntByName(fileStorage, 0, "FACE_HEIGHT",d->FACE_HEIGHT);
+	d->THRESHOLD = cvReadRealByName(fileStorage, 0, "THRESHOLD", d->THRESHOLD);
+	//LibFaceUtils::printMatrix(d->projectedTrainFaceMat);
 
-    //Not sure what depath and # of channels should be in faceImgArr. Store them in config?
-    for ( int i = 0; i < d->nTrainFaces; ++i )
-    {
-        char facename[200];
-        sprintf(facename, "person_%d", i);
-        d->faceImgArr.push_back( LibFaceUtils::stringToImage(config[string(facename)], IPL_DEPTH_32F, 1) );
-    }
+	for ( i = 0; i < nIds; i++ ) {
+		char facename[200];
+		sprintf(facename, "person_%d", i);
+		d->faceImgArr.push_back( (IplImage*)cvReadByName(fileStorage, 0, facename, 0) );
+	}
 
-    for ( int j = 0; j < d->nEigens; ++j )
-    {
-        char varname[200];
-        sprintf(varname, "eigenVect_%d", j);
-        d->eigenVectArr[j] = LibFaceUtils::stringToImage(config[string(varname)], IPL_DEPTH_32F, 1);
-    }
 
-    for ( int k = 0; k < nIds; ++k )
-    {
-        char idname[200];
-        sprintf(idname, "indexIdMap_%d", k);
-        d->indexIdMap[k] = atoi(config[string(idname)].c_str());
-    }
+	for ( i = 0; i < nIds; i++ ) {
+		char idname[200];
+		sprintf(idname, "id_%d", i);
+		d->indexMap.push_back( cvReadIntByName(fileStorage, 0, idname, 0));
+	}
 
-    for ( int k = 0; k < nIds; ++k )
-    {
-        char idname[200];
-        int id         = d->indexIdMap[k];    // Retrieve Id from the indexIdMap
-        sprintf(idname, "idCountMap_%d", id);
-        d->idCountMap[id] = atoi(config[string(idname)].c_str());
+	// Release file storage
+	cvReleaseFileStorage(&fileStorage);
 
-        //cvWrite(fileStorage, idname, (int *)&d->idCountMap[k], cvAttrList(0,0));
-    }
-
-    return 0;
+	return 0;
 }
 
-pair<int, double> Eigenfaces::recognize(IplImage* input)
-{
-    if (input == 0)
-    {
-        if (DEBUG)
-        {
-            cout << "No faces passed. No recognition to do." << endl;
-        }
-        return make_pair<int, double>(-1, -1); // Nothing
-    }
+int Eigenfaces::loadConfig(const map<string, string>& c) {
+	// FIXME: Because std::map has no convenient const accessor, make a copy.
+	map<string, string> config(c);
+	if (DEBUG)
+		cout<<"Load config data from a map"<<endl;
 
-    clock_t recog;
-    recog = clock();
+	int nIds  = atoi(config["nIds"].c_str()), i;
 
-    if (DEBUG)
-    {
-        cout << "Test face loaded." << endl;
-    }
+	//Not sure what depath and # of channels should be in faceImgArr. Store them in config?
+	for ( i = 0; i < nIds; i++ ) {
+		char facename[200];
+		sprintf(facename, "person_%d", i);
+		d->faceImgArr.push_back( LibFaceUtils::stringToImage(config[string(facename)], IPL_DEPTH_32F, 1) );
+	}
 
-    //vector<int> closestIDs;
+	for ( i = 0; i < nIds; i++ ) {
+		char idname[200];
+		sprintf(idname, "id_%d", i);
+		d->indexMap.push_back( atoi(config[string(idname)].c_str()));
+	}
 
-    // Now project the test images onto the PCA subspace so that comparisions can be made with trained data
-    float* projectedTestFace = (float*)cvAlloc(d->nEigens * (sizeof(float)));
-
-    // Project the test image onto the PCA subspace
-    if (DEBUG)
-    {
-        cout << "Projecting the test image..." << endl;
-    }
-    cvEigenDecomposite( input,
-                        d->nEigens,
-                        &d->eigenVectArr[0],
-                        0,
-                        0,
-                        d->pAvgTrainImg,
-                        projectedTestFace );
-
-    // Projected
-    if (DEBUG)
-    {
-        cout << "Projection complete." << endl;
-    }
-
-    // Now do distance checks
-    return d->findNearestNeighbor(projectedTestFace);
-
-    //return recogResult;
+	return 0;
 }
 
-int Eigenfaces::saveConfig(const string& dir)
-{
-    if (DEBUG)
-        cout << "Saving config in "<< dir << endl;
+pair<int, float> Eigenfaces::recognize(IplImage* input) {
+	if (input == 0) {
+		if (DEBUG)
+			cout << "No faces passed. No recognition to do." << endl;
 
-    if (d->nTrainFaces == 0)
-        return 0;
+		return make_pair<int, float>(-1, -1); // Nothing
+	}
 
-    string configFile          = dir + string("/libface-config.xml");
-    CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.c_str(), 0, CV_STORAGE_WRITE);
-
-    if (!fileStorage)
-    {
-        if (DEBUG)
-            cout << "Cant open for storing :" << d->configFile << endl;
-
-        return 1;
-    }
-
-    // Start storing
-    int nIds = d->idCountMap.size();
-
-    // Write some initial params and matrices
-    cvWriteInt( fileStorage, "nEigens",               d->nEigens );
-    cvWriteInt( fileStorage, "nTrainFaces",           d->nTrainFaces );
-    cvWriteInt( fileStorage, "nIds",                  d->idCountMap.size() );
-    if (d->eigenValMat)
-        cvWrite(fileStorage, "eigenValMat",           d->eigenValMat,           cvAttrList(0,0) );
-    if (d->projectedTrainFaceMat)
-        cvWrite(fileStorage, "projectedTrainFaceMat", d->projectedTrainFaceMat, cvAttrList(0,0) );
-    if (d->pAvgTrainImg)
-        cvWrite(fileStorage, "avgTrainImg",           d->pAvgTrainImg,          cvAttrList(0,0) );
+	float minDist = FLT_MAX;
 
 
-    // Write all the training faces
-    for ( int i = 0; i < d->nTrainFaces; ++i )
-    {
-        char facename[200];
-        sprintf(facename, "person_%d", i);
-        cvWrite(fileStorage, facename, d->faceImgArr[i], cvAttrList(0,0));
-    }
 
-    // Write all the eigenvectors
-    for ( int j = 0; j < d->nEigens; ++j )
-    {
-        char varname[200];
-        sprintf(varname, "eigenVect_%d", j);
-        cvWrite(fileStorage, varname, d->eigenVectArr[j], cvAttrList(0,0));
-    }
+	int id = -1;
+	clock_t recog = clock();
+	std::vector<IplImage*> tempFaces;
+	tempFaces.push_back(input);
 
-    for ( int k = 0; k < nIds; ++k)
-    {
-        char idname[200];
-        sprintf(idname, "indexIdMap_%d", k);
-        cvWriteInt( fileStorage, idname, d->indexIdMap[k]);
-    }
+	int j, i;
+	for( j = 0; j<d->faceImgArr.size(); j++) {
 
-    for ( int k = 0; k < nIds; ++k)
-    {
-        char idname[200];
-        int id = d->indexIdMap[k];    // Retrieve Id from the indexIdMap
-        sprintf(idname, "idCountMap_%d", id);
-        cvWriteInt( fileStorage, idname, d->idCountMap[id]);
-    }
+		tempFaces.push_back(d->faceImgArr.at(j));
 
-    // Release the fileStorage
-    cvReleaseFileStorage(&fileStorage);
-    return 0;
+		float* eigenValues;
+		//Initialize array with eigen values
+		if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) )
+			cout<<"Problems initializing eigenValues..."<<endl;
+
+		float* projectedTestFace = (float*)malloc(sizeof(float));
+
+		CvSize size=cvSize(tempFaces.at(0)->width, tempFaces.at(0)->height);
+
+		//Set PCA's termination criterion
+		CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
+				1,0);
+		//Initialise pointer to the pointers with eigen objects
+		IplImage** eigenObjects = new IplImage *[2];
+
+
+
+		IplImage* pAvgTrainImg;
+		//Initialize pointer to the average image
+		if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) )
+			cout<<"Problems initializing pAvgTrainImg..."<<endl;
+
+		for(i = 0; i < 2; i++ ){
+			eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
+			if(!(eigenObjects[i] ) )
+				cout<<"Problems initializing eigenObjects"<<endl;
+		}
+
+		//Perform PCA
+		cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
+				CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
+
+		//This is a simple min distance mechanism for recognition. Perhaps we should check similarity of
+		//images.
+		if(eigenValues[0] < minDist) {
+			minDist = eigenValues[0];
+			id = j;
+		}
+
+
+		//cvEigenDecomposite(tempFaces.at(0), nEigens, eigenObjects,
+		//CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedTestFace );
+
+		//IplImage *proj = cvCreateImage(cvSize(input->width, input->height), IPL_DEPTH_8U, 1);
+		//cvEigenProjection(eigenObjects, nEigens,
+		//		CV_EIGOBJ_NO_CALLBACK, NULL, projectedTestFace, pAvgTrainImg, proj);
+
+		//LibFaceUtils::showImage(proj);
+
+		free(projectedTestFace);
+		cvFree_(eigenValues);
+		cvReleaseImage(&pAvgTrainImg);
+		cvReleaseImage(&eigenObjects[0]);
+		cvReleaseImage(&eigenObjects[1]);
+
+
+		tempFaces.pop_back();
+	}
+
+	tempFaces.clear();
+
+	recog = clock() - recog;
+	if (DEBUG)
+		printf("Recognition took: %f sec.\n", (double)recog / ((double)CLOCKS_PER_SEC));
+
+	if(minDist > d->THRESHOLD) {
+		id = -1;
+		minDist = -1;
+
+		if(DEBUG)
+			printf("The value is below the threshold.\n");
+	} else {
+		if(DEBUG)
+			printf("The value is: %f\n.", minDist);
+	}
+
+
+	return make_pair<int, float>(id, minDist);
 }
 
-vector<int> Eigenfaces::update(vector<Face>& newFaceArr)
-{
-    vector<int> assignedIDs;
-    if (newFaceArr.size() == 0)
-    {
-        if (DEBUG)
-        {
-            cout<<" No faces passed. Not training." <<endl;
-        }
+int Eigenfaces::saveConfig(const string& dir) {
+	if (DEBUG)
+		cout << "Saving config in "<< dir << endl;
 
-        return assignedIDs;
-    }
+	string configFile          = dir + string("/libface-config.xml");
+	CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.c_str(), 0, CV_STORAGE_WRITE);
 
-    clock_t update;
-    update = clock();
+	if (!fileStorage) {
+		if (DEBUG)
+			cout << "Cant open for storing :" << d->configFile << endl;
 
-    unsigned int i = 0;
+		return 1;
+	}
 
-    // Our method : If no Id specified (-1), then give the face the next available ID.
-    // Now, all ID's, when the DB is read back, were earlier read as the storage index with which the face was stored in the DB.
-    // Note that indexIdMap, unlike idCountMap, is only changed when a face with a new ID is added.
+	// Start storing
+	unsigned int nIds = d->faceImgArr.size(), i;
 
-    for (; i < newFaceArr.size() ; ++i)
-    {
-        if(newFaceArr.at(i).getId() == -1)
-        {
-            if (DEBUG)
-            {
-                cout << "Has no specified ID" << endl;
-            }
+	// Write some initial params and matrices
+	cvWriteInt( fileStorage, "nIds", nIds );
+	cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
+	cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
+	cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
 
-            // If there was a junk image before, remove it
-            if(d->idCountMap.count(-1) > 0)
-            {
-                cvReleaseImage(&d->faceImgArr[0]);
-                d->faceImgArr.erase(d->faceImgArr.begin());
-                d->nTrainFaces--;
-                d->idCountMap.erase(d->idCountMap.find(-1));
-                d->indexIdMap[0] = 0;
-                // Nothing in index = 1 now
-                d->indexIdMap.erase(d->indexIdMap.find(1));
-            }
+	// Write all the training faces
+	for ( i = 0; i < nIds; i++ ) {
+		char facename[200];
+		sprintf(facename, "person_%d", i);
+		cvWrite(fileStorage, facename, d->faceImgArr.at(i), cvAttrList(0,0));
+	}
 
-            int newId = d->faceImgArr.size();
+	for ( i = 0; i < nIds; i++ ) {
+		char idname[200];
+		sprintf(idname, "id_%d", i);
+		cvWriteInt(fileStorage, idname, d->indexMap.at(i));
+	}
 
-            while( d->idCountMap.count(newId) > 1 )    // If this ID is already existing, we must acquire a new one
-            {
-                newId++;
-            }
-
-            // We now have the greatest unoccupied ID.
-            if (DEBUG)
-            {
-                cout << "Giving it the ID = " << newId << endl;
-            }
-
-            d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
-            assignedIDs.push_back(newId);
-            newFaceArr.at(i).setId(newId);
-
-            d->nTrainFaces++;
-
-            // A new face with a new ID is added. So map it's DB storage index with it's ID
-            d->indexIdMap[d->nTrainFaces-1] = newId;
-            // This a new ID added to the DB. So make an entry for it in the idCountMap
-            d->idCountMap[newId]            = 1;
-
-            //if (DEBUG)
-            //    cout << "New Face added = " << d->nTrainFaces << endl;
-        }
-        else
-        {
-            int id = newFaceArr.at(i).getId();
-
-            if (DEBUG)
-            {
-                cout << " Given ID as " << id << endl;
-            }
-            // If the ID is already in the DB
-
-            if(d->idCountMap.count(id) > 0)
-            {
-                unsigned int j = 0;
-
-                if (DEBUG)
-                {
-                    cout<<"Specified ID already axists in DB, averaging"<<endl;
-                }
-
-                // Must get the index of this id, so the previous face of the ID can be accessed from faceImgArr
-                for(j = 0; j < d->indexIdMap.size(); ++j)
-                    if(d->indexIdMap[j] == id)
-                        break;
-
-                IplImage* oldImg = d->faceImgArr.at(j);
-                //cout << "SSS" << endl;
-                IplImage* newImg = cvCreateImage(cvSize(oldImg->width, oldImg->height), oldImg->depth, oldImg->nChannels);
-                //cout << "SSS" << endl;
-                // The weight is accessed from the map
-                double weight    = d->idCountMap[id];
-
-                cvAddWeighted(oldImg, 1 - 1/weight,newFaceArr.at(i).getFace(), 1/weight, 0, newImg);
-
-                /*
-                //Cheese: Uncomment this if you want to see the average image so far for the person with this ID!
-                cvNamedWindow("a");
-                cvShowImage("a", newImg);
-                cvWaitKey(0);
-                cvDestroyWindow("a");
-                */
-
-                replace(d->faceImgArr.begin(), d->faceImgArr.end(), oldImg, newImg);
-                //assignedIDs.push_back(id);
-                // Increment averaging count
-                d->idCountMap[id] = d->idCountMap[id] + 1;
-                assignedIDs.push_back(id);
-
-                if (DEBUG)
-                {
-                    cout<<"Face updated and averaged = "<<id<<endl;
-                }
-            }
-            else
-            {
-                // If this is a fresh ID, and not autoassigned
-
-                if (DEBUG)
-                {
-                    cout << "Specified ID does not exist in DB, so this is a new face" << endl;
-                }
-
-                // If there was a junk image before, remove it
-
-                if(d->idCountMap.count(-1) > 0)
-                {
-                    cvReleaseImage(&d->faceImgArr[0]);
-                    d->faceImgArr.erase(d->faceImgArr.begin());
-                    d->nTrainFaces--;
-                    d->idCountMap.erase(d->idCountMap.find(-1));
-                    d->indexIdMap[0] = 0;
-                    // Nothing in index = 1 now
-                    d->indexIdMap.erase(d->indexIdMap.find(1));
-                }
-
-                d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
-                assignedIDs.push_back(id);
-                d->nTrainFaces++;
-
-                // A new face with a new ID is added. So map it's DB storage index with it's ID
-                d->indexIdMap[d->nTrainFaces -1] = id;
-
-                // This a new ID added to the DB. So make an entry for it in the idCountMap
-                d->idCountMap[id]                = 1;
-            }
-        }
-    }
-
-    // DB full or all faces exhausted, now train and store
-    d->learn();
-
-    update = clock() - update;
-    if (DEBUG)
-    {
-        printf("Updating took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
-        cout << "Inside Eigenfaces::update(), number of assigned ID's is " << assignedIDs.size() << endl;
-    }
-    return assignedIDs;
+	// Release the fileStorage
+	cvReleaseFileStorage(&fileStorage);
+	return 0;
 }
 
-int Eigenfaces::count() const
-{
-    return d->nTrainFaces;
-}
+int Eigenfaces::update(vector<Face>& newFaceArr) {
+	if (newFaceArr.size() == 0) {
+		if (DEBUG)
+			cout<<" No faces passed. Not training." <<endl;
 
-int Eigenfaces::count(int id) const
-{
-    return d->idCountMap[id];
+		return 0;
+	}
+
+	clock_t update;
+	update = clock();
+
+	unsigned int i;
+
+	// Our method : If no Id specified (-1), then give the face the next available ID.
+	// Now, all ID's, when the DB is read back, were earlier read as the storage index with which the face was stored in the DB.
+	// Note that indexIdMap, unlike idCountMap, is only changed when a face with a new ID is added.
+	for (i = 0; i < newFaceArr.size() ; ++i) {
+		if(newFaceArr.at(i).getId() == -1) {
+			if (DEBUG)
+				cout << "Has no specified ID" << endl;
+
+			int newId = d->faceImgArr.size();
+
+			// We now have the greatest unoccupied ID.
+			if (DEBUG)
+				cout << "Giving it the ID = " << newId << endl;
+
+			d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
+			newFaceArr.at(i).setId(newId);
+
+			// A new face with a new ID is added. So map it's DB storage index with it's ID
+			//d->indexIdMap[newId] = newId;
+			d->indexMap.push_back(newId);
+		} else {
+			int id = newFaceArr.at(i).getId();
+
+			if (DEBUG)
+				cout << " Given ID as " << id << endl;
+
+			find (d->indexMap.begin(), d->indexMap.end(), id);
+
+			std::vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
+			if(it != d->indexMap.end()) {
+				unsigned int j = 0;
+
+				if (DEBUG)
+					cout<<"Specified ID already axists in DB, averaging"<<endl;
+
+				d->learn(*it, cvCloneImage(newFaceArr.at(i).getFace()));
+
+			} else {
+				// If this is a fresh ID, and not autoassigned
+				if (DEBUG)
+					cout << "Specified ID does not exist in DB, so this is a new face" << endl;
+
+				d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
+				// A new face with a new ID is added. So map it's DB storage index with it's ID
+				d->indexMap.push_back(id);
+			}
+		}
+	}
+
+	update = clock() - update;
+	if (DEBUG)
+		printf("Updating took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
+
+	return 0;
 }
 
 } // namespace libface

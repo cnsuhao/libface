@@ -464,7 +464,7 @@ CvMat* LibFaceUtils::stringToMatrix(const string & data, int type)
  *
  * @param src A pointer to the matrix to be displayed.
  */
-void LibFaceUtils::showImage(CvMat* src, const string& title)
+void LibFaceUtils::showImage(CvArr* src, const string& title)
 {
     cvNamedWindow(title.data(),CV_WINDOW_AUTOSIZE);
     cvShowImage(title.data(), src);
