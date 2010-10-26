@@ -324,9 +324,9 @@ int LibFace::train(const string& dir)
     return result;
 }
 
-vector<int> LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
+int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
 {
-    vector<int> assignedIDs;
+    int assignedIDs;
 
     if (faces->size() == 0)
     {
@@ -379,22 +379,22 @@ vector<int> LibFace::update(const IplImage* img, vector<Face>* faces, int scaleF
     return assignedIDs;
 }
 
-vector<int> LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
+int LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
 {
     IplImage* img = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return this->update(img, faces, scaleFactor);
 }
 
-vector<int> LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor)
+int LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor)
 {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); //grayscale
     return this->update(img, faces, scaleFactor);
     cvReleaseImage(&img);
 }
 
-vector<int> LibFace::update(vector<Face>* faces, int scaleFactor)
+int LibFace::update(vector<Face>* faces, int scaleFactor)
 {
-    vector<int> assignedIDs;
+    int assignedIDs;
 
     if (faces->size() == 0)
     {
@@ -444,11 +444,6 @@ vector<int> LibFace::update(vector<Face>* faces, int scaleFactor)
 int LibFace::count() const
 {
     return d->recognitionCore->count();
-}
-
-int LibFace::count(int id) const
-{
-    return d->recognitionCore->count(id);
 }
 
 void LibFace::setDetectionAccuracy(double value)

@@ -74,7 +74,7 @@ public:
      * Abstract method for updating the system with new Face object.
      * @param dataVector A vector of Face objects.
      */
-    virtual std::vector<int> update(std::vector<Face>& dataVector) = 0;
+    virtual int update(std::vector<Face>& dataVector) = 0;
 
     /**
      * Abstract method for recognising an imput image as a face. Returns the ID of the nearest face
@@ -82,19 +82,13 @@ public:
      * @param test The test IplImage * image to be recognized
      * @return The ID of the closest face
      */
-    virtual std::pair<int, double> recognize(IplImage* test) = 0 ;
+    virtual std::pair<int, float> recognize(IplImage* test) = 0 ;
 
     /**
      * Abstract method to return the count of faces in the DB
      * @return The number of faces the DB has been trained with
      */
     virtual int count() const = 0;
-    /**
-     * Abstract method to return the count of faces for a particualr ID in the DB
-     * @param id The ID of the person whose train count is needed
-     * @return The number of faces of person with id
-     */
-    virtual int count(int id) const = 0;
 };
 
 // -------------------------------------------------------------------------------------------

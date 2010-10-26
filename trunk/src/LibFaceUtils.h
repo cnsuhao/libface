@@ -64,7 +64,7 @@ public:
     static void        printMatrix(CvMat* src);
     static CvMat*      reshape(CvMat* src);
     static CvMat*      reverseOrder(CvMat* src);
-    static void        showImage(CvMat* src, const std::string& title = "Image");
+    static void        showImage(CvArr* src, const std::string& title = "Image");
     static void        showImage(const IplImage* img, const std::vector<Face>& faces, double scale = 1, const std::string& title = "Image");
     static void        sqrVec(CvMat* src);
     static IplImage*   stringToImage(const std::string& data, int depth, int channels);
