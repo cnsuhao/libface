@@ -448,12 +448,13 @@ int Eigenfaces::saveConfig(const string& dir) {
 	return 0;
 }
 
-int Eigenfaces::update(vector<Face>& newFaceArr) {
+std::vector<int> Eigenfaces::update(vector<Face>& newFaceArr) {
+	std::vector<int> result (newFaceArr.size(),-1);
 	if (newFaceArr.size() == 0) {
 		if (DEBUG)
 			cout<<" No faces passed. Not training." <<endl;
 
-		return 0;
+		return result;
 	}
 
 	clock_t update;
@@ -514,7 +515,7 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 	if (DEBUG)
 		printf("Updating took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
 
-	return 0;
+	return result;
 }
 
 } // namespace libface
