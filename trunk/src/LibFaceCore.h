@@ -74,7 +74,7 @@ public:
      * Abstract method for updating the system with new Face object.
      * @param dataVector A vector of Face objects.
      */
-    virtual int update(std::vector<Face>& dataVector) = 0;
+    virtual std::vector<int> update(std::vector<Face>& dataVector) = 0;
 
     /**
      * Abstract method for recognising an imput image as a face. Returns the ID of the nearest face

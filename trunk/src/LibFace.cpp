@@ -324,9 +324,9 @@ int LibFace::train(const string& dir)
     return result;
 }
 
-int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
+std::vector<int> LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
 {
-    int assignedIDs;
+    std::vector<int> assignedIDs;
 
     if (faces->size() == 0)
     {
@@ -379,22 +379,22 @@ int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
     return assignedIDs;
 }
 
-int LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
+std::vector<int> LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
 {
     IplImage* img = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return this->update(img, faces, scaleFactor);
 }
 
-int LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor)
+std::vector<int> LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor)
 {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); //grayscale
     return this->update(img, faces, scaleFactor);
     cvReleaseImage(&img);
 }
 
-int LibFace::update(vector<Face>* faces, int scaleFactor)
+std::vector<int> LibFace::update(vector<Face>* faces, int scaleFactor)
 {
-    int assignedIDs;
+	std::vector<int> assignedIDs;
 
     if (faces->size() == 0)
     {
