@@ -60,7 +60,6 @@ int main(int argc, char** argv)
     LibFace libFace = LibFace(ALL, ".");
 
     cout << "Count of people that libface has been trained with : " << libFace.count() << endl;
-    cout << "Count of person with ID " << 3 << " : " << libFace.count(3) << endl;
 
     return 0;
 }
