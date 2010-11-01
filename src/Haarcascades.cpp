@@ -38,8 +38,13 @@
 #include <ctime>
 #include <cctype>
 
+#if defined (__APPLE__)
+#include <cv.h>
+#include <highgui.h>
+#else
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#endif
 
 #include "Haarcascades.h"
 

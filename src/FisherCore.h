@@ -28,7 +28,11 @@
 #ifndef _FISHERCORE_H_
 #define _FISHERCORE_H_
 
+#if defined (__APPLE__)
+#include <cv.h>
+#else
 #include <opencv/cv.h>
+#endif
 
 namespace libface
 {
