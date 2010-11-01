@@ -42,11 +42,17 @@
 #include <math.h>
 
 #include <LibFace.h>
-#include <Face.h>	// Our library
+#include <Face.h>        // Our library
 
 // Extra libraries for use in client programs
-#include<opencv/cv.h>
-#include<opencv/highgui.h>
+
+#if defined (__APPLE__)
+#include <cv.h>
+#include <highgui.h>
+#else
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#endif
 
 using namespace std;
 
