@@ -50,8 +50,13 @@
 #include <algorithm>
 #include <iterator>
 
+#if defined (__APPLE__)
+#include <cvaux.h>
+#include <cv.h>
+#else
 #include <opencv/cvaux.h>
 #include <opencv/cv.h>
+#endif
 
 //TODO: Check where the data needs to be released to reduce memoryconsumption.
 #include "Eigenfaces.h"

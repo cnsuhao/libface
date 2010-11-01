@@ -35,8 +35,13 @@
 #include <cmath>
 #include <ctime>
 
+#if defined (__APPLE__)
+#include <cv.h>
+#include <highgui.h>
+#else
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
+#endif
 
 #include "LibFaceUtils.h"
 #include "Haarcascades.h"

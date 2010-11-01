@@ -33,7 +33,11 @@
 #ifndef _LIBFACECORE_H_
 #define _LIBFACECORE_H_
 
+#if defined (__APPLE__)
+#include <cv.h>
+#else
 #include <opencv/cv.h>
+#endif
 
 #include "Face.h"
 

@@ -33,9 +33,15 @@
 #ifndef _LIBFACEUTILS_H_
 #define _LIBFACEUTILS_H_
 
+#if defined (__APPLE__)
+#include <highgui.h>
+#include <cxcore.h>
+#include <cv.h>
+#else
 #include <opencv/highgui.h>
 #include <opencv/cxcore.h>
 #include <opencv/cv.h>
+#endif
 
 #include <cstdio>
 #include <cstdlib>

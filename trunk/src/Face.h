@@ -35,7 +35,11 @@
 #ifndef _FACE_H_
 #define _FACE_H_
 
+#if defined(__APPLE__)
+#include <cv.h>
+#else
 #include <opencv/cv.h>
+#endif
 
 #include "LibFaceConfig.h"
 
