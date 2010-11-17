@@ -82,13 +82,18 @@ SET(BINDIR bin)
 
 # Check if system is 32 or 64 bit. Thanks to ulrichard for pointing to link.
 
-IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    MESSAGE( STATUS "64 bit architecture detected" )
-    SET(LIBDIR lib64)
-ELSE (CMAKE_SIZEOF_VOID_P EQUAL 8)
-    MESSAGE( STATUS "32 bit architecture detected" )
+IF (NOT APPLE)
+    IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        MESSAGE( STATUS "64 bit architecture detected" )
+        SET(LIBDIR lib64)
+    ELSE (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        MESSAGE( STATUS "32 bit architecture detected" )
+        SET(LIBDIR lib)
+    ENDIF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+ELSE(NOT APPLE)
+    MESSAGE( STATUS "Use 32 bit architecture for Apple" )
     SET(LIBDIR lib)
-ENDIF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+ENDIF(NOT APPLE)
 
 # Check if the user wants to force install into another directory.
 # If absolute path is specified the library will be install there,
