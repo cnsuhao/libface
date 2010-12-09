@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     }
 
     // Load libface with DETECT to only do detection mode
-    //"." means look for configuration file in current directory
+    // "." means look for configuration file in current directory
 
     LibFace libFace = LibFace(ALL, ".");
 
