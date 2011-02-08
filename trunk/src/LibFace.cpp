@@ -124,7 +124,7 @@ LibFace::~LibFace()
     delete d;
 }
 
-vector<Face> LibFace::detectFaces(const string& filename, int /*scaleFactor*/)
+vector<Face> LibFace::detectFaces(const string& filename, int scaleFactor)
 {
     vector<Face> result;
     if(filename.length() == 0)
@@ -146,7 +146,7 @@ vector<Face> LibFace::detectFaces(const string& filename, int /*scaleFactor*/)
     return d->detectionCore->detectFaces(d->lastImage);
 }
 
-vector<Face> LibFace::detectFaces(const char* arr, int width, int height, int step, int depth, int channels, int /*scaleFactor*/)
+vector<Face> LibFace::detectFaces(const char* arr, int width, int height, int step, int depth, int channels, int scaleFactor)
 {
     IplImage* image = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return d->detectionCore->detectFaces(image);
@@ -163,12 +163,12 @@ map<string,string> LibFace::getConfig()
     return result;
 }
 
-int LibFace::loadConfig(const string& /*dir*/)
+int LibFace::loadConfig(const string& dir)
 {
     int result = 0;
-/*
+    /*
     d->recognitionCore->loadData(dir);
-*/
+    */
 
     return result;
 }
@@ -179,19 +179,16 @@ int LibFace::loadConfig(const map<string, string>& config)
     return result;
 }
 
-vector<pair<int, double> > LibFace::recognise(const string& filename, vector<Face>* faces, int scaleFactor)
-{
+vector<pair<int, float> > LibFace::recognise(const string& filename, vector<Face>* faces, int scaleFactor) {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); // grayscale
     return this->recognise(img, faces, scaleFactor);
     cvReleaseImage(&img);       // FIXME : This line is never called !!!
 }
 
-vector<pair<int, double> > LibFace::recognise(const IplImage* img, vector<Face>* faces, int /*scaleFactor*/)
-{
-    vector<pair<int, double> > result;
+vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face>* faces, int scaleFactor) {
+    vector<pair<int, float> > result;
 
-    if (faces->size() == 0)
-    {
+    if (faces->size() == 0) {
         if (DEBUG)
             cout<<" No faces passed to libface::recognise() , not recognizing..." << endl;
         return result;
@@ -205,15 +202,13 @@ vector<pair<int, double> > LibFace::recognise(const IplImage* img, vector<Face>*
     }
 
     if (DEBUG)
-    {
         cout << "Will recognize." << endl;
-    }
+
 
     vector<IplImage*> newFaceImgArr;
 
     int size = faces->size();
-    for (int i=0 ; i<size ; i++)
-    {
+    for (int i=0 ; i<size ; i++) {
         Face* face = &faces->at(i);
         int x1     = face->getX1();
         int y1     = face->getY1();
@@ -237,39 +232,33 @@ vector<pair<int, double> > LibFace::recognise(const IplImage* img, vector<Face>*
     for (int i = 0; i < size; ++i)
         result.push_back(d->recognitionCore->recognize(newFaceImgArr.at(i)));
 
-    for (unsigned int i=0; i<newFaceImgArr.size(); i++)
+    for (int i=0; i<newFaceImgArr.size(); i++)
         cvReleaseImage(&newFaceImgArr[i]);
 
     return result;
 }
 
-vector<pair<int, double> > LibFace::recognise(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
-{
+vector<pair<int, float> > LibFace::recognise(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor) {
     IplImage* img = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return this->recognise(img, faces, scaleFactor);
 }
 
-vector<pair<int, double> > LibFace::recognise(vector<Face>* faces, int /*scaleFactor*/)
-{
-    vector<pair<int, double> > result;
+vector<pair<int, float> > LibFace::recognise(vector<Face>* faces, int scaleFactor) {
+    vector<pair<int, float> > result;
 
-    if (faces->size() == 0)
-    {
+    if (faces->size() == 0) {
         if (DEBUG)
             cout<<" No faces passed to libface::recognise() , not recognizing." << endl;
         return result;
     }
 
     if (DEBUG)
-    {
         cout << "Recognizing." << endl;
-    }
 
     vector<IplImage*> newFaceImgArr;
 
     int size = faces->size();
-    for (int i=0 ; i<size ; i++)
-    {
+    for (int i = 0 ; i < size ; i++) {
         Face* face = &faces->at(i);
         int id     = face->getId();
 
@@ -310,42 +299,32 @@ vector<pair<int, double> > LibFace::recognise(vector<Face>* faces, int /*scaleFa
     return result;
 }
 
-int LibFace::saveConfig(const string& dir)
-{
+int LibFace::saveConfig(const string& dir) {
     int result  = 0;
     d->recognitionCore->saveConfig(dir);
     return result;
 }
 
-int LibFace::train(const string& /*dir*/)
-{
-    int result = 0;
-//    d->recognitionCore->train(dir);
-    return result;
-}
 
-std::vector<int> LibFace::update(const IplImage* img, vector<Face>* faces, int /*scaleFactor*/)
+int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
 {
-    std::vector<int> assignedIDs;
+    int assignedIDs;
 
-    if (faces->size() == 0)
-    {
+
+    if (faces->size() == 0) {
         if (DEBUG)
             cout<<" No faces passed to update." << endl;
         return assignedIDs;
     }
 
     if (DEBUG)
-    {
         cout << "Update with faces." << endl;
-    }
 
     vector<Face>      newFaceArr;
     vector<IplImage*> createdImages;
 
     int size = faces->size();
-    for (int i=0 ; i<size ; i++)
-    {
+    for (int i=0 ; i<size ; i++) {
         Face* face = &faces->at(i);
 
         int x1     = face->getX1();
@@ -373,28 +352,26 @@ std::vector<int> LibFace::update(const IplImage* img, vector<Face>* faces, int /
     }
     assignedIDs = d->recognitionCore->update(newFaceArr);
 
-    for (unsigned int i=0; i<createdImages.size(); i++)
+    for (int i=0; i<createdImages.size(); i++)
         cvReleaseImage(&createdImages[i]);
 
     return assignedIDs;
 }
 
-std::vector<int> LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor)
-{
+int LibFace::update(const char* arr, vector<Face>* faces, int width, int height, int step, int depth, int channels, int scaleFactor) {
     IplImage* img = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return this->update(img, faces, scaleFactor);
 }
 
-std::vector<int> LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor)
-{
+int LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor) {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); //grayscale
     return this->update(img, faces, scaleFactor);
+    //WTF? that can;t be reached after return!
     cvReleaseImage(&img);
 }
 
-std::vector<int> LibFace::update(vector<Face>* faces, int /*scaleFactor*/)
-{
-	std::vector<int> assignedIDs;
+int LibFace::update(vector<Face>* faces, int scaleFactor) {
+    int assignedIDs = 0;
 
     if (faces->size() == 0)
     {
@@ -420,6 +397,7 @@ std::vector<int> LibFace::update(vector<Face>* faces, int /*scaleFactor*/)
         if (DEBUG)
             cout << "Id is: " << face.getId() << endl;
 
+
         const IplImage* faceImg = face.getFace();
         if (faceImg->width != d->facesize() || faceImg->height != d->facesize())
         {
@@ -435,7 +413,7 @@ std::vector<int> LibFace::update(vector<Face>* faces, int /*scaleFactor*/)
 
     assignedIDs = d->recognitionCore->update(newFaceArr);
 
-    for (unsigned int i=0; i<createdImages.size(); i++)
+    for (int i=0; i<createdImages.size(); i++)
         cvReleaseImage(&createdImages[i]);
 
     return assignedIDs;
@@ -456,7 +434,7 @@ double LibFace::getDetectionAccuracy() const
     return d->detectionCore->accuracy();
 }
 
-void LibFace::setDetectionSpecificity(double value)
+/*void LibFace::setDetectionSpecificity(double value)
 {
     d->detectionCore->setSpecificity(value);
 }
@@ -464,7 +442,7 @@ void LibFace::setDetectionSpecificity(double value)
 double LibFace::getDetectionSpecificity() const
 {
     return d->detectionCore->specificity();
-}
+}*/
 
 int LibFace::getRecommendedImageSizeForDetection(const CvSize&) const
 {

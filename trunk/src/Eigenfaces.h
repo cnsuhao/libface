@@ -123,7 +123,7 @@ public:
      *
      * @return Returns 0 if update was successful, or positive int otherwise.
      */
-    std::vector<int> update(std::vector<Face>&);
+    int update(std::vector<Face>&);
 
 private:
 

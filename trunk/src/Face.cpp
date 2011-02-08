@@ -34,114 +34,99 @@
 
 #include "Face.h"
 
-namespace libface
-{
+namespace libface {
 
-Face::Face(int x1, int y1, int x2, int y2, int id, const IplImage* face)
-{
-    //Set coordinates of the face rectangle;
-    this->x1     = x1;
-    this->x2     = x2;
-    this->y1     = y1;
-    this->y2     = y2;
+Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) {
+	//Set coordinates of the face rectangle;
+	this->x1     = x1;
+	this->x2     = x2;
+	this->y1     = y1;
+	this->y2     = y2;
 
-    this->width  = x2 - x1;
-    this->height = y2 - y1;
+	this->width  = x2 - x1;
+	this->height = y2 - y1;
 
-    //Set id of the face. By default it is -1.
-    this->id     = id;
+	//Set id of the face. By default it is -1.
+	this->id     = id;
 
-    //Set the pointer to the face.
-    this->face   = face;
+	//Set the pointer to the face.
+	this->face   = face;
 }
 
-Face::~Face()
-{
+Face::~Face() {
+	if(this->face) {
+		//cvReleaseImage(&this->face);
+	}
 }
 
-void Face::setX1(int x1)
-{
-    this->x1    = x1;
-    this->width = this->x2 - this->x1;
+void Face::setX1(int x1) {
+	this->x1    = x1;
+	this->width = this->x2 - this->x1;
 }
 
-void Face::setX2(int x2)
-{
-    this->x2    = x2;
-    this->width = this->x2 - this->x1;
+void Face::setX2(int x2) {
+	this->x2    = x2;
+	this->width = this->x2 - this->x1;
 }
 
-void Face::setY1(int y1)
-{
-    this->y1     = y1;
-    this->height = this->y2 - this->y1;
+void Face::setY1(int y1) {
+	this->y1     = y1;
+	this->height = this->y2 - this->y1;
 }
 
-void Face::setY2(int y2)
-{
-    this->y2     = y2;
-    this->height = this->y2 - this->y1;
+void Face::setY2(int y2) {
+	this->y2     = y2;
+	this->height = this->y2 - this->y1;
 }
 
-void Face::setId(int id)
-{
-    this->id = id;
+void Face::setId(int id) {
+	this->id = id;
 }
 
-void Face::setFace(const IplImage* face)
-{
-    this->face = face;
+void Face::setFace(IplImage* face) {
+	this->face = face;
 }
 
-IplImage* Face::takeFace() const
-{
-    if (this->face)
-        return (IplImage*)this->face;
+IplImage* Face::takeFace() const {
+	if (this->face)
+		return (IplImage*)this->face;
 
-    return 0;
+	return 0;
 }
 
-const IplImage* Face::getFace() const
-{
-    if (this->face)
-	return this->face;
+IplImage* Face::getFace() const {
+	if (this->face)
+		return this->face;
 
-    return 0;
+	return 0;
 }
 
-int Face::getHeight() const
-{
-    return this->height;
+int Face::getHeight() const {
+	return this->height;
 }
 
-int Face::getWidth() const
-{
-    return this->width;
+int Face::getWidth() const {
+	return this->width;
 }
 
-int Face::getX1() const
-{
-    return this->x1;
+int Face::getX1() const {
+	return this->x1;
 }
 
-int Face::getX2() const
-{
-    return this->x2;
+int Face::getX2() const {
+	return this->x2;
 }
 
-int Face::getY1() const
-{
-    return this->y1;
+int Face::getY1() const {
+	return this->y1;
 }
 
-int Face::getY2() const
-{
-    return this->y2;
+int Face::getY2() const {
+	return this->y2;
 }
 
-int Face::getId() const
-{
-    return this->id;
+int Face::getId() const {
+	return this->id;
 }
 
 } // namespace libface

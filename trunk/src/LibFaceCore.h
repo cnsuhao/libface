@@ -75,10 +75,13 @@ public:
     virtual int saveConfig(const std::string& dir)  = 0;
 
     /**
-     * Abstract method for updating the system with new Face object.
+     * Abstract method for updating the system with new array of Face objects.
+     *
      * @param dataVector A vector of Face objects.
+     *
+     * @return 0 id the update was successful, or positive int above 0 otherwise.
      */
-    virtual std::vector<int> update(std::vector<Face>& dataVector) = 0;
+    virtual int update(std::vector<Face>& dataVector) = 0;
 
     /**
      * Abstract method for recognising an imput image as a face. Returns the ID of the nearest face
@@ -105,10 +108,10 @@ public:
 
     virtual std::vector<Face> detectFaces(const IplImage* inputImage, const CvSize& originalSize = cvSize(0,0)) = 0;
     virtual std::vector<Face> detectFaces(const std::string& filename) = 0;
-    virtual double accuracy() const = 0;
-    virtual void setAccuracy(double value) = 0;
-    virtual double specificity() const = 0;
-    virtual void setSpecificity(double value) = 0;
+    virtual int accuracy() const = 0;
+    virtual void setAccuracy(int value) = 0;
+    //virtual double specificity() const = 0;
+    //virtual void setSpecificity(double value) = 0;
 };
 
 } // namespace libface
