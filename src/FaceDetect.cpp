@@ -30,18 +30,11 @@
  *
  * ============================================================ */
 
-#include <algorithm>
 #include <iostream>
-#include <cmath>
 #include <ctime>
 
-#if defined (__APPLE__)
-#include <cv.h>
-#include <highgui.h>
-#else
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
-#endif
 
 #include "LibFaceUtils.h"
 #include "Haarcascades.h"
@@ -49,151 +42,10 @@
 #include "Face.h"
 
 using namespace std;
+using namespace cv;
 
 namespace libface
 {
-
-class DetectObjectParameters
-{
-public:
-
-    DetectObjectParameters()
-    {
-        searchIncrement = 0;
-        grouping        = 0;
-        flags           = 0;
-        minSize         = cvSize(0,0);
-    }
-
-    double        searchIncrement;
-    int           grouping;
-    int           flags;
-    CvSize        minSize;
-};
-
-class CascadeProperties
-{
-public:
-
-    CascadeProperties()
-    {
-        primaryCascade   = false;
-        verifyingCascade = true;
-
-        windowSize = cvSize(0,0);
-
-        xROI      = 0;
-        yROI      = 0;
-        widthROI  = 1;
-        heightROI = 1;
-    }
-
-    bool primaryCascade;
-    bool verifyingCascade;
-
-    /// The size on which the cascade was trained, read from the XML file
-    CvSize windowSize;
-
-    /** Facial features have a region of interest, e.g., the left eye is typically
-     *  located in the left upper region of the presumed face.
-     *  For frontal face cascades, this is 0,0 - 1x1. */
-    double xROI;
-    double yROI;
-    double widthROI;
-    double heightROI;
-
-    /** Assumptions on the relation of the size of a facial feature to the whole face.
-     *  Basically, we say the size is between 1/10 and 1/4, approx 1/6 */
-    static double faceToFeatureRelationMin() { return 10; }
-    static double faceToFeatureRelationMax() { return 4; }
-    static double faceToFeatureRelationPresumed() { return 6; }
-
-    /** A primary cascade does the initial scan on the whole image area
-     *  A verifying cascade scans the area reported by the primary cascade */
-    void setPrimaryCascade(bool isPrimary = true)
-    {
-        primaryCascade = isPrimary;
-        verifyingCascade = !isPrimary;
-    }
-
-    void setROI(double x, double y, double width, double height)
-    {
-        xROI      = x;
-        yROI      = y;
-        widthROI  = width;
-        heightROI = height;
-    }
-
-    bool isFacialFeature() const
-    {
-        return xROI != 0 || yROI != 0 || widthROI != 1 || heightROI != 1;
-    }
-
-    /** given the full face rect (relative to whole image), returns the rectangle
-     *  of the region of interest of this cascade (still relative to whole image).
-     *  For frontal face cascades, returns the given parameter unchanged. */
-    CvRect faceROI(const CvRect& faceRect) const
-    {
-        return cvRect(faceRect.x + xROI * faceRect.width,
-                      faceRect.y + yROI * faceRect.height,
-                      widthROI * faceRect.width,
-                      heightROI * faceRect.height);
-    }
-
-    /**
-     * Verifying cascades: Returns the minSize parameter for cvHaarDetectObjects.
-     * For frontal faces, starts the scan in the same order of magnitude as the presumed face,
-     * slightly smaller.
-     * For facial features, which are smaller than a face, uses the faceToFeatureRelation
-     * assumptions made above. Often may end using the minimum.
-     */
-    CvSize minSizeForFace(const CvSize& faceSize) const
-    {
-        CvSize minSize;
-
-        if (!isFacialFeature())
-        {
-            // Start with a size slightly smaller than the presumed face
-            minSize = cvSize(lround(double(faceSize.width) * 0.6),
-                             lround(double(faceSize.height) * 0.6));
-        }
-        else
-        {
-            // for a feature, which is smaller than the face, start with a significantly smaller min size
-            minSize = cvSize(lround(double(faceSize.width) / faceToFeatureRelationMin()),
-                             lround(double(faceSize.height) / faceToFeatureRelationMin()));
-        }
-
-        if (lessThanWindowSize(minSize))
-            return cvSize(0,0);
-        return minSize;
-    }
-
-    /**
-     * For facial features:
-     * For the case that a feature ROI is small and shall be scaled up.
-     * Give the real face size.
-     * Returns a scale factor (>1) by which the face, or rather only the ROI,
-     * should be scaled up to fit with the windowSize of this cascade.
-     */
-    double requestedInputScaleFactor(const CvSize& faceSize) const
-    {
-        if (!isFacialFeature())
-            return 1.0;
-
-        if (faceSize.width / faceToFeatureRelationMin() >= windowSize.width
-            && faceSize.height / faceToFeatureRelationMin() >= windowSize.height)
-            return 1.0;
-
-        return max(double(windowSize.width) * faceToFeatureRelationPresumed() / faceSize.width,
-                   double(windowSize.height) * faceToFeatureRelationPresumed() / faceSize.height);
-    }
-
-    bool lessThanWindowSize(const CvSize& size) const
-    {
-        return size.width < windowSize.width || size.height < windowSize.height;
-    }
-};
 
 class FaceDetect::FaceDetectPriv
 {
@@ -202,71 +54,39 @@ public:
 
     FaceDetectPriv()
     {
-        cascadeSet               = 0;
-        storage                  = 0;
-        scaleFactor              = 1.0;
-
-        maxDistance              = 0;
-        minDuplicates            = 0;
-
-        speedVsAccuracy          = 0.8;
-        sensitivityVsSpecificity = 0.8;
+        cascadeSet = 0;
+        storage    = 0;
     }
 
     Haarcascades* cascadeSet;
     CvMemStorage* storage;
-    double        scaleFactor;    // Keeps the scaling factor of the internal image.
+    double        scaleFactor;        // Keeps the scaling factor of the internal image.
 
-    int           maxDistance;    // Maximum distance between two faces to call them unique
-    int           minDuplicates;  // Minimum number of duplicates required to qualify as a genuine face
+    bool          countCertainity;
 
-    vector<CascadeProperties> cascadeProperties;
+    int           maximumDistance;    // Maximum distance between two faces to call them unique
+    int           minimumDuplicates;  // Minimum number of duplicates required to qualify as a genuine face
+
     // Tunable values, for accuracy
-    DetectObjectParameters primaryParams;
-    DetectObjectParameters verifyingParams;
-
-    double        speedVsAccuracy;
-    double        sensitivityVsSpecificity;
+    float         searchIncrement;
+    int           grouping;
+    int           minSize[4];
+    int           accu;
 };
 
 FaceDetect::FaceDetect(const string& cascadeDir)
-          : d(new FaceDetectPriv)
+: d(new FaceDetectPriv)
 {
     d->cascadeSet = new Haarcascades(cascadeDir);
 
     /* Cascades */
+    //d->cascadeSet->addCascade("haarcascade_frontalface_alt.xml", 1);   // Weight 1 for frontal default
+    d->cascadeSet->addCascade("haarcascade_frontalface_alt2.xml",1);  //default
+    //d->cascadeSet->addCascade("haarcascade_profileface.xml", 1);
 
-    d->cascadeSet->addCascade("haarcascade_frontalface_alt.xml", 1);
-    d->cascadeSet->addCascade("haarcascade_frontalface_default.xml",1);
-    d->cascadeSet->addCascade("haarcascade_frontalface_alt2.xml",1);
-    d->cascadeSet->addCascade("haarcascade_frontalface_alt_tree.xml", 1);
+    d->countCertainity = true;
 
-    d->cascadeSet->addCascade("haarcascade_profileface.xml", 1);
-
-    d->cascadeSet->addCascade("haarcascade_mcs_lefteye.xml", 1);
-    d->cascadeSet->addCascade("haarcascade_mcs_righteye.xml", 1);
-    d->cascadeSet->addCascade("haarcascade_mcs_nose.xml", 1);
-    d->cascadeSet->addCascade("haarcascade_mcs_mouth.xml", 1);
-
-    d->cascadeProperties = vector<CascadeProperties>(d->cascadeSet->getSize());
-    for (int i=0; i<d->cascadeSet->getSize(); i++)
-        if (d->cascadeSet->getCascade(i).haarcasc)
-            d->cascadeProperties[i].windowSize = d->cascadeSet->getCascade(i).haarcasc->orig_window_size;
-
-    d->cascadeProperties[2].setPrimaryCascade();
-
-    d->cascadeProperties[5].setROI(0, 0, 0.6, 0.6);
-    d->cascadeProperties[6].setROI(0.4, 0, 0.6, 0.6);
-    d->cascadeProperties[7].setROI(0.2, 0.25, 0.6, 0.6);
-    d->cascadeProperties[8].setROI(0.1, 0.4, 0.8, 0.6);
-
-    /**
-     * Modesto Castrillón, Oscar Déniz, Daniel Hernández, Javier Lorenzo
-     * A comparison of face and facial feature detectors based
-     * on the Viola–Jones general object detection framework
-     * Machine Vision and Applications, 01/2008
-     * DOI 10.1007/s00138-010-0250-7
-     */
+    this->setAccuracy(1);
 }
 
 FaceDetect::~FaceDetect()
@@ -277,151 +97,80 @@ FaceDetect::~FaceDetect()
     delete d;
 }
 
-double FaceDetect::accuracy() const
+int FaceDetect::accuracy() const
 {
-    return d->speedVsAccuracy;
+    return d->accu;
 }
 
-double FaceDetect::specificity() const
+void FaceDetect::setAccuracy(int i)
 {
-    return d->sensitivityVsSpecificity;
-}
-
-void FaceDetect::setAccuracy(double speedVsAccuracy)
-{
-    d->speedVsAccuracy        = max(0.0, min(1.0, speedVsAccuracy));
-}
-
-void FaceDetect::setSpecificity(double sensitivityVsSpecificity)
-{
-    d->sensitivityVsSpecificity = max(0.0, min(1.0, sensitivityVsSpecificity));
-}
-
-void FaceDetect::updateParameters(const CvSize& /*scaledSize*/, const CvSize& originalSize)
-{
-    double origSize = double(max(originalSize.width, originalSize.height)) / 1000;
-
-    /* Search increment will determine the number of passes over the image.
-     * But with fewer passes, we will miss some faces.
-     */
-    if (d->speedVsAccuracy <= 0.159)
-        d->primaryParams.searchIncrement = 1.5;
-    else if (d->speedVsAccuracy >= 0.8)
-        d->primaryParams.searchIncrement = 1.1;
-    else
-        d->primaryParams.searchIncrement = round(100 * (1.1 - 0.5*log10(d->speedVsAccuracy))) / 100;
-
-    /* This is a clear tradeoff. With 1, we'll get many faces,
-     * but more false positives than faces.
-     * 3 is the best parameter for normal use. */
-    if (d->sensitivityVsSpecificity < 0.25)
-        d->primaryParams.grouping = 1;
-    else if (d->sensitivityVsSpecificity < 0.5)
-        d->primaryParams.grouping = 2;
-    else
-        d->primaryParams.grouping = 3;
-
-    // flag speeds up (very much faster) and potentially lowers sensitivity: We mostly use it,
-    // unless in we want very high sensitivity at low speed
-    if (d->sensitivityVsSpecificity > 0.1 || d->speedVsAccuracy < 0.9)
-        d->primaryParams.flags = CV_HAAR_DO_CANNY_PRUNING;
-    else
-        d->primaryParams.flags = 0;
-
-    /* greater min size will filter small images, lowering sensitivity, enhancing specificity,
-     * with false positives often small */
-    double minSize = 32 * d->sensitivityVsSpecificity;
-    /* Original small images deserve a smaller minimum size. */
-    minSize -= 10 * (1.0 - min(1.0, origSize));
-    /* A small min size means small starting size, together with search increment, determining
-     * the number of operations and thus speed */
-    if (d->speedVsAccuracy < 0.75)
-        minSize += 100 * (0.75 - d->speedVsAccuracy);
-    // Cascade minimum is 20 for most of our cascades (one is 24). Passing 0 will use the cascade minimum.
-    if (minSize < 20)
-        minSize = 0;
-    d->primaryParams.minSize = cvSize(lround(minSize), lround(minSize));
-
-    d->maxDistance   = 15;    // Maximum distance between two faces to call them unique
-    d->minDuplicates = 0;
-
-    d->verifyingParams.searchIncrement = 1.1;
-    d->verifyingParams.flags           = 0;
-    // min size is adjusted each time
-
-    if (DEBUG)
+    if(i >= 1 && i <= 10)
     {
-        cout << "updateParameters: accuracy " << d->speedVsAccuracy
-             << " sensitivity " << d->sensitivityVsSpecificity
-             << " - searchIncrement " << d->primaryParams.searchIncrement
-             << " grouping " << d->primaryParams.grouping
-             << " flags " << d->primaryParams.flags
-             << " min size " << d->primaryParams.minSize.width << endl
-             << " primary cascades: ";
-
-        for (unsigned int i=0; i<d->cascadeProperties.size(); i++)
-            if (d->cascadeProperties[i].primaryCascade)
-                cout << d->cascadeSet->getCascade(i).name << " ";
-
-        cout << endl
-             << " maxDistance " << d->maxDistance
-             << " minDuplicates " << d->minDuplicates << endl;
-    }
-
-    /*if (d->speedVsAccuracy < 0.5)
-    {
-        d->primaryCascades[0] = true;
-        d->minDuplicates = 0;
+        d->accu = i;
     }
     else
     {
-        d->primaryCascades[1] = true;
-        d->primaryCascades[2] = true;
-        if (d->sensitivityVsSpecificity > 0.5)
-            d->minDuplicates = 1;
-    }*/
+        if (DEBUG)
+            cout<<"Bad accuracy value"<<endl;
+        return;
+    }
 
-    /*
-    d->searchIncrement = lround(10 * (0.04 * mpx + 1.02)) / 10;
+    d->maximumDistance   = 20;    // Maximum distance between two faces to call them unique
+    d->minimumDuplicates = 1;    // Minimum number of duplicates required to qualify as a genuine face
+
+    // Now adjust values based on accuracy level
     switch(d->accu)
     {
-        case 1:
-        {
-            d->searchIncrement = 1.21F;
-            d->minSize[0]      = 1;
-            d->minSize[1]      = 30;
-            d->minSize[2]      = 40;
-            d->minSize[3]      = 50;
-            d->grouping        = 2;
-            break;
-        }
+    case 1:
+    {
+        d->searchIncrement = 1.269F;
+        d->minSize[0]      = 1;
+        d->minSize[1]      = 20;
+        d->minSize[2]      = 26;
+        d->minSize[3]      = 35;
+        d->grouping        = 1;
+        break;
+    }
 
-        case 2:
-        {
-            d->searchIncrement = 1.2F;
-            d->minSize[0]      = 1;
-            d->minSize[1]      = 20;
-            d->minSize[2]      = 30;
-            d->minSize[3]      = 40;
-            d->grouping        = 3;
-            break;
-        }
-        case 3:
-        {
-            d->searchIncrement = 1.21F;
-            d->minSize[0]      = 1;
-            d->minSize[1]      = 20;
-            d->minSize[2]      = 26;
-            d->minSize[3]      = 35;
-            d->grouping        = 3;
-            break;
-        }
+    case 2:
+    {
+        d->searchIncrement = 1.2F;
+        d->minSize[0]      = 1;
+        d->minSize[1]      = 20;
+        d->minSize[2]      = 30;
+        d->minSize[3]      = 40;
+        d->grouping        = 3;
+        break;
+    }
+    case 3:
+    {
+        d->searchIncrement = 1.21F;
+        d->minSize[0]      = 1;
+        d->minSize[1]      = 20;
+        d->minSize[2]      = 26;
+        d->minSize[3]      = 35;
+        d->grouping        = 3;
+        break;
+    }
+    case 4:
+    {
+        d->searchIncrement = 1.268F;
+        d->minSize[0]      = 1;
+        d->minSize[1]      = 30;
+        d->minSize[2]      = 40;
+        d->minSize[3]      = 50;
+        d->grouping        = 2;
+        break;
+    }
+    default:
+    {
+        // TODO: missing case for compiler.
+        break;
+    }
     };
-    */
 }
 
-vector<Face> FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc,
-                                       const DetectObjectParameters &params)
+vector<Face> FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize)
 {
     // Clear the memory d->storage which was used before
     cvClearMemStorage(d->storage);
@@ -440,369 +189,260 @@ vector<Face> FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassif
         return result;
     }
 
-    // There can be more than one face in an image. So create a growable sequence of faces.
-    // Detect the objects and store them in the sequence
-
-    /*cout << "cvHaarDetectObjects: image size " << inputImage->width << " " << inputImage->height
-            << " searchIncrement " << params.searchIncrement
-            << " grouping " << params.grouping
-            << " flags " << params.flags
-            << " min size " << params.minSize.width << " " << params.minSize.height << endl;*/
-
-    faces = cvHaarDetectObjects(inputImage,
-            casc,
-            d->storage,
-            params.searchIncrement,                // Increase search scale by 5% everytime
-            params.grouping,                       // Drop groups of less than n detections
-            params.flags,                          // Optionally, pre-test regions by edge detection
-            params.minSize                         // Minimum face size to look for
-    );
-
-    // Loop the number of faces found.
-    for (int i = 0; i < (faces ? faces->total : 0); i++)
+    // Find whether the cascade is loaded, to find the faces. If yes, then:
+    if (casc)
     {
-        // Create a new rectangle for drawing the face
+        //TODO: Also may give a weight to the cascades, maybe alt-1, default and alt2 - 0.8?
 
-        CvRect* r = (CvRect*) cvGetSeqElem(faces, i);
+        // There can be more than one face in an image. So create a growable sequence of faces.
+        // Detect the objects and store them in the sequence
+        clock_t detect;
 
-        // Find the dimensions of the face
+        if (DEBUG)
+            detect = clock();
 
-        pt1.x     = r->x;
-        pt2.x     = r->x + r->width;
-        pt1.y     = r->y;
-        pt2.y     = r->y + r->height;
+        faces = cvHaarDetectObjects(inputImage,
+                casc,
+                d->storage,
+                d->searchIncrement,             // Increase search scale by 5% everytime
+                d->grouping,                              // Drop groups of less than 2 detections
+                CV_HAAR_DO_CANNY_PRUNING,
+                faceSize                        // Minimum face size to look for
+        );
 
-        Face face = Face(pt1.x,pt1.y,pt2.x,pt2.y);
+        if (DEBUG)
+        {
+            detect = clock() - detect;
+            printf("Detection took: %f secs.\n", (double)detect / ((double)CLOCKS_PER_SEC));
+        }
 
-        result.push_back(face);
+        // Loop the number of faces found.
+        for (int i = 0; i < (faces ? faces->total : 0); i++)
+        {
+            // Create a new rectangle for drawing the face
+
+            CvRect* roi = (CvRect*) cvGetSeqElem(faces, i);
+
+            // Find the dimensions of the face,and scale it if necessary.
+            float boxShrink = 0.1;
+
+            pt1.x     = (int)(roi->x  * d->scaleFactor * 1);
+            pt2.x     = (int)((roi->x + roi->width)  * d->scaleFactor);
+            pt1.y     = (int)(roi->y  * d->scaleFactor * 1);
+            pt2.y     = (int)((roi->y + roi->height) * d->scaleFactor);
+
+            //Make box a bit tighter
+            int width = pt2.x - pt1.x;
+            int height = pt2.y - pt1.y;
+
+            pt1.x = pt1.x + (int)(width*boxShrink);
+            pt1.y = pt1.y + (int)(height*boxShrink);
+            pt2.x = pt2.x - (int)(width*boxShrink);
+            pt2.y = pt2.y - (int)(height*boxShrink);
+
+            Face face = Face(pt1.x,pt1.y,pt2.x,pt2.y);
+
+            result.push_back(face);
+        }
+
+        //Please don't delete next line even if commented out. It helps with testing intermediate results.
+        //LibFaceUtils::showImage(inputImage, result);
+
     }
-
-    cvClearSeq(faces);
-
-    //Please don't delete next line even if commented out. It helps with testing intermediate results.
-    //LibFaceUtils::showImage(inputImage, result);
 
     return result;
 }
 
-bool FaceDetect::verifyFace(const IplImage* inputImage, const Face &face)
-{
-    // check if we need to verify
-    int verifyingCascades = 0;
-    for (unsigned int i = 0; i < d->cascadeProperties.size(); ++i)
-        if (d->cascadeProperties[i].verifyingCascade)
-            verifyingCascades++;
-
-    if (!verifyingCascades)
-        return true;
-
-    clock_t detect;
-    if (DEBUG)
-        detect = clock();
-
-    // Face coordinates. Add a certain margin for the other frontal cascades.
-    const CvRect faceRect = cvRect(face.getX1(), face.getY1(), face.getWidth(), face.getHeight());
-    const CvSize faceSize = cvSize(face.getWidth(), face.getHeight());
-    const int margin      = min(40, max(faceRect.width, faceRect.height));
-
-    // Clip to bounds of image, after adding the margin
-    CvRect extendedRect   = cvRect( max(0, faceRect.x - margin),
-                                    max(0, faceRect.y - margin),
-                                    faceRect.width + 2*margin,
-                                    faceRect.height + 2*margin );
-    extendedRect.width  = min(inputImage->width - extendedRect.x, extendedRect.width);
-    extendedRect.height = min(inputImage->height - extendedRect.y, extendedRect.height);
-
-    if (DEBUG)
-    {
-        cout << "\nVerifying face (" << face.getX1() << "," << face.getY1() << " "
-             << face.getWidth() << "x" << face.getHeight() << ")" << endl;
-        cout << "extended rect " << extendedRect.x << " " << extendedRect.y
-             << " " << extendedRect.width << "x" << extendedRect.height << endl;
-    }
-
-    IplImage* extendedFaceImg = LibFaceUtils::copyRect(inputImage, extendedRect);
-    vector<Face> foundFaces;
-    //LibFaceUtils::showImage(extendedFaceImg, foundFaces);
-
-    int frontalFaceVotes = 0, facialFeatureVotes = 0;
-    for (int i = 0; i < d->cascadeSet->getSize(); ++i)
-    {
-        if (d->cascadeProperties[i].verifyingCascade)
-        {
-            d->verifyingParams.minSize = d->cascadeProperties[i].minSizeForFace(faceSize);
-
-            if (d->cascadeProperties[i].isFacialFeature())
-            {
-                d->verifyingParams.grouping = 2;
-
-                CvRect roi = d->cascadeProperties[i].faceROI(faceRect);
-                IplImage* feature = LibFaceUtils::copyRect(inputImage, roi);
-                foundFaces = cascadeResult(feature, d->cascadeSet->getCascade(i).haarcasc, d->verifyingParams);
-                if (foundFaces.size())
-                    facialFeatureVotes++;
-
-                /*
-                 * This is pretty much working code that scales up the face if it's too small
-                 * for the  facial feature cascade. It did not bring me benefit with false positives though.
-                double factor = d->cascadeProperties[i].requestedInputScaleFactor(faceSize);
-                IplImage* feature = LibFaceUtils::scaledSection(inputImage, roi, factor);
-
-                / *cout << "Facial feature in " << roi.x << " " << roi.y << " " << roi.width << "x" << roi.height
-                     << " scaled up to " << feature->width << " " << feature->height << endl;* /
-                foundFaces = cascadeResult(feature, d->cascadeSet->getCascade(i).haarcasc, d->verifyingParams);
-
-                for (vector<Face>::iterator it = foundFaces.begin(); it != foundFaces.end(); ++it)
-                {
-                    cout << "Feature face " << it->getX1() << " " << it->getY1() << " " << it->getWidth() << "x" << it->getHeight() << endl;
-                    double widthScaled = it->getWidth() / factor;
-                    double heightScaled = it->getHeight() / factor;
-
-                    / *cout << "Hit feature size " << widthScaled << " " << heightScaled << " "
-                         << (faceSize.width / CascadeProperties::faceToFeatureRelationMin()) << " "
-                         << (faceSize.width / CascadeProperties::faceToFeatureRelationMax()) << endl;* /
-                    if (
-                        (widthScaled > faceSize.width / CascadeProperties::faceToFeatureRelationMin()
-                         && widthScaled < faceSize.width / CascadeProperties::faceToFeatureRelationMax())
-                        ||
-                        (heightScaled > faceSize.height / CascadeProperties::faceToFeatureRelationMin()
-                         && heightScaled < faceSize.height / CascadeProperties::faceToFeatureRelationMax())
-                        )
-                    {
-                        facialFeatureVotes++;
-                        cout << "voting" << endl;
-                        break;
-                    }
-                }
-                */
-
-                cvReleaseImage(&feature);
-            }
-            else
-            {
-                d->verifyingParams.grouping = 3;
-
-                foundFaces = cascadeResult(extendedFaceImg, d->cascadeSet->getCascade(i).haarcasc, d->verifyingParams);
-
-                // We dont need to check the size of found regions, the minSize in verifyingParams is large enough
-                if (foundFaces.size())
-                    frontalFaceVotes++;
-            }
-
-            if (DEBUG)
-                cout << "Verifying cascade " << d->cascadeSet->getCascade(i).name << " gives "
-                     << foundFaces.size() << endl;
-        }
-    }
-
-    cvReleaseImage(&extendedFaceImg);
-
-    bool verified;
-    // Heuristic: Discard a sufficiently large face that shows no facial features
-    if (faceSize.width <= 50 && facialFeatureVotes == 0)
-        verified = false;
-    else
-    {
-        if (frontalFaceVotes && facialFeatureVotes)
-            verified = true;
-        else if (frontalFaceVotes >= 2)
-            verified = true;
-        else if (facialFeatureVotes >= 2)
-            verified = true;
-        else
-            verified = false;
-    }
-
-    if (DEBUG)
-    {
-        detect = clock() - detect;
-        cout << "Verification finished in " << ((double)detect / ((double)CLOCKS_PER_SEC))
-             << ". Votes: Frontal " << frontalFaceVotes << " " << " Features " << facialFeatureVotes
-             << ". Face verified: " << verified << endl;
-    }
-    return verified;
-}
-
-vector<Face> FaceDetect::mergeFaces(const IplImage* /*inputImage*/, vector<vector<Face> > combo, int maxdist, int mindups)
+vector<Face> FaceDetect::finalFaces(const IplImage* inputImage, vector<vector<Face> > combo, int maxdist, int mindups)
 {
     clock_t      finalStage;
     vector<Face> finalResult;
+    vector<int>  genuineness;
 
     if (DEBUG)
         finalStage = clock();
 
     // Make one long vector of all faces
+
     for (unsigned int i = 0; i < combo.size(); ++i)
-        finalResult.insert(finalResult.end(), combo[i].begin(), combo[i].end());
-
-    // used only one cascade? No need to merge then
-    int primaryCascades = 0;
-    for (unsigned int i = 0; i < d->cascadeProperties.size(); ++i)
-        if (d->cascadeProperties[i].primaryCascade)
-            primaryCascades++;
-
-    if (primaryCascades > 1)
     {
-        if (DEBUG)
-            finalStage = clock() - finalStage;
-
-        /*
-        Now, starting from the left, take a face and compare with rest. If distance is less than a threshold,
-        consider them to be "overlapping" face frames and delete the "duplicate" from the vector.
-        Remember that only faces to the RIGHT of the reference face will be deleted.
-        */
-        vector<int> genuineness;
-        if (DEBUG)
-            finalStage = clock();
-
-        int ctr = 0;
-        for (unsigned int i = 0; i < finalResult.size(); ++i)
-        {
-            int duplicates = 0;
-            for (unsigned int j = i + 1; j < finalResult.size(); ++j)    // Compare with the faces to the right
-            {
-                ctr++;
-                if (LibFaceUtils::distance(finalResult[i], finalResult[j]) < maxdist)
-                {
-                    finalResult.erase(finalResult.begin() + j);
-                    duplicates++;
-                    j--;
-
-                }
-            }
-            genuineness.push_back(duplicates);
-            if (duplicates < mindups)    // Less duplicates, probably not genuine, kick it out
-            {
-                genuineness.erase(genuineness.begin() + i);
-                finalResult.erase(finalResult.begin() + i);
-                i--;
-            }
-        }
-
-        /*
-        Note that the index of the reference element will be the same as the index of it's number of duplicates
-        in the genuineness vector, so win-win!.
-        */
-
-        if (DEBUG)
-        {
-            printf("Faces parsed : %d, number of final faces : %d\n", ctr, (int)genuineness.size());
-            finalStage = clock() - finalStage;
-            printf("Pruning took: %f sec.\n", (double)finalStage / ((double)CLOCKS_PER_SEC));
-        }
+        for (unsigned int j = 0; j < combo[i].size(); ++j)
+            finalResult.push_back(combo[i].at(j));
     }
 
-    return finalResult;
+    if (DEBUG)
+    {
+        finalStage = clock() - finalStage;
+    }
+
+    /*
+    Now, starting from the left, take a face and compare with rest. If distance is less than a threshold, 
+    consider them to be "overlapping" face frames and delete the "duplicate" from the vector.
+    Remember that only faces to the RIGHT of the reference face will be deleted.
+     */
+    if (DEBUG)
+        finalStage = clock();
+
+    int ctr = 0;
+    for (unsigned int i = 0; i < finalResult.size(); ++i)
+    {
+        int duplicates = 0;
+        for (unsigned int j = i + 1; j < finalResult.size(); ++j)    // Compare with the faces to the right
+        {
+            ctr++;
+            if (LibFaceUtils::distance(finalResult[i], finalResult[j]) < maxdist)
+            {
+                finalResult.erase(finalResult.begin() + j);
+                duplicates++;
+                j--;
+
+            }
+        }
+        genuineness.push_back(duplicates);
+        if (duplicates < mindups)    // Less duplicates, probably not genuine, kick it out
+        {
+            genuineness.erase(genuineness.begin() + i);
+            finalResult.erase(finalResult.begin() + i);
+            i--;
+        }
+        /* 
+        Note that the index of the reference element will be the same as the index of it's number of duplicates
+        in the genuineness vector, so win-win!.
+         */
+    }
+
+    if (DEBUG)
+    {
+        printf("Faces parsed : %d, number of final faces : %d\n", ctr, (int)genuineness.size());
+        finalStage = clock() - finalStage;
+        printf("Prunning took: %f sec.\n", (double)finalStage / ((double)CLOCKS_PER_SEC));
+    }
+
+    if (finalResult.size() == 0)
+    {
+        return finalResult;
+    }
+    vector<Face> returnFaces;
+
+    for (unsigned int j = 0; j < finalResult.size(); ++j)
+    {
+        Face face         = finalResult[j];
+
+        //Extract face-image from whole-image.
+        CvRect rect       = cvRect(face.getX1(),face.getY1(),face.getWidth(),face.getHeight());
+        IplImage* faceImg = LibFaceUtils::copyRect(inputImage, rect);
+        face.setFace(faceImg);
+
+        returnFaces.push_back(face);
+    }
+
+    return returnFaces;
 }
 
 int FaceDetect::getRecommendedImageSizeForDetection()
 {
-    return 800;
+    return 800; // area, with typical photos, about 500000
 }
 
-vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSize& size)
+std::vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSize& originalSize)
 {
-    if (inputImage->imageData == 0)
+    if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {
         cout<<"Bad image given, not detecting faces."<<endl;
         return vector<Face>();
     }
 
-    CvSize originalSize = size;
-    if (!size.width && !size.height)
-        originalSize = cvSize(inputImage->width, inputImage->height);
+    IplImage* imgCopy = cvCloneImage(inputImage);
+    clock_t init, final;
 
-    clock_t init, detect, duration;
+    init           = clock();
 
-    if (DEBUG)
-        init = clock();
-
-    IplImage* scaled = 0;
-    d->scaleFactor   = 1;
+    int faceSize   = d->minSize[0];
+    IplImage* temp = 0;
+    // BIG problems with small images if this isn't initialized here, it remains 0
+    // Not an issue with big images because d->scaleFactor is passed by reference to the resizer and automatically set.
+    d->scaleFactor = 1;
 
     int inputArea  = inputImage->width*inputImage->height;
 
     if (DEBUG)
         printf("Input area : %d\n", inputArea);
 
-    if (inputArea > getRecommendedImageSizeForDetection() * getRecommendedImageSizeForDetection())
+    if (inputArea > 7000000)
     {
+        temp = libface::LibFaceUtils::resizeToArea(inputImage, 786432, d->scaleFactor);
+
         if (DEBUG)
-            cout << "downscaling input image" << endl;
-        scaled = libface::LibFaceUtils::resizeToArea(inputImage, 786432, d->scaleFactor);
+            printf("Image scaled to %d pixels\n", 786432);
+
+        this->setAccuracy(3);
+    }
+    else if (inputArea > 5000000)
+    {
+        temp = libface::LibFaceUtils::resizeToArea(inputImage, 786432, d->scaleFactor);
+
+        if (DEBUG)
+            printf("Image scaled to %d pixels\n",786432);
+
+        this->setAccuracy(2);
+    }
+    else if (inputArea > 2000000)
+    {
+        temp = libface::LibFaceUtils::resizeToArea(inputImage, 786432, d->scaleFactor);
+
+        if (DEBUG)
+            printf("Image scaled to %d pixels\n", 786432);
+
+        float ratio = (float) inputImage->width/inputImage->height;
+        if ( ratio == (float) 4/3 )
+            this->setAccuracy(4);
+        else
+            this->setAccuracy(4);
+
+
     }
 
-    const IplImage* image = scaled ? scaled : inputImage;
 
-    updateParameters(cvSize(image->width, image->height), originalSize);
-
+    // This is the combination of all the resulting faces from each cascade in the set 1228800
     // Now loop through each cascade, apply it, and get back a vector of detected faces
-    vector<vector<Face> > primaryResults(d->cascadeSet->getSize());
-    vector<Face> finalResult;
+    //vector< vector<Face> > resultCombo;
+    vector<Face>           faces;
 
     d->storage = cvCreateMemStorage(0);
-
     for (int i = 0; i < d->cascadeSet->getSize(); ++i)
     {
-        if (d->cascadeProperties[i].primaryCascade)
-        {
-            if (DEBUG)
-                detect = clock();
+        IplImage* constTemp = temp ? temp : cvCloneImage(inputImage);
+        faces                = this->cascadeResult(constTemp, d->cascadeSet->getCascade(i).haarcasc, cvSize(faceSize,faceSize));
+    }
+    cvReleaseMemStorage(&d->storage);
 
-            primaryResults[i] = cascadeResult(image, d->cascadeSet->getCascade(i).haarcasc, d->primaryParams);
-
-            if (DEBUG)
-            {
-                duration = clock() - detect;
-                cout <<"Primary detection with " <<  d->cascadeSet->getCascade(i).name << ": "
-                     << ((double)duration / ((double)CLOCKS_PER_SEC)) << " sec" << endl;
-            }
-        }
+    final = clock()-init;
+    if (DEBUG)
+    {
+        cout<<"Total time taken : " << (double)final / ((double)CLOCKS_PER_SEC)<< "seconds" << endl;
     }
 
     // After intelligently "merging" overlaps of face regions by different cascades,
-    // this creates a list of faces.
-    finalResult = mergeFaces(image, primaryResults, d->maxDistance, d->minDuplicates);
-    //LibFaceUtils::showImage(image, finalResult);
+    // this returns the final list of faces. Allow a max distance of 15.
+    //vector<Face> ret = finalFaces(inputImage, resultCombo, d->maximumDistance, 0);
 
-    // Verify faces using other cascades
-    for (vector<Face>::iterator it = finalResult.begin(); it != finalResult.end(); )
-    {
-        if (!verifyFace(image, *it))
-            it = finalResult.erase(it);
-        else
-            ++it;
+    for(int i=0; i<faces.size();i++) {
+
+        CvRect roi = cvRect(faces[i].getX1(), faces[i].getY1(), faces[i].getWidth(), faces[i].getHeight());
+        cvSetImageROI(imgCopy, roi);
+
+        IplImage *roiImg = cvCreateImage( cvSize(roi.width, roi.height), inputImage->depth, inputImage->nChannels );
+        cvCopy(imgCopy, roiImg);
+        cvResetImageROI(imgCopy);
+
+        faces[i].setFace(roiImg);
     }
 
-    cvReleaseMemStorage(&d->storage);
-    if (scaled)
-        cvReleaseImage(&scaled);
+    cvReleaseImage(&imgCopy);
 
-    // Insert extracted images into face
-    for (vector<Face>::iterator it = finalResult.begin(); it != finalResult.end(); ++it)
-    {
-        // rescale to full image
-        if (d->scaleFactor != 1)
-        {
-            it->setX1(lround(it->getX1() * d->scaleFactor));
-            it->setY1(lround(it->getY1() * d->scaleFactor));
-            it->setX2(lround(it->getX2() * d->scaleFactor));
-            it->setY2(lround(it->getY2() * d->scaleFactor));
-        }
-
-        //Extract face-image from whole-image.
-        CvRect rect       = cvRect(it->getX1(), it->getY1(), it->getWidth(), it->getHeight());
-        IplImage* faceImg = LibFaceUtils::copyRect(inputImage, rect);
-        it->setFace(faceImg);
-    }
-
-    if (DEBUG)
-    {
-        duration = clock() - init;
-        cout << "Total time : " << ((double)duration / ((double)CLOCKS_PER_SEC))<< " sec" << endl;
-    }
-
-    return finalResult;
+    if (temp)
+        cvReleaseImage(&temp);
+    return faces;
 }
 
 vector<Face> FaceDetect::detectFaces(const string& filename)

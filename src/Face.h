@@ -59,7 +59,7 @@ public:
      * @param y2 Y coordinate of the bottom right corner of the face.
      * @param id ID of the face. -1 not not known.
      */
-    Face(int x1=-1, int y1=-1, int x2=-1, int y2=-1, int id=-1, const IplImage* face=0);
+    Face(int x1=-1, int y1=-1, int x2=-1, int y2=-1, int id=-1, IplImage* face=0);
 
     /**
      * Deconstructor that releases the pointer to IplImage.
@@ -101,7 +101,7 @@ public:
     * Note: Does not take ownership of the IplImage object, you need to release it after use
     * @param face pointer to the IplImage of the face.
     */
-    void setFace(const IplImage* face);
+    void setFace(IplImage* face);
 
     /**
     * Returns the non-const pointer to the image data.
@@ -115,7 +115,7 @@ public:
     *
     * @return Pointer the IplImage image of the face.
     */
-    const IplImage* getFace() const;
+    IplImage* getFace() const;
 
     /**
     * Gets the height of the face rectangle.
@@ -178,7 +178,7 @@ private:
     int             id;
     int             width;
     int             height;
-    const IplImage* face;
+    IplImage*       face;
 };
 
 } // namespace libface

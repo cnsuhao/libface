@@ -40,8 +40,6 @@
 namespace libface
 {
 
-class DetectObjectParameters;
-
 class FACEAPI FaceDetect : public LibFaceDetectCore
 {
 public:
@@ -77,19 +75,14 @@ public:
     std::vector<Face> detectFaces(const std::string& filename);
 
     /**
-     * Tunes the parameters.
-     * There are two orthogonal dimensions to adjust:
-     * - computation speed vs. accuracy (sensitivity and specificity)
-     * - sensitivity vs. specificity
-     * The value is in the interval [0;1], where 0 means
-     * fastest operation and highest sensitivity while 1
-     * means best accuracy (slow operation) and high specificity.
+     * Returns the accuracy of face detection on a five-point scale. The default is 4.
      */
-    void setAccuracy(double speedVsAccuracy);
-    void setSpecificity(double sensitivityVsSpecificity);
+    int accuracy() const;
 
-    double accuracy() const;
-    double specificity() const;
+    /**
+     * Set the accuracy of face detection on a five-point scale.
+     */
+    void setAccuracy(int value);
 
     /**
      * Returns the image size (one dimension)
@@ -104,24 +97,20 @@ private:
      *
      *  @param inputImage A pointer to the IplImage representing image of interest.
      *  @param casc The CvClassClassifierCascade pointer to be used for the detection
-     *  @param params The parameters to be used for detection
+     *  @param faceSize A cvSize that specifies the minimum size of faces to be detected
      *  @return Returns a vector of Face objects. Each object hold information about 1 face.
      */
-    std::vector<Face> cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, const DetectObjectParameters& params);
-
-    bool verifyFace(const IplImage* inputImage, const Face &face);
+    std::vector<Face> cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize = cvSize(10, 10));
 
     /**
-     * Returns the faces from the detection results of multiple cascades
+     * Returns the final faces from the detection results of multiple cascades
      *
      * @param combo A vector of a vector of faces, each component vector is the detection result of a single cascade
      * @param maxdist The maximum allowable distance between two duplicates, if two faces are further apart than this, they are not duplicates
      * @param mindups The minimum number of duplicate detections required for a face to qualify as genuine
      * @return The vector of the final faces
      */
-    std::vector<Face> mergeFaces(const IplImage*, std::vector< std::vector<Face> >, int maxdist, int mindups);
-
-    void updateParameters(const CvSize& scaledSize, const CvSize& originalSize);
+    std::vector<Face> finalFaces(const IplImage*, std::vector< std::vector<Face> >, int maxdist, int mindups);
 
 private:
 

@@ -32,12 +32,13 @@ FIND_PACKAGE(Doxygen)
 #---------------------------------------------------------------------------------------------
 
 SET(${PROJECT_NAME}_MAJOR_VERSION 0)
-SET(${PROJECT_NAME}_MINOR_VERSION 1)
+SET(${PROJECT_NAME}_MINOR_VERSION 2)
 
 SET(LIBFACE_VERSION_STRING "${${PROJECT_NAME}_MAJOR_VERSION}.${${PROJECT_NAME}_MINOR_VERSION}")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
 #-- Users Options ----------------------------------------------------------------------------
+
 
 # Allow the developer to select if Dynamic or Static libraries are built
 OPTION (BUILD_SHARED_LIBS "Build Shared Libraries" ON)
@@ -144,6 +145,10 @@ INSTALL(FILES ${PROJECT_BINARY_DIR}/LibFaceConfig.h DESTINATION include/${PROJEC
 
 INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/FindLibFace.cmake
         DESTINATION ${CMAKE_ROOT}/Modules)
+
+
+ENABLE_TESTING()
+ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/test)
 
 #---------------------------------------------------------------------------------------------
 

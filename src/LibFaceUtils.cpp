@@ -645,14 +645,14 @@ IplImage* LibFaceUtils::charToIplImage(const char* img, int width, int height, i
 IplImage* LibFaceUtils::copyRect(const IplImage* src, const CvRect& rect)
 {
     // Create a non-const header to set the ROI
-    IplImage* srcHeader  = cvCreateImageHeader(cvSize(src->width, src->height), src->depth, src->nChannels);
-    srcHeader->imageData = const_cast<char*>(src->imageData);
-    cvSetImageROI(srcHeader, rect);
+    IplImage* srcCopy  = cvCloneImage(src);  ///cvCreateImage(cvSize(src->width, src->height), src->depth, src->nChannels);
+    //srcHeader->imageData = const_cast<char*>(src->imageData);
+    cvSetImageROI(srcCopy, rect);
 
     IplImage* result = cvCreateImage(cvSize(rect.width, rect.height), src->depth, src->nChannels);
-    cvCopy(srcHeader, result, NULL);
+    cvCopy(srcCopy, result);
 
-    cvReleaseImageHeader(&srcHeader);
+    cvReleaseImage(&srcCopy);
     return result;
 }
 
