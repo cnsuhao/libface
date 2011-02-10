@@ -662,8 +662,8 @@ IplImage* LibFaceUtils::scaledSection(const IplImage* src, const CvRect& sourceR
         return copyRect(src, sourceRect);
 
     return scaledSection(src, sourceRect, cvSize(
-                         lround(double(sourceRect.width) * scaleFactor),
-                         lround(double(sourceRect.height) * scaleFactor) )
+                         floor(double(sourceRect.width) * scaleFactor),
+                         floor(double(sourceRect.height) * scaleFactor) )
                         );
 }
 
