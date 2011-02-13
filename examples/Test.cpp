@@ -73,8 +73,8 @@ int main(int argc, char** argv)
 
     int i, j;
     IplImage* img=0;
-    vector<Face> result;    // Vector of faces returned from a particular photo's detection
-    vector<Face> finalresult;    // The combined vector of faces after detection on all photos is over
+    vector<Face>* result;    // Vector of faces returned from a particular photo's detection
+    vector<Face>* finalresult;    // The combined vector of faces after detection on all photos is over
 
     for (i = 1; i < argc; ++i)
     {
@@ -84,10 +84,10 @@ int main(int argc, char** argv)
         result = libFace.detectFaces(string(argv[i]));
         cout << " detected" << endl;
 
-        for (j = 0; j < result.size(); ++j)    // Draw squares over detected faces
+        for (j = 0; j < result->size(); ++j)    // Draw squares over detected faces
         {
 
-            Face* face = &result.at(j);
+            Face* face = &result->at(j);
 
             cout << "Drawing" << endl;
             cvRectangle( img, cvPoint(face->getX1(), face->getY1()),
@@ -98,14 +98,14 @@ int main(int argc, char** argv)
         //cout<<"Displaying "<<argv[i]<<endl;
         //LibFaceUtils::showImage(img);
 
-        finalresult.insert(finalresult.end(), result.begin(), result.end());    // Append result to finalresult
-        result.clear();
+        finalresult->insert(finalresult->end(), result->begin(), result->end());    // Append result to finalresult
+        result->clear();
     }
 
-    cout << "Will recognize " << finalresult.size() << " faces..." << endl;
+    cout << "Will recognize " << finalresult->size() << " faces..." << endl;
 
-    vector<pair<int, double> >recognised;
-    recognised = libFace.recognise(&finalresult);
+    vector<pair<int, float> >recognised;
+    recognised = libFace.recognise(finalresult);
 
     for( i = 0; i < recognised.size(); ++i)
     {

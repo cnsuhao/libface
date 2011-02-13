@@ -28,9 +28,6 @@ int main(int argc, char* argv[]) {
 
 	LibFace* libFace = new LibFace(mode, string("."));
 
-
-
-
 	printf("List Files in %s\n", path);
 
 
@@ -48,17 +45,19 @@ int main(int argc, char* argv[]) {
 
 				char tempPath[1024] ;
 				strcpy(tempPath, path);
-				vector<Face> result = libFace->detectFaces(string(strcat(tempPath,filename)));
+				vector<Face>* result = libFace->detectFaces(string(strcat(tempPath,filename)));
 
-				if(result.empty()) {
+				if(result->empty()) {
 					failed++;
 					printf("No Face Found in %s\n",filename);
-				} else if(result.size() > 1) {
-					falsePos = falsePos + result.size() - 1;
+				} else if(result->size() > 1) {
+					falsePos = falsePos + result->size() - 1;
 					correct++;
 				} else {
 					correct++;
 				}
+
+				delete result;
 
 			}
 		}
@@ -69,6 +68,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	delete libFace;
 
 	printf("RESULTS:\n");
 	printf("\tCORRECT:\t\t%d\n",correct);

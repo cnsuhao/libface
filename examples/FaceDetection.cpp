@@ -89,7 +89,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    vector<Face>  result, finalresult;
+    vector<Face>  *result, *finalresult;
     libface::Mode mode;
     mode             = libface::DETECT;
     LibFace* libFace = new LibFace(mode, string("."));
@@ -106,9 +106,9 @@ int main(int argc, char** argv)
         result = libFace->detectFaces(img->imageData,img->width, img->height, img->widthStep, img->depth, img->nChannels);
         cout << " detected" << endl;
 
-        for (unsigned int j = 0; j < result.size(); ++j)	// Draw squares over detected faces
+        for (unsigned int j = 0; j < result->size(); ++j)	// Draw squares over detected faces
         {
-            Face* face = &result.at(j);
+            Face* face = &result->at(j);
             cout<<"Drawing"<<endl;
             cvRectangle( img, cvPoint(face->getX1(), face->getY1())
                          , cvPoint(face->getX2(), face->getY2())
@@ -124,8 +124,8 @@ int main(int argc, char** argv)
         cvWaitKey(0);
         cvDestroyWindow(argv[i]);
         cvSaveImage("out.png", img);
-        finalresult.insert(finalresult.end(), result.begin(), result.end());	// Append result to finalresult
-        result.clear();
+        finalresult->insert(finalresult->end(), result->begin(), result->end());	// Append result to finalresult
+        result->clear();
     }
 
     return 0;
