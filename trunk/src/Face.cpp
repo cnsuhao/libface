@@ -54,9 +54,8 @@ Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) {
 }
 
 Face::~Face() {
-	if(this->face) {
-		//cvReleaseImage(&this->face);
-	}
+	if(this->face)
+		cvReleaseImage(&this->face);
 }
 
 void Face::setX1(int x1) {

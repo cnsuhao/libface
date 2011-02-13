@@ -89,8 +89,9 @@ FaceDetect::FaceDetect(const string& cascadeDir)
     this->setAccuracy(1);
 }
 
-FaceDetect::~FaceDetect()
-{
+FaceDetect::~FaceDetect() {
+	printf("face detect deconstructor\n");
+
     cvReleaseMemStorage(&d->storage);
     d->cascadeSet->clear();
     delete d->cascadeSet;
@@ -170,12 +171,12 @@ void FaceDetect::setAccuracy(int i)
     };
 }
 
-vector<Face> FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize)
+vector<Face>* FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize)
 {
     // Clear the memory d->storage which was used before
     cvClearMemStorage(d->storage);
 
-    vector<Face> result;
+    vector<Face>* result = new vector<Face>();
 
     CvSeq* faces = 0;
 
@@ -242,7 +243,7 @@ vector<Face> FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassif
 
             Face face = Face(pt1.x,pt1.y,pt2.x,pt2.y);
 
-            result.push_back(face);
+            result->push_back(face);
         }
 
         //Please don't delete next line even if commented out. It helps with testing intermediate results.
@@ -344,12 +345,12 @@ int FaceDetect::getRecommendedImageSizeForDetection()
     return 800; // area, with typical photos, about 500000
 }
 
-std::vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSize& originalSize)
+std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage, const CvSize& originalSize)
 {
     if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {
         cout<<"Bad image given, not detecting faces."<<endl;
-        return vector<Face>();
+        return new vector<Face>();
     }
 
     IplImage* imgCopy = cvCloneImage(inputImage);
@@ -406,7 +407,7 @@ std::vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSi
     // This is the combination of all the resulting faces from each cascade in the set 1228800
     // Now loop through each cascade, apply it, and get back a vector of detected faces
     //vector< vector<Face> > resultCombo;
-    vector<Face>           faces;
+    vector<Face>* faces;
 
     d->storage = cvCreateMemStorage(0);
     for (int i = 0; i < d->cascadeSet->getSize(); ++i)
@@ -418,24 +419,22 @@ std::vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSi
 
     final = clock()-init;
     if (DEBUG)
-    {
         cout<<"Total time taken : " << (double)final / ((double)CLOCKS_PER_SEC)<< "seconds" << endl;
-    }
 
     // After intelligently "merging" overlaps of face regions by different cascades,
     // this returns the final list of faces. Allow a max distance of 15.
     //vector<Face> ret = finalFaces(inputImage, resultCombo, d->maximumDistance, 0);
 
-    for(int i=0; i<faces.size();i++) {
+    for(int i=0; i<faces->size();i++) {
 
-        CvRect roi = cvRect(faces[i].getX1(), faces[i].getY1(), faces[i].getWidth(), faces[i].getHeight());
+        CvRect roi = cvRect(faces->at(i).getX1(), faces->at(i).getY1(), faces->at(i).getWidth(), faces->at(i).getHeight());
         cvSetImageROI(imgCopy, roi);
 
         IplImage *roiImg = cvCreateImage( cvSize(roi.width, roi.height), inputImage->depth, inputImage->nChannels );
         cvCopy(imgCopy, roiImg);
         cvResetImageROI(imgCopy);
 
-        faces[i].setFace(roiImg);
+        faces->at(i).setFace(roiImg);
     }
 
     cvReleaseImage(&imgCopy);
@@ -445,12 +444,12 @@ std::vector<Face> FaceDetect::detectFaces(const IplImage* inputImage, const CvSi
     return faces;
 }
 
-vector<Face> FaceDetect::detectFaces(const string& filename)
+vector<Face>* FaceDetect::detectFaces(const string& filename)
 {
     // Create a new image based on the input image
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
 
-    vector<Face> faces = detectFaces(img);
+    vector<Face>* faces = detectFaces(img);
 
     cvReleaseImage(&img);
 

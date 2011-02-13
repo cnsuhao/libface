@@ -121,11 +121,11 @@ void MainWindow::detectFaces()
 {
     int i;
     currentFaces = libFace->detectFaces(currentPhoto);
-    int size     = currentFaces.size();
+    int size     = currentFaces->size();
 
     for (i=0 ; i<size ; i++)
     {
-        Face face          = currentFaces.at(i);
+        Face face          = currentFaces->at(i);
         FaceItem* faceItem = new FaceItem(0, 
                                           myScene,face.getX1()*scale, 
                                           face.getY1()*scale,
@@ -138,7 +138,7 @@ void MainWindow::detectFaces()
 
 void MainWindow::updateConfig()
 {
-    libFace->update(&currentFaces);
+    libFace->update(currentFaces);
 }
 
 void MainWindow::clearScene()
@@ -155,11 +155,11 @@ void MainWindow::clearScene()
 
 void MainWindow::recognise()
 {
-    libFace->recognise(&currentFaces,1);
+    libFace->recognise(currentFaces,1);
 
     int i;
-    for(i=0;i<currentFaces.size();i++)
-    	printf("Face ID: %d\n",currentFaces.at(i).getId());
+    for(i=0;i<currentFaces->size();i++)
+    	printf("Face ID: %d\n",currentFaces->at(i).getId());
 
     //TODO: create mapping to items.
 }

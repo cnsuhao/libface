@@ -53,16 +53,13 @@
 
 using namespace std;
 
-namespace libface
-{
+namespace libface {
 
-class LibFace::LibFacePriv
-{
+class LibFace::LibFacePriv {
 
 public:
 
-    LibFacePriv()
-    {
+    LibFacePriv() {
         detectionCore   = 0;
         recognitionCore = 0;
         lastImage       = 0;
@@ -79,16 +76,15 @@ public:
 };
 
 LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
-       : d(new LibFacePriv)
- {
+       : d(new LibFacePriv) {
+
     d->type = type;
 
     cout << "Cascade directory located as : " << cascadeDir << endl;
 
     // We don't need Eigenfaces if we just want detection, and vice versa.
     // So there is a case for everything.
-    switch (d->type)
-    {
+    switch (d->type) {
         case DETECT:
             d->cascadeDir      = cascadeDir;
             d->detectionCore   = new FaceDetect(d->cascadeDir);
@@ -104,10 +100,9 @@ LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
     }
 }
 
-LibFace::~LibFace()
-{
-    switch(d->type)
-    {
+LibFace::~LibFace() {
+	printf("libface deconstructor\n");
+    switch(d->type) {
         case DETECT:
             delete d->detectionCore;
             break;
@@ -124,20 +119,20 @@ LibFace::~LibFace()
     delete d;
 }
 
-vector<Face> LibFace::detectFaces(const string& filename, int scaleFactor)
-{
-    vector<Face> result;
-    if(filename.length() == 0)
-    {
-        if (DEBUG)
-        {
+int LibFace::count() const {
+    return d->recognitionCore->count();
+}
+
+vector<Face>* LibFace::detectFaces(const string& filename, int scaleFactor) {
+    vector<Face>* result;
+    if(filename.length() == 0) {
+        if (DEBUG) {
             cout<<"No image passed for detection"<<endl;
             return result;
         }
     }
     //Check if image was already loaded once, by checking last loaded filename.
-    if (filename != d->lastFileName)
-    {
+    if (filename != d->lastFileName) {
         d->lastFileName = filename;
         cvReleaseImage(&d->lastImage);
         d->lastImage    = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
@@ -146,26 +141,36 @@ vector<Face> LibFace::detectFaces(const string& filename, int scaleFactor)
     return d->detectionCore->detectFaces(d->lastImage);
 }
 
-vector<Face> LibFace::detectFaces(const char* arr, int width, int height, int step, int depth, int channels, int scaleFactor)
-{
+vector<Face>* LibFace::detectFaces(const char* arr, int width, int height, int step, int depth, int channels, int scaleFactor) {
     IplImage* image = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return d->detectionCore->detectFaces(image);
 }
 
-vector<Face> LibFace::detectFaces(const IplImage* image, const CvSize& originalSize)
-{
+vector<Face>* LibFace::detectFaces(const IplImage* image, const CvSize& originalSize) {
     return d->detectionCore->detectFaces(image, originalSize);
 }
 
-map<string,string> LibFace::getConfig()
-{
+map<string,string> LibFace::getConfig() {
     map<string,string> result = d->recognitionCore->getConfig();
     return result;
 }
 
-int LibFace::loadConfig(const string& dir)
-{
+double LibFace::getDetectionAccuracy() const {
+    return d->detectionCore->accuracy();
+}
+
+
+int LibFace::getRecommendedImageSizeForDetection(const CvSize&) const {
+    return FaceDetect::getRecommendedImageSizeForDetection();
+}
+
+CvSize LibFace::getRecommendedImageSizeForRecognition(const CvSize&) const {
+    return cvSize(d->facesize(), d->facesize());
+}
+
+int LibFace::loadConfig(const string& dir) {
     int result = 0;
+    //FIXME: Update the way config is loaded
     /*
     d->recognitionCore->loadData(dir);
     */
@@ -173,16 +178,17 @@ int LibFace::loadConfig(const string& dir)
     return result;
 }
 
-int LibFace::loadConfig(const map<string, string>& config)
-{
+int LibFace::loadConfig(const map<string, string>& config) {
     int result  = d->recognitionCore->loadConfig(config);
     return result;
 }
 
 vector<pair<int, float> > LibFace::recognise(const string& filename, vector<Face>* faces, int scaleFactor) {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); // grayscale
-    return this->recognise(img, faces, scaleFactor);
-    cvReleaseImage(&img);       // FIXME : This line is never called !!!
+    vector<pair<int, float> > result = this->recognise(img, faces, scaleFactor);
+    cvReleaseImage(&img);
+
+    return result;
 }
 
 vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face>* faces, int scaleFactor) {
@@ -194,8 +200,7 @@ vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face>* 
         return result;
     }
 
-    if (!img)
-    {
+    if (!img) {
         if (DEBUG)
             cout<<" Null image passed to libface::recognise() , not recognizing..." << endl;
         return result;
@@ -268,21 +273,17 @@ vector<pair<int, float> > LibFace::recognise(vector<Face>* faces, int scaleFacto
         const IplImage* faceImg = face->getFace();
         IplImage* createdImg    = 0;
 
-        if (!faceImg)
-        {
+        if (!faceImg) {
             if (DEBUG)
                 cout << "Face with null image passed to libface::recognise(), skipping";
             continue;
         }
 
-        if (faceImg->width != d->facesize() || faceImg->height != d->facesize())
-        {
+        if (faceImg->width != d->facesize() || faceImg->height != d->facesize()) {
             // Make into d->facesize*d->facesize standard-sized image
             createdImg = cvCreateImage(cvSize(d->facesize(), d->facesize()), faceImg->depth, faceImg->nChannels);
             cvResize(faceImg, createdImg);
-        }
-        else
-        {
+        } else {
             // we need a non-const image for cvEigenDecomposite
             createdImg = cvCloneImage(faceImg);
         }
@@ -305,9 +306,11 @@ int LibFace::saveConfig(const string& dir) {
     return result;
 }
 
+void LibFace::setDetectionAccuracy(double value) {
+    d->detectionCore->setAccuracy(value);
+}
 
-int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor)
-{
+int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor) {
     int assignedIDs;
 
 
@@ -365,32 +368,30 @@ int LibFace::update(const char* arr, vector<Face>* faces, int width, int height,
 
 int LibFace::update(const string& filename, vector<Face>* faces, int scaleFactor) {
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); //grayscale
-    return this->update(img, faces, scaleFactor);
-    //WTF? that can;t be reached after return!
+    int result = this->update(img, faces, scaleFactor);
+
     cvReleaseImage(&img);
+
+    return result;
 }
 
 int LibFace::update(vector<Face>* faces, int scaleFactor) {
     int assignedIDs = 0;
 
-    if (faces->size() == 0)
-    {
+    if (faces->size() == 0) {
         if (DEBUG)
             cout<<" No faces passed to libface::update() , not updating." << endl;
         return assignedIDs;
     }
 
     if (DEBUG)
-    {
         cout << "Update with faces." << endl;
-    }
 
     vector<Face>      newFaceArr;
     vector<IplImage*> createdImages;
 
     int size = faces->size();
-    for (int i=0; i<size; i++)
-    {
+    for (int i=0; i<size; i++) {
         // Copy, dont change the passed face
         Face face  = faces->at(i);
 
@@ -399,8 +400,7 @@ int LibFace::update(vector<Face>* faces, int scaleFactor) {
 
 
         const IplImage* faceImg = face.getFace();
-        if (faceImg->width != d->facesize() || faceImg->height != d->facesize())
-        {
+        if (faceImg->width != d->facesize() || faceImg->height != d->facesize()) {
             // Make into standard-sized image
             IplImage* sizedFaceImg  = cvCreateImage(cvSize(d->facesize() , d->facesize()), faceImg->depth, faceImg->nChannels);
             cvResize(faceImg, sizedFaceImg);
@@ -417,41 +417,6 @@ int LibFace::update(vector<Face>* faces, int scaleFactor) {
         cvReleaseImage(&createdImages[i]);
 
     return assignedIDs;
-}
-
-int LibFace::count() const
-{
-    return d->recognitionCore->count();
-}
-
-void LibFace::setDetectionAccuracy(double value)
-{
-    d->detectionCore->setAccuracy(value);
-}
-
-double LibFace::getDetectionAccuracy() const
-{
-    return d->detectionCore->accuracy();
-}
-
-/*void LibFace::setDetectionSpecificity(double value)
-{
-    d->detectionCore->setSpecificity(value);
-}
-
-double LibFace::getDetectionSpecificity() const
-{
-    return d->detectionCore->specificity();
-}*/
-
-int LibFace::getRecommendedImageSizeForDetection(const CvSize&) const
-{
-    return FaceDetect::getRecommendedImageSizeForDetection();
-}
-
-CvSize LibFace::getRecommendedImageSizeForRecognition(const CvSize&) const
-{
-    return cvSize(d->facesize(), d->facesize());
 }
 
 } // namespace libface

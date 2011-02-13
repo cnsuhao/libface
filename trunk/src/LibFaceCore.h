@@ -106,12 +106,10 @@ public:
 
     virtual ~LibFaceDetectCore() {};
 
-    virtual std::vector<Face> detectFaces(const IplImage* inputImage, const CvSize& originalSize = cvSize(0,0)) = 0;
-    virtual std::vector<Face> detectFaces(const std::string& filename) = 0;
+    virtual std::vector<Face>* detectFaces(const IplImage* inputImage, const CvSize& originalSize = cvSize(0,0)) = 0;
+    virtual std::vector<Face>* detectFaces(const std::string& filename) = 0;
     virtual int accuracy() const = 0;
     virtual void setAccuracy(int value) = 0;
-    //virtual double specificity() const = 0;
-    //virtual void setSpecificity(double value) = 0;
 };
 
 } // namespace libface
