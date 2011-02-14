@@ -101,7 +101,6 @@ LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
 }
 
 LibFace::~LibFace() {
-	printf("libface deconstructor\n");
     switch(d->type) {
         case DETECT:
             delete d->detectionCore;
@@ -124,11 +123,10 @@ int LibFace::count() const {
 }
 
 vector<Face>* LibFace::detectFaces(const string& filename, int scaleFactor) {
-    vector<Face>* result;
     if(filename.length() == 0) {
         if (DEBUG) {
             cout<<"No image passed for detection"<<endl;
-            return result;
+            return 0;
         }
     }
     //Check if image was already loaded once, by checking last loaded filename.
@@ -146,8 +144,8 @@ vector<Face>* LibFace::detectFaces(const char* arr, int width, int height, int s
     return d->detectionCore->detectFaces(image);
 }
 
-vector<Face>* LibFace::detectFaces(const IplImage* image, const CvSize& originalSize) {
-    return d->detectionCore->detectFaces(image, originalSize);
+vector<Face>* LibFace::detectFaces(const IplImage* image) {
+    return d->detectionCore->detectFaces(image);
 }
 
 map<string,string> LibFace::getConfig() {

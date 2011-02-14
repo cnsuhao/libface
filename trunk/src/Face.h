@@ -58,6 +58,7 @@ public:
      * @param x2 X coordinate of the bottom right corner of the face.
      * @param y2 Y coordinate of the bottom right corner of the face.
      * @param id ID of the face. -1 not not known.
+     * @param face A pointer to the IplImage with the image data.
      */
     Face(int x1=-1, int y1=-1, int x2=-1, int y2=-1, int id=-1, IplImage* face=0);
 

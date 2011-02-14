@@ -83,20 +83,47 @@ public:
 	 */
 	int count() const;
 
-	std::vector<Face>* detectFaces(const IplImage* img, const CvSize& originalSize);
+
+	/**
+	 * Method for detecting faces in the picture with the pointer. It will attempt to
+	 * check if this file was last to be loaded, if it has been then it will use last pointer. The IDs for
+	 * all faces will be -1.
+	 *
+	 * @param img A pointer to the IplImage for face detection.
+	 *
+	 * @return Vector of Face objects with ID set to -1 on each.
+	 */
+	std::vector<Face>* detectFaces(const IplImage* img);
 	// API-agnostic methods
 
 	/**
 	 * Method for detecting faces in the picture with the specified filename. It will attempt to
-	 * check if this file was last to be loaded, if it has been then it will use last pointer.
+	 * check if this file was last to be loaded, if it has been then it will use last pointer. The IDs for
+	 * all faces will be -1.
 	 *
 	 * @param filename Filename of the file to find faces in.
 	 * @param scaleFactor Allows to specify if image should be scaled. Make things faster.
 	 * Default not scaled (1). NOT USED at the moment.
 	 *
-	 * @return Vector of Face objects
+	 * @return Vector of Face objects with ID set to -1 on each.
 	 */
 	std::vector<Face>* detectFaces(const std::string& filename, int scaleFactor=1);
+
+	/**
+	 * Method for detecting faces in the picture with the specified encoding. The IDs for
+	 * all faces will be -1.
+	 *
+	 * @param image A pointer to the char encoding.
+	 * @param width Image width.
+	 * @param height Image height.
+	 * @param step Step.
+	 * @param depth Image depth (default: IPL_DEPTH_8U).
+	 * @param channels Number of channels in the image (default: 1).
+	 * @param scaleFactor Allows to specify if image should be scaled. Make things faster.
+	 * Default not scaled (1). NOT USED at the moment.
+	 *
+	 * @return Vector of Face objects with ID set to -1 on each.
+	 */
 	std::vector<Face>* detectFaces(const char* image, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1 );
 
 
