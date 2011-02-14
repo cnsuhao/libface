@@ -63,7 +63,7 @@ public:
      * @param inputImage A pointer to the image in which faces are to be detected
      * @return The vector of detected faces
      */
-    std::vector<Face>* detectFaces(const IplImage* inputImage, const CvSize& originalSize = cvSize(0,0));
+    std::vector<Face>* detectFaces(const IplImage* inputImage);
 
     /**
      * Inherited method from LibFaceDetectCore. A slightly different interface where you can specify

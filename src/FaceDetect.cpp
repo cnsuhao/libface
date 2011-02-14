@@ -90,8 +90,6 @@ FaceDetect::FaceDetect(const string& cascadeDir)
 }
 
 FaceDetect::~FaceDetect() {
-	printf("face detect deconstructor\n");
-
     cvReleaseMemStorage(&d->storage);
     d->cascadeSet->clear();
     delete d->cascadeSet;
@@ -345,7 +343,7 @@ int FaceDetect::getRecommendedImageSizeForDetection()
     return 800; // area, with typical photos, about 500000
 }
 
-std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage, const CvSize& originalSize)
+std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage)
 {
     if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {

@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
 
 	libface::Mode mode = libface::DETECT;
 
+	//Make an instance of LibFace class with appropriate parameters
 	LibFace* libFace = new LibFace(mode, string("."));
 
 	printf("List Files in %s\n", path);
@@ -37,7 +38,7 @@ int main(int argc, char* argv[]) {
 	int failed = 0, correct = 0, falsePos = 0;
 	if (dir != NULL) {
 
-		/* print all the files and directories within directory */
+		//print all the files and directories within directory.
 		while ((ent = readdir (dir)) != NULL) {
 			char* filename = ent->d_name;
 			if(*filename != '.') {
@@ -45,6 +46,7 @@ int main(int argc, char* argv[]) {
 
 				char tempPath[1024] ;
 				strcpy(tempPath, path);
+				//Do face detection by calling detectFaces function with file path of an image.
 				vector<Face>* result = libFace->detectFaces(string(strcat(tempPath,filename)));
 
 				if(result->empty()) {
@@ -63,7 +65,7 @@ int main(int argc, char* argv[]) {
 		}
 		closedir (dir);
 	} else {
-		/* could not open directory */
+		// could not open directory
 		perror ("");
 		return EXIT_FAILURE;
 	}
