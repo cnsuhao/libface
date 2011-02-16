@@ -109,8 +109,10 @@ ENDIF(DEFINED LIB_INSTALL_DIR)
 #1 and 0 are used in the code so don't change to ON/OFF
 IF(CMAKE_BUILD_TYPE MATCHES "Debug")
     SET(DEBUG_MODE 1)
+    SET(LOG_LEVEL "libfaceDEBUG")
 ELSE(CMAKE_BUILD_TYPE MATCHES "Debug")
     SET(DEBUG_MODE 0)
+    SET(LOG_LEVEL "libfaceINFO")
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Debug")
 
 # Configure a header file to pass some of the CMake settings

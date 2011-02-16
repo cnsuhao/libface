@@ -45,13 +45,17 @@
 #include <algorithm>
 #include <iterator>
 
-//TODO: Scale images here.
 #include "LibFace.h"
 #include "LibFaceUtils.h"
 #include "FaceDetect.h"
 #include "Face.h"
+#include "Log.h"
 
 using namespace std;
+
+
+extern std::ostream std::clog;
+
 
 namespace libface {
 
@@ -80,9 +84,9 @@ LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
 
     d->type = type;
 
-    cout << "Cascade directory located as : " << cascadeDir << endl;
+    LOG(libfaceINFO) << "Cascade directory located in : " << cascadeDir;
 
-    // We don't need Eigenfaces if we just want detection, and vice versa.
+    // We don't need face recognition if we just want detection, and vice versa.
     // So there is a case for everything.
     switch (d->type) {
         case DETECT:
@@ -125,7 +129,7 @@ int LibFace::count() const {
 vector<Face>* LibFace::detectFaces(const string& filename, int scaleFactor) {
     if(filename.length() == 0) {
         if (DEBUG) {
-            cout<<"No image passed for detection"<<endl;
+        	LOG(libfaceWARNING) << "No image passed for detection";
             return 0;
         }
     }
@@ -167,22 +171,20 @@ CvSize LibFace::getRecommendedImageSizeForRecognition(const CvSize&) const {
 }
 
 int LibFace::loadConfig(const string& dir) {
-    int result = 0;
-    //FIXME: Update the way config is loaded
-    /*
-    d->recognitionCore->loadData(dir);
-    */
 
-    return result;
+	/*
+    return d->recognitionCore->loadData(dir);
+    */
+	return 0;
 }
 
 int LibFace::loadConfig(const map<string, string>& config) {
-    int result  = d->recognitionCore->loadConfig(config);
-    return result;
+    return d->recognitionCore->loadConfig(config);
 }
 
 vector<pair<int, float> > LibFace::recognise(const string& filename, vector<Face>* faces, int scaleFactor) {
-    IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); // grayscale
+
+	IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE); // grayscale
     vector<pair<int, float> > result = this->recognise(img, faces, scaleFactor);
     cvReleaseImage(&img);
 
@@ -193,19 +195,16 @@ vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face>* 
     vector<pair<int, float> > result;
 
     if (faces->size() == 0) {
-        if (DEBUG)
-            cout<<" No faces passed to libface::recognise() , not recognizing..." << endl;
+      	LOG(libfaceWARNING) << " No faces passed to libface::recognise() , not recognizing...";
         return result;
     }
 
     if (!img) {
-        if (DEBUG)
-            cout<<" Null image passed to libface::recognise() , not recognizing..." << endl;
+      	LOG(libfaceWARNING) << " Null image passed to libface::recognise() , not recognizing...";
         return result;
     }
 
-    if (DEBUG)
-        cout << "Will recognize." << endl;
+   	LOG(libfaceDEBUG) << "Will recognize";
 
 
     vector<IplImage*> newFaceImgArr;
@@ -250,13 +249,11 @@ vector<pair<int, float> > LibFace::recognise(vector<Face>* faces, int scaleFacto
     vector<pair<int, float> > result;
 
     if (faces->size() == 0) {
-        if (DEBUG)
-            cout<<" No faces passed to libface::recognise() , not recognizing." << endl;
+        LOG(libfaceWARNING) << " No faces passed to libface::recognise() , not recognizing.";
         return result;
     }
 
-    if (DEBUG)
-        cout << "Recognizing." << endl;
+   	LOG(libfaceDEBUG) << "Recognizing.";
 
     vector<IplImage*> newFaceImgArr;
 
@@ -265,15 +262,13 @@ vector<pair<int, float> > LibFace::recognise(vector<Face>* faces, int scaleFacto
         Face* face = &faces->at(i);
         int id     = face->getId();
 
-        if (DEBUG)
-            cout << "Id is: " << id << endl;
+        LOG(libfaceDEBUG) << "Id is: " << id;
 
         const IplImage* faceImg = face->getFace();
         IplImage* createdImg    = 0;
 
         if (!faceImg) {
-            if (DEBUG)
-                cout << "Face with null image passed to libface::recognise(), skipping";
+        	LOG(libfaceWARNING) << "Face with null image passed to libface::recognise(), skipping";
             continue;
         }
 
@@ -293,8 +288,7 @@ vector<pair<int, float> > LibFace::recognise(vector<Face>* faces, int scaleFacto
         cvReleaseImage(&createdImg);
     }
 
-    if (DEBUG)
-        cout << "Size of result = " << result.size();
+    LOG(libfaceDEBUG) << "Size of result = " << result.size();
     return result;
 }
 
@@ -313,13 +307,11 @@ int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor) {
 
 
     if (faces->size() == 0) {
-        if (DEBUG)
-            cout<<" No faces passed to update." << endl;
+    	LOG(libfaceWARNING) << " No faces passed to update.";
         return assignedIDs;
     }
 
-    if (DEBUG)
-        cout << "Update with faces." << endl;
+   	LOG(libfaceDEBUG) << "Update with faces." << endl;
 
     vector<Face>      newFaceArr;
     vector<IplImage*> createdImages;
@@ -334,8 +326,7 @@ int LibFace::update(const IplImage* img, vector<Face>* faces, int scaleFactor) {
         int height = face->getHeight();
         int id     = face->getId();
 
-        if (DEBUG)
-            cout << "Id is: " << id << endl;
+        LOG(libfaceDEBUG) << "Id is: " << id;
 
         // Extract face-image from whole-image.
         CvRect rect            = cvRect(x1,y1,width,height);
@@ -377,13 +368,11 @@ int LibFace::update(vector<Face>* faces, int scaleFactor) {
     int assignedIDs = 0;
 
     if (faces->size() == 0) {
-        if (DEBUG)
-            cout<<" No faces passed to libface::update() , not updating." << endl;
+    	LOG(libfaceWARNING) << " No faces passed to libface::update() , not updating.";
         return assignedIDs;
     }
 
-    if (DEBUG)
-        cout << "Update with faces." << endl;
+    LOG(libfaceDEBUG) << "Update with faces.";
 
     vector<Face>      newFaceArr;
     vector<IplImage*> createdImages;
@@ -393,8 +382,7 @@ int LibFace::update(vector<Face>* faces, int scaleFactor) {
         // Copy, dont change the passed face
         Face face  = faces->at(i);
 
-        if (DEBUG)
-            cout << "Id is: " << face.getId() << endl;
+        LOG(libfaceDEBUG) << "Id is: " << face.getId();
 
 
         const IplImage* faceImg = face.getFace();

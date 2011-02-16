@@ -51,4 +51,5 @@ INSTALL(FILES LibFace.h
               Eigenfaces.h
               LibFaceUtils.h
               Haarcascades.h
+              Log.h
               DESTINATION include/${PROJECT_NAME})
