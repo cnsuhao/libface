@@ -6,6 +6,7 @@
  */
 
 #include <dirent.h>
+#include <stdio.h>
 
 #include "../src/LibFace.h";
 #include "../src/Face.h";
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]) {
 		while ((ent = readdir (dir)) != NULL) {
 			char* filename = ent->d_name;
 			if(*filename != '.') {
-				printf ("%s\n", filename);
+				printf("%s\n", filename);
 
 				char tempPath[1024] ;
 				strcpy(tempPath, path);
