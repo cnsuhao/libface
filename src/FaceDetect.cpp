@@ -44,6 +44,10 @@
 using namespace std;
 using namespace cv;
 
+namespace std {
+  extern ostream clog;
+}
+
 namespace libface
 {
 
@@ -365,7 +369,9 @@ std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage)
     int inputArea  = inputImage->width*inputImage->height;
 
     if (DEBUG)
-        printf("Input area : %d\n", inputArea);
+    	printf("Input area : %d\n", inputArea);
+        //clog << "Input area: " << inputArea << endl;
+
 
     if (inputArea > 7000000)
     {
