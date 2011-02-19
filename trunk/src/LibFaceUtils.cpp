@@ -30,7 +30,6 @@
  *
  * ============================================================ */
 
-#include <iostream>
 #include <cmath>
 
 #include "LibFaceUtils.h"
@@ -623,22 +622,16 @@ CvMat* LibFaceUtils::addScalar(CvMat* src, CvScalar value)
 
 IplImage* LibFaceUtils::charToIplImage(const char* img, int width, int height, int step, int depth, int channels)
 {
-    cout << "Inside charToIplImage" << endl;
-
     IplImage* imgHeader  = cvCreateImageHeader(cvSize(width, height), depth, channels);
     imgHeader->widthStep = step;
 
-    cout << "made header" << endl;
-
     imgHeader->imageData = (char *)img;
 
-    cout << "loaded data" << endl;
     //cvNamedWindow("a");
     //cvShowImage("a", imgHeader);
     //cvWaitKey(0);
     //cvDestroyWindow("a");
 
-    cout << "returning" << endl;
     return imgHeader;
 }
 

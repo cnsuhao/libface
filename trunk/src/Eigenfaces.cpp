@@ -1,11 +1,11 @@
 /** ===========================================================
- * @file
+ * @file Eigenfaces.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
  *
  * @date    2009-12-27
- * @brief   Eigenfaces parser
+ * @brief   Eigenfaces parser.
  * @section DESCRIPTION
  *
  * This class is an implementation of Eigenfaces. The image stored is the projection of the faces with the
@@ -58,18 +58,17 @@
 #include "FaceDetect.h"
 #include "LibFaceUtils.h"
 
+#include "Log.h"
+
 using namespace std;
 
-namespace libface
-{
+namespace libface {
 
-class Eigenfaces::EigenfacesPriv
-{
+class Eigenfaces::EigenfacesPriv {
 
 public:
 
-	EigenfacesPriv()
-	{
+	EigenfacesPriv() {
 		CUT_OFF               = 10000000.0; //50000000.0;
 		UPPER_DIST            = 10000000;
 		LOWER_DIST            = 10000000;
@@ -169,17 +168,17 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 	float* eigenValues;
 	//Initialize array with eigen values
 	if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) )
-		cout<<"Problems initializing eigenValues..."<<endl;
+		LOG(libfaceERROR) << "Problems initializing eigenValues...";
 
 	IplImage* pAvgTrainImg = 0;
 	//Initialize pointer to the average image
 	if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) )
-		cout<<"Problems initializing pAvgTrainImg..."<<endl;
+		LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
 
-	for(i = 0; i < 2; i++ ){
+	for(i = 0; i < 2; i++ ) {
 		eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
 		if(!(eigenObjects[i] ) )
-			cout<<"Problems initializing eigenObjects"<<endl;
+			LOG(libfaceERROR) << "Problems initializing eigenObjects";
 	}
 
 	//Perform PCA
@@ -212,10 +211,9 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
 string Eigenfaces::EigenfacesPriv::stringify(unsigned int x) const {
 	ostringstream o;
-	if (!(o << x)) {
-		if (DEBUG)
-			cerr << "Could not convert" << endl;
-	}
+
+	if (!(o << x))
+		LOG(libfaceERROR) << "Could not convert";
 
 	return o.str();
 }
@@ -226,18 +224,15 @@ Eigenfaces::Eigenfaces(const string& dir)
 	struct stat stFileInfo;
 	d->configFile = dir + string("/libface-config.xml");
 
-	if(DEBUG)
-		cout << "Config location: " << d->configFile << endl;
+	LOG(libfaceINFO) << "Config location: " << d->configFile;
 
 	int intStat = stat(d->configFile.c_str(),&stFileInfo);
 	if (intStat == 0) {
-		if (DEBUG)
-			cout << "libface config file exists." << endl;
+		LOG(libfaceINFO) << "libface config file exists. Will create new config.";
 
 		loadConfig(dir);
 	} else {
-		if (DEBUG)
-			cout << "libface config file does not exist." << endl;
+		LOG(libfaceINFO) << "libface config file does not exist. Will create new config.";
 	}
 }
 
@@ -281,14 +276,12 @@ map<string, string> Eigenfaces::getConfig() {
 int Eigenfaces::loadConfig(const string& dir) {
 	d->configFile = dir + string("/libface-config.xml");
 
-	if (DEBUG)
-		cout << "Load training data" << endl;
+	LOG(libfaceDEBUG) << "Load training data" << endl;
 
 	CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.data(), 0, CV_STORAGE_READ);
-	cout << "opened" << endl;
+
 	if (!fileStorage) {
-		if (DEBUG)
-			cout << "Can't open config file for reading :" << d->configFile << endl;
+		LOG(libfaceERROR) << "Can't open config file for reading :" << d->configFile;
 		return 1;
 	}
 
@@ -322,8 +315,8 @@ int Eigenfaces::loadConfig(const string& dir) {
 int Eigenfaces::loadConfig(const map<string, string>& c) {
 	// FIXME: Because std::map has no convenient const accessor, make a copy.
 	map<string, string> config(c);
-	if (DEBUG)
-		cout<<"Load config data from a map"<<endl;
+
+	LOG(libfaceINFO) << "Load config data from a map.";
 
 	int nIds  = atoi(config["nIds"].c_str()), i;
 
@@ -345,8 +338,7 @@ int Eigenfaces::loadConfig(const map<string, string>& c) {
 
 pair<int, float> Eigenfaces::recognize(IplImage* input) {
 	if (input == 0) {
-		if (DEBUG)
-			cout << "No faces passed. No recognition to do." << endl;
+		LOG(libfaceWARNING) << "No faces passed. No recognition to do." << endl;
 
 		return make_pair<int, float>(-1, -1); // Nothing
 	}
@@ -368,34 +360,29 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 
 	recog = clock() - recog;
 
-	if (DEBUG)
-		printf("Recognition took: %f sec.\n", (double)recog / ((double)CLOCKS_PER_SEC));
+	LOG(libfaceDEBUG) << "Recognition took: " << (double)recog / ((double)CLOCKS_PER_SEC) << "sec.";
 
 	if(minDist > d->RMS_THRESHOLD) {
 		id = -1;
 		minDist = -1;
 
-		if(DEBUG)
-			printf("The value is below the threshold.\n");
-	} else {
-		if(DEBUG)
-			printf("The value is: %f\n.", minDist);
-	}
+		LOG(libfaceDEBUG) << "The value is below the threshold.";
+
+	} else
+		LOG(libfaceDEBUG) << "The value is: " << minDist;
 
 
 	return make_pair<int, float>(id, minDist);
 }
 
 int Eigenfaces::saveConfig(const string& dir) {
-	if (DEBUG)
-		cout << "Saving config in "<< dir << endl;
+	LOG(libfaceINFO) << "Saving config in "<< dir;
 
 	string configFile          = dir + string("/libface-config.xml");
 	CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.c_str(), 0, CV_STORAGE_WRITE);
 
 	if (!fileStorage) {
-		if (DEBUG)
-			cout << "Cant open for storing :" << d->configFile << endl;
+		LOG(libfaceERROR) << "Can't open file for storing :" << d->configFile << ". Save has failed!.";
 
 		return 1;
 	}
@@ -429,8 +416,7 @@ int Eigenfaces::saveConfig(const string& dir) {
 
 int Eigenfaces::update(vector<Face>& newFaceArr) {
 	if (newFaceArr.size() == 0) {
-		if (DEBUG)
-			cout<<" No faces passed. Not training." <<endl;
+		LOG(libfaceWARNING) << " No faces passed. Not training.";
 
 		return 0;
 	}
@@ -445,14 +431,12 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 	// Note that indexIdMap, unlike idCountMap, is only changed when a face with a new ID is added.
 	for (i = 0; i < newFaceArr.size() ; ++i) {
 		if(newFaceArr.at(i).getId() == -1) {
-			if (DEBUG)
-				cout << "Has no specified ID" << endl;
+			LOG(libfaceDEBUG) << "Has no specified ID.";
 
 			int newId = d->faceImgArr.size();
 
 			// We now have the greatest unoccupied ID.
-			if (DEBUG)
-				cout << "Giving it the ID = " << newId << endl;
+			LOG(libfaceDEBUG) << "Giving it the ID = " << newId;
 
 			d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
 			newFaceArr.at(i).setId(newId);
@@ -463,8 +447,7 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 		} else {
 			int id = newFaceArr.at(i).getId();
 
-			if (DEBUG)
-				cout << " Given ID as " << id << endl;
+			LOG(libfaceDEBUG) << " Given ID as " << id;
 
 			find (d->indexMap.begin(), d->indexMap.end(), id);
 
@@ -472,15 +455,13 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 			if(it != d->indexMap.end()) {
 				unsigned int j = 0;
 
-				if (DEBUG)
-					cout<<"Specified ID already axists in DB, averaging"<<endl;
+				LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
 
 				d->learn(*it, cvCloneImage(newFaceArr.at(i).getFace()));
 
 			} else {
 				// If this is a fresh ID, and not autoassigned
-				if (DEBUG)
-					cout << "Specified ID does not exist in DB, so this is a new face" << endl;
+				LOG(libfaceDEBUG) << "Specified ID does not exist in the DB, creating new face.";
 
 				d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
 				// A new face with a new ID is added. So map it's DB storage index with it's ID
@@ -490,8 +471,8 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 	}
 
 	update = clock() - update;
-	if (DEBUG)
-		printf("Updating took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
+
+	LOG(libfaceDEBUG) << "Updating took: " << (double)update / ((double)CLOCKS_PER_SEC) << "sec.";
 
 	return 0;
 }
