@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file Face.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
