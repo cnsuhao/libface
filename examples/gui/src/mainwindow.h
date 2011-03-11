@@ -86,7 +86,7 @@ private:
     LibFace*             libFace;
     string               currentPhoto;
     double               scale;
-    vector<Face>*         currentFaces;
+    vector<Face*>*         currentFaces;
 };
 
 #endif // MAINWINDOW_H

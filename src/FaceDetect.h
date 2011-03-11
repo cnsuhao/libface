@@ -63,7 +63,7 @@ public:
      * @param inputImage A pointer to the image in which faces are to be detected
      * @return The vector of detected faces
      */
-    std::vector<Face>* detectFaces(const IplImage* inputImage);
+    std::vector<Face*>* detectFaces(const IplImage* inputImage);
 
     /**
      * Inherited method from LibFaceDetectCore. A slightly different interface where you can specify
@@ -72,7 +72,7 @@ public:
      * @param filename A full path to the image.
      * @return Returns a vector of Face objects. Each object hold information about 1 face.
      */
-    std::vector<Face>* detectFaces(const std::string& filename);
+    std::vector<Face*>* detectFaces(const std::string& filename);
 
     /**
      * Returns the accuracy of face detection on a five-point scale. The default is 4.
@@ -100,7 +100,7 @@ private:
      *  @param faceSize A cvSize that specifies the minimum size of faces to be detected
      *  @return Returns a vector of Face objects. Each object hold information about 1 face.
      */
-    std::vector<Face>* cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize = cvSize(10, 10));
+    std::vector<Face*>* cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize = cvSize(10, 10));
 
     /**
      * Returns the final faces from the detection results of multiple cascades

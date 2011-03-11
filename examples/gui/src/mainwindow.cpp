@@ -125,24 +125,22 @@ void MainWindow::detectFaces()
 
     for (i=0 ; i<size ; i++)
     {
-        Face face          = currentFaces->at(i);
+        Face* face          = currentFaces->at(i);
         FaceItem* faceItem = new FaceItem(0, 
-                                          myScene,face.getX1()*scale, 
-                                          face.getY1()*scale,
-                                          (face.getX2()-face.getX1())*scale, 
-                                          (face.getY2()-face.getY1())*scale);
+                                          myScene, face->getX1()*scale,
+                                          face->getY1()*scale,
+                                          (face->getX2()-face->getX1())*scale,
+                                          (face->getY2()-face->getY1())*scale);
 
         //cout << "Face:\t(" << face.getX1()*scale << ","<<face.getY1()*scale <<")" <<endl;
     }
 }
 
-void MainWindow::updateConfig()
-{
+void MainWindow::updateConfig() {
     libFace->update(currentFaces);
 }
 
-void MainWindow::clearScene()
-{
+void MainWindow::clearScene() {
     QList<QGraphicsItem*> list = myScene->items();
 
     int i;
@@ -159,7 +157,7 @@ void MainWindow::recognise()
 
     int i;
     for(i=0;i<currentFaces->size();i++)
-    	printf("Face ID: %d\n",currentFaces->at(i).getId());
+    	printf("Face ID: %d\n",currentFaces->at(i)->getId());
 
     //TODO: create mapping to items.
 }

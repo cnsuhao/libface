@@ -36,6 +36,7 @@
 #define _LIBFACE_H_
 
 #include "Eigenfaces.h"
+#include "HMMfaces.h"
 #include "LibFaceConfig.h"
 #include "LibFaceCore.h"
 
@@ -46,7 +47,8 @@ namespace libface {
 enum Mode {
 	ALL,
 	DETECT,
-	EIGEN
+	EIGEN,
+	HMM
 };
 
 class FACEAPI LibFace {
@@ -93,7 +95,7 @@ public:
 	 *
 	 * @return Vector of Face objects with ID set to -1 on each.
 	 */
-	std::vector<Face>* detectFaces(const IplImage* img);
+	std::vector<Face*>* detectFaces(const IplImage* img);
 	// API-agnostic methods
 
 	/**
@@ -107,7 +109,7 @@ public:
 	 *
 	 * @return Vector of Face objects with ID set to -1 on each.
 	 */
-	std::vector<Face>* detectFaces(const std::string& filename, int scaleFactor=1);
+	std::vector<Face*>* detectFaces(const std::string& filename, int scaleFactor=1);
 
 	/**
 	 * Method for detecting faces in the picture with the specified encoding. The IDs for
@@ -124,7 +126,7 @@ public:
 	 *
 	 * @return Vector of Face objects with ID set to -1 on each.
 	 */
-	std::vector<Face>* detectFaces(const char* image, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1 );
+	std::vector<Face*>* detectFaces(const char* image, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1 );
 
 
 
@@ -181,7 +183,7 @@ public:
 	 */
 	int loadConfig(const std::map<std::string, std::string>& config);
 
-	std::vector<std::pair<int, float> > recognise(const IplImage* img, std::vector<Face>* faces_p, int scaleFactor=1);
+	std::vector<std::pair<int, float> > recognise(const IplImage* img, std::vector<Face*>* faces_p, int scaleFactor=1);
 
 
 	/**
@@ -194,7 +196,7 @@ public:
 	 * Default not scaled (1). NOT USED at the moment.
 	 * @return Vector of integer ID's that best match the input vector of Faces, in same order
 	 */
-	std::vector<std::pair<int, float> > recognise(const std::string& filename, std::vector<Face>* faces_p, int scaleFactor=1);
+	std::vector<std::pair<int, float> > recognise(const std::string& filename, std::vector<Face*>* faces_p, int scaleFactor=1);
 
 	/**
 	 *  Method to recognise faces in the given image. The array of faces will be updated with
@@ -206,7 +208,7 @@ public:
 	 * Default not scaled (1). NOT USED at the moment.
 	 * @return Vector of integer ID's that best match the input vector of Faces, in same order
 	 */
-	std::vector<std::pair<int, float> > recognise(const char* image, std::vector<Face>* faces_p, int width, int height, int step, int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
+	std::vector<std::pair<int, float> > recognise(const char* image, std::vector<Face*>* faces_p, int width, int height, int step, int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
 
 	/**
 	 *  Method to recognise faces in the given image. The array of faces will be updated with
@@ -217,7 +219,7 @@ public:
 	 * Default not scaled (1). NOT USED at the moment.
 	 * @return Vector of integer ID's that best match the input vector of Faces, in same order
 	 */
-	std::vector<std::pair<int, float> > recognise( std::vector<Face>* faces, int scaleFactor =1);
+	std::vector<std::pair<int, float> > recognise( std::vector<Face*>* faces, int scaleFactor =1);
 
 
 	/**
@@ -247,7 +249,7 @@ public:
 	 *
 	 * @return 0 is return if update was successful.
 	 */
-	int update(const std::string& filename, std::vector<Face>* faces=NULL, int scaleFactor=1);
+	int update(const std::string& filename, std::vector<Face*>* faces=NULL, int scaleFactor=1);
 
 	/** Method to update the library with faces from the picture specified.
 	 *
@@ -263,7 +265,7 @@ public:
 	 *
 	 * @return 0 is return if update was successful.
 	 */
-	int update(const char* image, std::vector<Face>* faces, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
+	int update(const char* image, std::vector<Face*>* faces, int width , int height , int step , int depth = IPL_DEPTH_8U, int channels = 1, int scaleFactor=1);
 
 	/** Method to update the library with faces from the picture specified.
 	 *
@@ -274,7 +276,7 @@ public:
 	 *
 	 * @return 0 is return if update was successful.
 	 */
-	int update(std::vector<Face>* faces=NULL, int scaleFactor=1);
+	int update(std::vector<Face*>* faces=NULL, int scaleFactor=1);
 
 	/** Method to update the library with faces from the picture specified.
 	 *
@@ -284,7 +286,7 @@ public:
 	 *
 	 * @return 0 is return if update was successful.
 	 */
-	int update(const IplImage* img, std::vector<Face>* faces, int scaleFactor = 1);
+	int update(const IplImage* img, std::vector<Face*>* faces, int scaleFactor = 1);
 
 private:
 

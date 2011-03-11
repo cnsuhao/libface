@@ -164,11 +164,11 @@ void FaceDetect::setAccuracy(int i)
     };
 }
 
-vector<Face>* FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize) {
+vector<Face*>* FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassifierCascade* casc, CvSize faceSize) {
     // Clear the memory d->storage which was used before
     cvClearMemStorage(d->storage);
 
-    vector<Face>* result = new vector<Face>();
+    vector<Face*>* result = new vector<Face*>();
 
     CvSeq* faces = 0;
 
@@ -226,7 +226,7 @@ vector<Face>* FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClassi
             pt2.x = pt2.x - (int)(width*boxShrink);
             pt2.y = pt2.y - (int)(height*boxShrink);
 
-            Face face = Face(pt1.x,pt1.y,pt2.x,pt2.y);
+            Face* face = new Face(pt1.x,pt1.y,pt2.x,pt2.y);
 
             result->push_back(face);
         }
@@ -316,11 +316,11 @@ int FaceDetect::getRecommendedImageSizeForDetection() {
     return 800; // area, with typical photos, about 500000
 }
 
-std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage) {
+std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {
     	LOG(libfaceINFO) << "Bad image given, not performing face detection.";
-        return new vector<Face>();
+        return new vector<Face*>();
     }
 
     IplImage* imgCopy = cvCloneImage(inputImage);
@@ -370,7 +370,7 @@ std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage) {
     // This is the combination of all the resulting faces from each cascade in the set 1228800
     // Now loop through each cascade, apply it, and get back a vector of detected faces
     //vector< vector<Face> > resultCombo;
-    vector<Face>* faces;
+    vector<Face*>* faces;
 
     d->storage = cvCreateMemStorage(0);
     for (int i = 0; i < d->cascadeSet->getSize(); ++i) {
@@ -388,14 +388,14 @@ std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage) {
 
     for(int i=0; i<faces->size();i++) {
 
-        CvRect roi = cvRect(faces->at(i).getX1(), faces->at(i).getY1(), faces->at(i).getWidth(), faces->at(i).getHeight());
+        CvRect roi = cvRect(faces->at(i)->getX1(), faces->at(i)->getY1(), faces->at(i)->getWidth(), faces->at(i)->getHeight());
         cvSetImageROI(imgCopy, roi);
 
         IplImage *roiImg = cvCreateImage( cvSize(roi.width, roi.height), inputImage->depth, inputImage->nChannels );
         cvCopy(imgCopy, roiImg);
         cvResetImageROI(imgCopy);
 
-        faces->at(i).setFace(roiImg);
+        faces->at(i)->setFace(roiImg);
     }
 
     cvReleaseImage(&imgCopy);
@@ -405,11 +405,11 @@ std::vector<Face>* FaceDetect::detectFaces(const IplImage* inputImage) {
     return faces;
 }
 
-vector<Face>* FaceDetect::detectFaces(const string& filename) {
+vector<Face*>* FaceDetect::detectFaces(const string& filename) {
     // Create a new image based on the input image
     IplImage* img = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
 
-    vector<Face>* faces = detectFaces(img);
+    vector<Face*>* faces = detectFaces(img);
 
     cvReleaseImage(&img);
 

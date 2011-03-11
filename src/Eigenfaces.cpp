@@ -72,12 +72,14 @@ public:
 		CUT_OFF               = 10000000.0; //50000000.0;
 		UPPER_DIST            = 10000000;
 		LOWER_DIST            = 10000000;
-		THRESHOLD             = 23000000.0;
+		EIGEN_THRESHOLD       = 1000000.0;
 		RMS_THRESHOLD         = 10.0;
 		FACE_WIDTH            = 120;
 		FACE_HEIGHT           = 120;
 
 	}
+
+	float eigen(IplImage* img1, IplImage* img2);
 
 	/**
 	 * Calculates Root Mean Squared error between 2 images.
@@ -108,11 +110,83 @@ public:
 	double                 CUT_OFF;
 	double                 UPPER_DIST;
 	double                 LOWER_DIST;
-	double                 THRESHOLD;
-	double                 RMS_THRESHOLD;
+	float                  RMS_THRESHOLD;
+	float				   EIGEN_THRESHOLD;
 	int                    FACE_WIDTH;
 	int                    FACE_HEIGHT;
 };
+
+float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
+
+	float minDist = FLT_MAX;
+
+	std::vector<IplImage*> tempFaces;
+	tempFaces.push_back(img1);
+
+
+	int i;
+
+	tempFaces.push_back(img2);
+
+	float* eigenValues;
+	//Initialize array with eigen values
+	if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) )
+		cout<<"Problems initializing eigenValues..."<<endl;
+
+	float* projectedTestFace = (float*)malloc(sizeof(float));
+
+	CvSize size=cvSize(tempFaces.at(0)->width, tempFaces.at(0)->height);
+
+	//Set PCA's termination criterion
+	CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
+			1,0);
+	//Initialise pointer to the pointers with eigen objects
+	IplImage** eigenObjects = new IplImage *[2];
+
+
+
+	IplImage* pAvgTrainImg;
+	//Initialize pointer to the average image
+	if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) )
+		cout<<"Problems initializing pAvgTrainImg..."<<endl;
+
+	for(i = 0; i < 2; i++ ){
+		eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
+		if(!(eigenObjects[i] ) )
+			cout<<"Problems initializing eigenObjects"<<endl;
+	}
+
+	//Perform PCA
+	cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
+			CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
+
+	//This is a simple min distance mechanism for recognition. Perhaps we should check similarity of
+	//images.
+	if(eigenValues[0] < minDist) {
+		minDist = eigenValues[0];
+	}
+
+
+	//cvEigenDecomposite(tempFaces.at(0), nEigens, eigenObjects,
+	//CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedTestFace );
+
+	//IplImage *proj = cvCreateImage(cvSize(input->width, input->height), IPL_DEPTH_8U, 1);
+	//cvEigenProjection(eigenObjects, nEigens,
+	//              CV_EIGOBJ_NO_CALLBACK, NULL, projectedTestFace, pAvgTrainImg, proj);
+
+	//LibFaceUtils::showImage(proj);
+
+	free(projectedTestFace);
+	cvFree_(eigenValues);
+	cvReleaseImage(&pAvgTrainImg);
+	cvReleaseImage(&eigenObjects[0]);
+	cvReleaseImage(&eigenObjects[1]);
+
+	tempFaces.clear();
+
+	return minDist;
+}
+
 
 /**
  * Calculates Root Mean Squared error between 2 images. The method doesn't modify input images.
@@ -228,7 +302,7 @@ Eigenfaces::Eigenfaces(const string& dir)
 
 	int intStat = stat(d->configFile.c_str(),&stFileInfo);
 	if (intStat == 0) {
-		LOG(libfaceINFO) << "libface config file exists. Will create new config.";
+		LOG(libfaceINFO) << "libface config file exists. Loading previous config.";
 
 		loadConfig(dir);
 	} else {
@@ -343,14 +417,14 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 		return make_pair<int, float>(-1, -1); // Nothing
 	}
 
-	double minDist = DBL_MAX;
+	float minDist = FLT_MAX;
 	int id = -1;
 	clock_t recog = clock();
 	size_t j;
 
 	for( j = 0; j<d->faceImgArr.size(); j++) {
 
-		double err = d->rms(input, d->faceImgArr.at(j));
+		float err = d->eigen(input, d->faceImgArr.at(j));
 
 		if(err < minDist) {
 			minDist = err;
@@ -362,7 +436,7 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 
 	LOG(libfaceDEBUG) << "Recognition took: " << (double)recog / ((double)CLOCKS_PER_SEC) << "sec.";
 
-	if(minDist > d->RMS_THRESHOLD) {
+	if(minDist > d->EIGEN_THRESHOLD) {
 		id = -1;
 		minDist = -1;
 
@@ -414,8 +488,8 @@ int Eigenfaces::saveConfig(const string& dir) {
 	return 0;
 }
 
-int Eigenfaces::update(vector<Face>& newFaceArr) {
-	if (newFaceArr.size() == 0) {
+int Eigenfaces::update(vector<Face*>* newFaceArr) {
+	if (newFaceArr->size() == 0) {
 		LOG(libfaceWARNING) << " No faces passed. Not training.";
 
 		return 0;
@@ -429,8 +503,8 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 	// Our method : If no Id specified (-1), then give the face the next available ID.
 	// Now, all ID's, when the DB is read back, were earlier read as the storage index with which the face was stored in the DB.
 	// Note that indexIdMap, unlike idCountMap, is only changed when a face with a new ID is added.
-	for (i = 0; i < newFaceArr.size() ; ++i) {
-		if(newFaceArr.at(i).getId() == -1) {
+	for (i = 0; i < newFaceArr->size() ; ++i) {
+		if(newFaceArr->at(i)->getId() == -1) {
 			LOG(libfaceDEBUG) << "Has no specified ID.";
 
 			int newId = d->faceImgArr.size();
@@ -438,14 +512,14 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 			// We now have the greatest unoccupied ID.
 			LOG(libfaceDEBUG) << "Giving it the ID = " << newId;
 
-			d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
-			newFaceArr.at(i).setId(newId);
+			d->faceImgArr.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));
+			newFaceArr->at(i)->setId(newId);
 
 			// A new face with a new ID is added. So map it's DB storage index with it's ID
 			//d->indexIdMap[newId] = newId;
 			d->indexMap.push_back(newId);
 		} else {
-			int id = newFaceArr.at(i).getId();
+			int id = newFaceArr->at(i)->getId();
 
 			LOG(libfaceDEBUG) << " Given ID as " << id;
 
@@ -457,13 +531,13 @@ int Eigenfaces::update(vector<Face>& newFaceArr) {
 
 				LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
 
-				d->learn(*it, cvCloneImage(newFaceArr.at(i).getFace()));
+				d->learn(*it, cvCloneImage(newFaceArr->at(i)->getFace()));
 
 			} else {
 				// If this is a fresh ID, and not autoassigned
 				LOG(libfaceDEBUG) << "Specified ID does not exist in the DB, creating new face.";
 
-				d->faceImgArr.push_back(cvCloneImage(newFaceArr.at(i).getFace()));
+				d->faceImgArr.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));
 				// A new face with a new ID is added. So map it's DB storage index with it's ID
 				d->indexMap.push_back(id);
 			}
