@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 				char tempPath[1024] ;
 				strcpy(tempPath, path);
 				//Do face detection by calling detectFaces function with file path of an image.
-				vector<Face>* result = libFace->detectFaces(string(strcat(tempPath,filename)));
+				vector<Face*>* result = libFace->detectFaces(string(strcat(tempPath,filename)));
 
 				if(result->empty()) {
 					failed++;

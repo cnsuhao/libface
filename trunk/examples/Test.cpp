@@ -73,8 +73,8 @@ int main(int argc, char** argv)
 
     int i, j;
     IplImage* img=0;
-    vector<Face>* result;    // Vector of faces returned from a particular photo's detection
-    vector<Face>* finalresult;    // The combined vector of faces after detection on all photos is over
+    vector<Face*>* result;    // Vector of faces returned from a particular photo's detection
+    vector<Face*>* finalresult;    // The combined vector of faces after detection on all photos is over
 
     for (i = 1; i < argc; ++i)
     {
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         for (j = 0; j < result->size(); ++j)    // Draw squares over detected faces
         {
 
-            Face* face = &result->at(j);
+            Face* face = result->at(j);
 
             cout << "Drawing" << endl;
             cvRectangle( img, cvPoint(face->getX1(), face->getY1()),

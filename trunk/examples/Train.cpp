@@ -73,8 +73,8 @@ int main(int argc, char** argv)
 
     int i, j;
     IplImage* img=0;
-    vector<Face>* result;         // Vector of faces returned from a particular photo's detection
-    vector<Face>* finalresult;    // The combined vector of faces after detection on all photos is over
+    vector<Face*>* result;         // Vector of faces returned from a particular photo's detection
+    vector<Face*>* finalresult;    // The combined vector of faces after detection on all photos is over
 
     for (i = 1; i < argc; ++i)
     {
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     assignedIDs = libFace.update(finalresult);
 
     for(i = 0; i < finalresult->size(); ++i)
-        cout << "ID "<<finalresult->at(i).getId() << " assigned to face " << i << endl;
+        cout << "ID "<<finalresult->at(i)->getId() << " assigned to face " << i << endl;
 
     libFace.saveConfig(".");
 

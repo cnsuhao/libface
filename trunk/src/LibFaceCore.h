@@ -99,7 +99,7 @@ public:
 	 *
 	 * @return 0 id the update was successful, or positive int above 0 otherwise.
 	 */
-	virtual int update(std::vector<Face>& dataVector) = 0;
+	virtual int update(std::vector<Face*>* dataVector) = 0;
 
 	/**
 	 * Purely virtual method for recognising an input image as a face. Returns the ID of the nearest face
@@ -133,7 +133,7 @@ public:
 	 *
 	 * @return Returns a pointer to the vector of Face objects, where each ID is set to -1.
 	 */
-	virtual std::vector<Face>* detectFaces(const std::string& filename) = 0;
+	virtual std::vector<Face*>* detectFaces(const std::string& filename) = 0;
 
 	/**
 	 * Purely virtual method for detecting faces in an image.
@@ -142,7 +142,7 @@ public:
 	 *
 	 * @return Returns a pointer to the vector of Face objects, where each ID is set to -1.
 	 */
-	virtual std::vector<Face>* detectFaces(const IplImage* inputImage) = 0;
+	virtual std::vector<Face*>* detectFaces(const IplImage* inputImage) = 0;
 
 	/**
 	 * Purely virtual method for getting the accuracy of the detection.
