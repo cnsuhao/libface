@@ -72,7 +72,7 @@ public:
 		CUT_OFF               = 10000000.0; //50000000.0;
 		UPPER_DIST            = 10000000;
 		LOWER_DIST            = 10000000;
-		EIGEN_THRESHOLD       = 1000000.0;
+	    THRESHOLD             = 1000000.0;
 		RMS_THRESHOLD         = 10.0;
 		FACE_WIDTH            = 120;
 		FACE_HEIGHT           = 120;
@@ -111,7 +111,7 @@ public:
 	double                 UPPER_DIST;
 	double                 LOWER_DIST;
 	float                  RMS_THRESHOLD;
-	float				   EIGEN_THRESHOLD;
+	float				   THRESHOLD;
 	int                    FACE_WIDTH;
 	int                    FACE_HEIGHT;
 };
@@ -436,7 +436,7 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 
 	LOG(libfaceDEBUG) << "Recognition took: " << (double)recog / ((double)CLOCKS_PER_SEC) << "sec.";
 
-	if(minDist > d->EIGEN_THRESHOLD) {
+	if(minDist > d->THRESHOLD) {
 		id = -1;
 		minDist = -1;
 

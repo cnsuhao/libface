@@ -36,7 +36,7 @@
 #define _LIBFACE_H_
 
 #include "Eigenfaces.h"
-#include "HMMfaces.h"
+//#include "HMMfaces.h"
 #include "LibFaceConfig.h"
 #include "LibFaceCore.h"
 
