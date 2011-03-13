@@ -167,6 +167,11 @@ public:
     */
     int getId() const;
 
+    /**
+     * Manually release the data held in the face object.
+     */
+    void releaseData();
+
 private:
 
     // NOTE: We cannot use a d private container there due to use vector.push_back() 
