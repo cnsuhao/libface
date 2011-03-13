@@ -27,7 +27,8 @@ ADD_LIBRARY(face ${LIB_TYPE}
                  Eigenfaces.cpp
                  LibFace.cpp
                  Haarcascades.cpp
-                 HMMfaces.cpp)
+                 #HMMfaces.cpp
+                 )
 
 #SET_TARGET_PROPERTIES(face PROPERTIES COMPILE_FLAGS "-Wall")
 
@@ -53,5 +54,5 @@ INSTALL(FILES LibFace.h
               LibFaceUtils.h
               Haarcascades.h
               Log.h
-              HMMfaces.h
+              #HMMfaces.h
               DESTINATION include/${PROJECT_NAME})

@@ -97,7 +97,8 @@ LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
 		d->recognitionCore = new Eigenfaces(configDir);
 		break;
 	case HMM:
-		d->recognitionCore = new HMMfaces();
+		//d->recognitionCore = new HMMfaces();
+		LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
 		break;
 	default:    // Initialize both detector and Eigenfaces
 	d->cascadeDir      = cascadeDir;
