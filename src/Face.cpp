@@ -128,4 +128,9 @@ int Face::getId() const {
 	return this->id;
 }
 
+void Face::releaseData() {
+	if(this->face)
+		cvReleaseImage(&this->face);
+}
+
 } // namespace libface
