@@ -54,6 +54,7 @@ Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) {
 }
 
 Face::~Face() {
+	LOG(libfaceDEBUG) << "Destroying face";
 	if(this->face)
 		cvReleaseImage(&this->face);
 }
@@ -84,13 +85,6 @@ void Face::setId(int id) {
 
 void Face::setFace(IplImage* face) {
 	this->face = face;
-}
-
-IplImage* Face::takeFace() const {
-	if (this->face)
-		return (IplImage*)this->face;
-
-	return 0;
 }
 
 IplImage* Face::getFace() const {
@@ -129,6 +123,7 @@ int Face::getId() const {
 }
 
 void Face::releaseData() {
+	LOG(libfaceDEBUG) << "Releasing Face Data";
 	if(this->face)
 		cvReleaseImage(&this->face);
 }
