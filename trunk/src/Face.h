@@ -42,6 +42,7 @@
 #endif
 
 #include "LibFaceConfig.h"
+#include "Log.h"
 
 namespace libface
 {
@@ -103,13 +104,6 @@ public:
     * @param face pointer to the IplImage of the face.
     */
     void setFace(IplImage* face);
-
-    /**
-    * Returns the non-const pointer to the image data.
-    * Use this if you know that ownership of the image is passed to you.
-    * You can release the image and setFace(0) on this face.
-    */
-    IplImage* takeFace() const;
 
     /**
     * Gets the image of the face.
