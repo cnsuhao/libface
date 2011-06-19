@@ -52,6 +52,7 @@
 // Our library
 #include "LibFace.h"
 #include "Face.h"
+#include "LibFaceUtils.h"
 
 using namespace std;
 
@@ -60,6 +61,9 @@ using namespace libface;
 
 int main(int argc, char** argv)
 {
+    cout << "=== This is Test.cpp ===" << endl;
+    cout << "This binary will recognize known faces." << endl;
+
     if (argc < 2)
     {
         cout << "Bad Args!!!\nUsage: " << argv[0] << " <image1> <image2> ..." << endl;
@@ -71,35 +75,32 @@ int main(int argc, char** argv)
 
     LibFace libFace = LibFace(ALL, ".");
 
-    int i, j;
-    IplImage* img=0;
     vector<Face*>* result;    // Vector of faces returned from a particular photo's detection
-    vector<Face*>* finalresult;    // The combined vector of faces after detection on all photos is over
+    vector<Face*>* finalresult = new vector<Face*>; // The combined vector of faces after detection on all photos is over
 
-    for (i = 1; i < argc; ++i)
+    for (int i = 1; i < argc; ++i)
     {
         // Load input image
         cout << "Loading image " << argv[i] << endl;
-        img    = cvLoadImage(argv[1]);
+        // detect faces in image
         result = libFace.detectFaces(string(argv[i]));
-        cout << " detected" << endl;
 
-        for (j = 0; j < result->size(); ++j)    // Draw squares over detected faces
+        // output results, show every face marked with a rectangle
+        cout << " Face detection completed, found " << result->size() << " faces." << endl;
+        for (unsigned j = 0; j < result->size(); ++j)
         {
-
+            cout << " Drawing face " << j+1 << "." << endl;
+            IplImage* img = cvLoadImage(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
             Face* face = result->at(j);
-
-            cout << "Drawing" << endl;
-            cvRectangle( img, cvPoint(face->getX1(), face->getY1()),
-                         cvPoint(face->getX2(), face->getY2()),
-                         CV_RGB(255,0,0), 3, 2, 0);
+            cvRectangle( img, cvPoint(face->getX1(), face->getY1()), cvPoint(face->getX2(), face->getY2()), CV_RGB(255,0,0), 3, 2, 0);
+            LibFaceUtils::showImage(img,argv[i]);
         }
 
-        //cout<<"Displaying "<<argv[i]<<endl;
-        //LibFaceUtils::showImage(img);
+        // Append result to finalresult
+        finalresult->insert(finalresult->end(), result->begin(), result->end());
 
-        finalresult->insert(finalresult->end(), result->begin(), result->end());    // Append result to finalresult
-        result->clear();
+        delete result;
+
     }
 
     cout << "Will recognize " << finalresult->size() << " faces..." << endl;
@@ -107,11 +108,18 @@ int main(int argc, char** argv)
     vector<pair<int, float> >recognised;
     recognised = libFace.recognise(finalresult);
 
-    for( i = 0; i < recognised.size(); ++i)
-    {
-        cout << "ID matched : " << recognised.at(i).first << endl;
-        cout << "Distance : " << recognised.at(i).second << endl;
+    cout << "Recognition done, presenting results." << endl;
+
+    if(recognised.size() != finalresult->size()) {
+        cout << "Error, size mismatch, exiting." << endl;
+        return 1;
     }
 
+    for(unsigned i = 0; i < recognised.size(); ++i)
+    {
+        cout << " Face No." << i+1 << " matched known face with ID " << recognised.at(i).first << " at a distance of " << recognised.at(i).second << "." << endl;
+    }
+
+    cout << "=== This was Test.cpp === " << endl;
     return 0;
 }

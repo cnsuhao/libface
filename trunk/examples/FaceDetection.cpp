@@ -89,7 +89,8 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    vector<Face*>  *result, *finalresult;
+    vector<Face*> *result;
+    vector<Face*> *finalresult = new vector<Face*>;
     libface::Mode mode;
     mode             = libface::DETECT;
     LibFace* libFace = new LibFace(mode, string("."));
@@ -99,17 +100,17 @@ int main(int argc, char** argv)
     {
         // Load input image
         cout << "Loading image " << argv[i] << endl;
-        img = cvLoadImage(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+        img = cvLoadImage(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
 
         // We can give the filename to this function too, but a better method is the one done below,
         // in which raw image data is passed
         result = libFace->detectFaces(img->imageData,img->width, img->height, img->widthStep, img->depth, img->nChannels);
-        cout << " detected" << endl;
+        cout << " Detected " << result->size() << " faces." << endl;
 
         for (unsigned int j = 0; j < result->size(); ++j)	// Draw squares over detected faces
         {
             Face* face = result->at(j);
-            cout<<"Drawing"<<endl;
+            cout << " Drawing square around face " << j << "." <<endl;
             cvRectangle( img, cvPoint(face->getX1(), face->getY1())
                          , cvPoint(face->getX2(), face->getY2())
                          , CV_RGB(255,0,0), 3, 2, 0);
@@ -118,15 +119,18 @@ int main(int argc, char** argv)
         if(img->height*img->width > 400000)
             img = resizeToArea(img, 400000);
 
-        cout << "Displaying " << argv[i] << endl;
+        cout << "Displaying faces in " << argv[i] << endl;
         cvNamedWindow(argv[i]);
         cvShowImage(argv[i], img);
         cvWaitKey(0);
         cvDestroyWindow(argv[i]);
+        cout << "Image saved to out.png." << endl;
         cvSaveImage("out.png", img);
         finalresult->insert(finalresult->end(), result->begin(), result->end());	// Append result to finalresult
-        result->clear();
+        delete result;
     }
+
+    delete finalresult;
 
     return 0;
 }

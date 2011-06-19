@@ -459,16 +459,17 @@ CvMat* LibFaceUtils::stringToMatrix(const string & data, int type)
 }
 
 /**
- * Simple utility method for displaying matrices. Only useful if matrix represents an image
+ * Simple utility method for displaying matrices. Only useful if matrix represents an image.
  *
  * @param src A pointer to the matrix to be displayed.
+ * @param title A string containing the title of the window. Defaults to "Image".
  */
 void LibFaceUtils::showImage(CvArr* src, const string& title)
 {
-    cvNamedWindow(title.data(),CV_WINDOW_AUTOSIZE);
-    cvShowImage(title.data(), src);
+    cvNamedWindow(title.c_str(),CV_WINDOW_AUTOSIZE);
+    cvShowImage(title.c_str(), src);
     cvWaitKey(0);
-    cvDestroyWindow(title.data());
+    cvDestroyWindow(title.c_str());
 }
 
 /**

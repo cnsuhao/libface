@@ -527,7 +527,6 @@ int Eigenfaces::update(vector<Face*>* newFaceArr) {
 
 			std::vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
 			if(it != d->indexMap.end()) {
-				unsigned int j = 0;
 
 				LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
 

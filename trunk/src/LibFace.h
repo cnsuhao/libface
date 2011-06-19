@@ -269,7 +269,6 @@ public:
 
 	/** Method to update the library with faces from the picture specified.
 	 *
-	 * @param filename Filename of the image to load.
 	 * @param faces Pointer to a std::vector of Face objects. Default to NULL, meaning the whole image is face.
 	 * @param scaleFactor Allows to specify if image should be scaled. Make things faster.
 	 * Default not scaled (1). NOT USED at the moment.
