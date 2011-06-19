@@ -237,7 +237,7 @@ vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face*>*
 	for (int i = 0; i < size; ++i)
 		result.push_back(d->recognitionCore->recognize(newFaceImgArr.at(i)));
 
-	for (int i=0; i<newFaceImgArr.size(); i++)
+    for (unsigned i=0; i<newFaceImgArr.size(); i++)
 		cvReleaseImage(&newFaceImgArr[i]);
 
 	return result;
@@ -306,7 +306,7 @@ void LibFace::setDetectionAccuracy(double value) {
 }
 
 int LibFace::update(const IplImage* img, vector<Face*>* faces, int scaleFactor) {
-	int assignedIDs;
+    int assignedIDs = 0;
 
 
 	if (faces->size() == 0) {
@@ -317,7 +317,6 @@ int LibFace::update(const IplImage* img, vector<Face*>* faces, int scaleFactor) 
 	LOG(libfaceDEBUG) << "Update with faces." << endl;
 
 	vector<Face*>      newFaceArr;
-	vector<IplImage*> createdImages;
 
 	int size = faces->size();
 	for (int i=0 ; i<size ; i++) {
@@ -338,7 +337,6 @@ int LibFace::update(const IplImage* img, vector<Face*>* faces, int scaleFactor) 
 		// Make into standard-sized image
 		IplImage* sizedFaceImg = cvCreateImage(cvSize(d->facesize(), d->facesize()), img->depth, img->nChannels);
 		cvResize(faceImg, sizedFaceImg);
-		createdImages.push_back(sizedFaceImg);
 
 		face->setFace(sizedFaceImg);
 		// Extracted. Now push it into the newfaces vector
@@ -347,8 +345,6 @@ int LibFace::update(const IplImage* img, vector<Face*>* faces, int scaleFactor) 
 	}
 	assignedIDs = d->recognitionCore->update(&newFaceArr);
 
-	for (int i=0; i<createdImages.size(); i++)
-		cvReleaseImage(&createdImages[i]);
 
 	return assignedIDs;
 }
@@ -375,35 +371,30 @@ int LibFace::update(vector<Face*> *faces, int scaleFactor) {
 		return assignedIDs;
 	}
 
-	LOG(libfaceDEBUG) << "Update with faces.";
+    LOG(libfaceDEBUG) << "Update with " << faces->size() << " faces.";
 
 	vector<Face*>      newFaceArr;
-	vector<IplImage*> createdImages;
 
-	int size = faces->size();
-	for (int i=0; i<size; i++) {
-		// Copy, dont change the passed face
+    unsigned size = faces->size();
+    for (unsigned i=0; i<size; i++) {
+        // Copy faces to newFaceArr, dont change the passed face
 		Face* face  = faces->at(i);
 
 		LOG(libfaceDEBUG) << "Id is: " << face->getId();
 
-
 		const IplImage* faceImg = face->getFace();
+
 		if (faceImg->width != d->facesize() || faceImg->height != d->facesize()) {
 			// Make into standard-sized image
 			IplImage* sizedFaceImg  = cvCreateImage(cvSize(d->facesize() , d->facesize()), faceImg->depth, faceImg->nChannels);
 			cvResize(faceImg, sizedFaceImg);
 			face->setFace(sizedFaceImg);
-			createdImages.push_back(sizedFaceImg);
 		}
 		// Extracted. Now push it into the newfaces vector
 		newFaceArr.push_back(face);
 	}
 
 	assignedIDs = d->recognitionCore->update(&newFaceArr);
-
-	for (int i=0; i<createdImages.size(); i++)
-		cvReleaseImage(&createdImages[i]);
 
 	return assignedIDs;
 }
