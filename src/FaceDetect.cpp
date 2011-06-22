@@ -14,6 +14,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -158,7 +159,7 @@ void FaceDetect::setAccuracy(int i)
     }
     default:
     {
-    	LOG(libfaceDEBUG) << "DEFAULT for the accuracy used.";
+        LOG(libfaceDEBUG) << "DEFAULT for the accuracy used.";
         break;
     }
     };
@@ -256,7 +257,7 @@ vector<Face> FaceDetect::finalFaces(const IplImage* inputImage, vector<vector<Fa
     finalStage = clock() - finalStage;
 
     /*
-    Now, starting from the left, take a face and compare with rest. If distance is less than a threshold, 
+    Now, starting from the left, take a face and compare with rest. If distance is less than a threshold,
     consider them to be "overlapping" face frames and delete the "duplicate" from the vector.
     Remember that only faces to the RIGHT of the reference face will be deleted.
      */
@@ -283,7 +284,7 @@ vector<Face> FaceDetect::finalFaces(const IplImage* inputImage, vector<vector<Fa
             finalResult.erase(finalResult.begin() + i);
             i--;
         }
-        /* 
+        /*
         Note that the index of the reference element will be the same as the index of it's number of duplicates
         in the genuineness vector, so win-win!.
          */
@@ -319,7 +320,7 @@ int FaceDetect::getRecommendedImageSizeForDetection() {
 std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {
-    	LOG(libfaceINFO) << "Bad image given, not performing face detection.";
+        LOG(libfaceINFO) << "Bad image given, not performing face detection.";
         return new vector<Face*>();
     }
 
@@ -386,7 +387,7 @@ std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     // this returns the final list of faces. Allow a max distance of 15.
     //vector<Face> ret = finalFaces(inputImage, resultCombo, d->maximumDistance, 0);
 
-    for(int i=0; i<faces->size();i++) {
+    for(unsigned i = 0; i < faces->size(); ++i) {
 
         CvRect roi = cvRect(faces->at(i)->getX1(), faces->at(i)->getY1(), faces->at(i)->getWidth(), faces->at(i)->getHeight());
         cvSetImageROI(imgCopy, roi);

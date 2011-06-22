@@ -11,7 +11,7 @@
  * This is a simple example of the use of the libface library.
  * It implements face detection and recognition and uses the opencv libraries.
 
- * @note: libface does not require users to have openCV knowledge, so here, 
+ * @note: libface does not require users to have openCV knowledge, so here,
  *        openCV is treated as a "3rd-party" library for image manipulation convenience.
  *
  * @author Copyright (C) 2010 by Alex Jironkin
@@ -20,6 +20,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -107,7 +108,7 @@ int main(int argc, char** argv)
         result = libFace->detectFaces(img->imageData,img->width, img->height, img->widthStep, img->depth, img->nChannels);
         cout << " Detected " << result->size() << " faces." << endl;
 
-        for (unsigned int j = 0; j < result->size(); ++j)	// Draw squares over detected faces
+        for (unsigned int j = 0; j < result->size(); ++j)    // Draw squares over detected faces
         {
             Face* face = result->at(j);
             cout << " Drawing square around face " << j << "." <<endl;
@@ -126,7 +127,7 @@ int main(int argc, char** argv)
         cvDestroyWindow(argv[i]);
         cout << "Image saved to out.png." << endl;
         cvSaveImage("out.png", img);
-        finalresult->insert(finalresult->end(), result->begin(), result->end());	// Append result to finalresult
+        finalresult->insert(finalresult->end(), result->begin(), result->end());    // Append result to finalresult
         delete result;
     }
 

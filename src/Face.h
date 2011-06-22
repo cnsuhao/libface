@@ -16,6 +16,7 @@
  *         <a href="alexjironkin at gmail dot com">alexjironkin at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -100,7 +101,7 @@ public:
 
     /**
     * Sets the image of the face.
-    * Note: Does not take ownership of the IplImage object, you need to release it after use
+    * Note: Does not take ownership of the IplImage object, you need to release it after use.
     * @param face pointer to the IplImage of the face.
     */
     void setFace(IplImage* face);
@@ -168,7 +169,7 @@ public:
 
 private:
 
-    // NOTE: We cannot use a d private container there due to use vector.push_back() 
+    // NOTE: We cannot use a d private container there due to use vector.push_back()
     //       C++ call instancied in FaceDetect class.
 
     int             x1;

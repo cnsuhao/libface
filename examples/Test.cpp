@@ -11,7 +11,7 @@
  * This is a simple example of the use of the libface library.
  * It implements face detection and recognition and uses the opencv libraries.
  *
- * @note: libface does not require users to have openCV knowledge, so here, 
+ * @note: libface does not require users to have openCV knowledge, so here,
  *        openCV is treated as a "3rd-party" library for image manipulation convenience.
  *
  * @author Copyright (C) 2010 by Alex Jironkin
@@ -20,6 +20,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -94,6 +95,7 @@ int main(int argc, char** argv)
             Face* face = result->at(j);
             cvRectangle( img, cvPoint(face->getX1(), face->getY1()), cvPoint(face->getX2(), face->getY2()), CV_RGB(255,0,0), 3, 2, 0);
             LibFaceUtils::showImage(img,argv[i]);
+            cvReleaseImage(&img);
         }
 
         // Append result to finalresult
