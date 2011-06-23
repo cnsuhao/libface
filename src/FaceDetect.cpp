@@ -376,8 +376,11 @@ std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     d->storage = cvCreateMemStorage(0);
     for (int i = 0; i < d->cascadeSet->getSize(); ++i) {
         IplImage* constTemp = temp ? temp : cvCloneImage(inputImage);
-        faces                = this->cascadeResult(constTemp, d->cascadeSet->getCascade(i).haarcasc, cvSize(faceSize,faceSize));
+        faces               = this->cascadeResult(constTemp, d->cascadeSet->getCascade(i).haarcasc, cvSize(faceSize,faceSize));
+        // By releasing constTemp, either temp or the above created clone is released.
+        cvReleaseImage(&constTemp);
     }
+
     cvReleaseMemStorage(&d->storage);
 
     final = clock()-init;
@@ -401,8 +404,6 @@ std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
 
     cvReleaseImage(&imgCopy);
 
-    if (temp)
-        cvReleaseImage(&temp);
     return faces;
 }
 
