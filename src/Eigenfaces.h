@@ -55,7 +55,7 @@ public:
     Eigenfaces(const std::string& dir = ".");
 
     /**
-     * Deconstructor that frees the data variables.
+     * Destructor that frees the data variables.
      */
     ~Eigenfaces();
 
