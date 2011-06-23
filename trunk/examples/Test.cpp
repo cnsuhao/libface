@@ -71,20 +71,23 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    // Load libface with DETECT to only do detection mode
     // "." means look for configuration file in current directory
 
     LibFace libFace = LibFace(ALL, ".");
 
-    vector<Face*>* result;    // Vector of faces returned from a particular photo's detection
-    vector<Face*>* finalresult = new vector<Face*>; // The combined vector of faces after detection on all photos is over
+    // This is a vector of pointers to Face objects. The vector will be destructed later. that means that the pointers will get destructed, but the faces they point to will not get deconstructed. We should destruct them manually.
+    vector<Face*>* result;
+    // Same holds for this object. Difference is that this vector is allocated with new here. See below to find out why.
+    vector<Face*>* finalresult = new vector<Face*>;
 
     for (int i = 1; i < argc; ++i)
     {
         // Load input image
         cout << "Loading image " << argv[i] << endl;
-        // detect faces in image
-        result = libFace.detectFaces(string(argv[i]));
+
+        // Now here, the function libFace.detectFaces will allocated the memory for result, hence we didn't allocate it earlier.
+        // (Actually, some other function called by detectFaces will do it.)
+        result = libFace.detectFaces(string(argv[i])); // detect faces in image
 
         // output results, show every face marked with a rectangle
         cout << " Face detection completed, found " << result->size() << " faces." << endl;
@@ -98,11 +101,11 @@ int main(int argc, char** argv)
             cvReleaseImage(&img);
         }
 
-        // Append result to finalresult
+        // Here, we insert the pointer from result into finalresult, which is why we had to allocate it earlier. finalresult and result now point to the same Face objects! We have to be careful not to destruct them twice, or destruct them through one pointer while the other pointer still needs them.
         finalresult->insert(finalresult->end(), result->begin(), result->end());
 
+        // Now we can deallocate result. This will call the destructor ~vector<Face*>(). This again calls the destructors for all elements of the vector, but those are just pointers. The destructor of a pointer is a no-op. meaning it does not release the object it is pointing to. Now this actually what we want, since we still need the actual object - finalresult is pointing to it. We still need to delete result, because in the next iteration of the for loop, result will be changed to point somewhere else.
         delete result;
-
     }
 
     cout << "Will recognize " << finalresult->size() << " faces..." << endl;
@@ -122,6 +125,13 @@ int main(int argc, char** argv)
         cout << " Face No." << i+1 << " matched known face with ID " << recognised.at(i).first << " at a distance of " << recognised.at(i).second << "." << endl;
     }
 
-    cout << "=== This was Test.cpp === " << endl;
+    // Now that we are done, we still have finalresult pointing to some Face objects (that is, if we found any in the images). Once main() returns, the destructor for finalresult will be called automatically, which in turn calls the destructors for all the elements of the vector. However, this will only delete the pointers, but not the Face objects pointed to, as already desribed earlier. We need to manually destruct all objects that finalresult points to.
+    while(finalresult->size() > 0) {
+        // Deleting the pointer calls the deconstructor of the object pointed to.
+        delete finalresult->at(0);
+        finalresult->erase(finalresult->begin());
+    }
+
+    cout << "=== This was Test.cpp ===" << endl;
     return 0;
 }

@@ -136,7 +136,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 
     float* projectedTestFace = (float*)malloc(sizeof(float));
 
-    CvSize size=cvSize(tempFaces.at(0)->width, tempFaces.at(0)->height);
+    CvSize size = cvSize(tempFaces.at(0)->width, tempFaces.at(0)->height);
 
     //Set PCA's termination criterion
     CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
@@ -183,7 +183,9 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     cvReleaseImage(&eigenObjects[0]);
     cvReleaseImage(&eigenObjects[1]);
 
-    tempFaces.clear();
+    // Calling clear is actually not necessary, tempFaces will be destructed on return.
+    // The images pointed to in tempFaces are owned by the calling function and may not be released here (which clear would not do).
+    //tempFaces.clear();
 
     return minDist;
 }

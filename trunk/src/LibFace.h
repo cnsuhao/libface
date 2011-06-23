@@ -74,7 +74,7 @@ public:
 #endif
 
     /**
-     * Deconstructor for the library.
+     * Destructor for the library.
      */
     ~LibFace();
 
