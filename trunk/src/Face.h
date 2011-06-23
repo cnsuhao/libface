@@ -59,13 +59,42 @@ public:
      * @param y1 Y coordinate of the top left corner of the face.
      * @param x2 X coordinate of the bottom right corner of the face.
      * @param y2 Y coordinate of the bottom right corner of the face.
-     * @param id ID of the face. -1 not not known.
+     * @param id ID of the face. -1 not known.
      * @param face A pointer to the IplImage with the image data.
      */
     Face(int x1=-1, int y1=-1, int x2=-1, int y2=-1, int id=-1, IplImage* face=0);
 
+    Face(const Face & that) : x1(that.x1), y1(that.y1), x2(that.x2), y2(that.y2), id(that.id), width(that.width), height(that.height), face(0) {
+        LOG(libfaceDEBUG) << "Face copy constructor was called.";
+        if(that.face != 0) {
+            face = cvCloneImage(that.face);
+        }
+    }
+
+    Face & operator = (const Face & that) {
+        LOG(libfaceDEBUG) << "Face assignment operator was called.";
+        // check self assignment
+        if(this == &that) {
+            return *this;
+        }
+        x1 = that.x1;
+        y1 = that.y1;
+        x2 = that.x2;
+        y2 = that.y2;
+        id = that.id;
+        width = that.width;
+        height = that.height;
+        face = cvCloneImage(that.face);
+        return *this;
+    }
+
+    // TODO do we need these?
+    // bool operator == (const Face& that) const
+    // bool operator != (const Face& that) const
+
+
     /**
-     * Deconstructor that releases the pointer to IplImage.
+     * Destructor that releases the IplImage.
      */
     ~Face();
 
