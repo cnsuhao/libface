@@ -33,13 +33,18 @@
 
 #include <ctime>
 
+#if defined (__APPLE__)
+#include <cv.h>
+//#include <highgui.h>
+#else
 #include <opencv/cv.h>
-#include <opencv/highgui.h>
+//#include <opencv/highgui.h>
+#endif
 
-#include "LibFaceUtils.h"
+//#include "LibFaceUtils.h"
 #include "Haarcascades.h"
 #include "FaceDetect.h"
-#include "Face.h"
+//#include "Face.h"
 #include "Log.h"
 
 using namespace std;
@@ -55,9 +60,12 @@ class FaceDetect::FaceDetectPriv {
 
 public:
 
-    FaceDetectPriv() {
-        cascadeSet = 0;
-        storage    = 0;
+    FaceDetectPriv() : cascadeSet(0), storage(0) {}
+    ~FaceDetectPriv() {
+        if(storage) {
+            cvReleaseMemStorage(&storage);
+        }
+        delete cascadeSet;
     }
 
     Haarcascades* cascadeSet;
@@ -76,8 +84,7 @@ public:
     int           accu;
 };
 
-FaceDetect::FaceDetect(const string& cascadeDir)
-: d(new FaceDetectPriv) {
+FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv) {
     d->cascadeSet = new Haarcascades(cascadeDir);
 
     /* Cascades */
@@ -91,9 +98,7 @@ FaceDetect::FaceDetect(const string& cascadeDir)
 }
 
 FaceDetect::~FaceDetect() {
-    cvReleaseMemStorage(&d->storage);
-    d->cascadeSet->clear();
-    delete d->cascadeSet;
+    // deleting/releasing all pointer members
     delete d;
 }
 

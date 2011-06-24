@@ -85,7 +85,7 @@ void Face::setId(int id) {
 
 void Face::setFace(IplImage* face) {
     // if another image was already set as this->face, release it
-    if(this->face != 0)
+    if(this->face)
         cvReleaseImage(&this->face);
 	this->face = face;
 }

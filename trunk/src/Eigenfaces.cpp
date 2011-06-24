@@ -39,25 +39,32 @@
 
 #include <sys/stat.h>
 
-#include <ctime>
-#include <cctype>
+//#include <ctime>
+//#include <cctype>
 #include <iostream>
-#include <fstream>
-#include <cstdio>
-#include <cstdlib>
-#include <cerrno>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
+//#include <fstream>
+//#include <cstdio>
+//#include <cstdlib>
+//#include <cerrno>
+//#include <vector>
+//#include <sstream>
+//#include <algorithm>
+//#include <iterator>
 
-#include <opencv/cvaux.h>
+#if defined (__APPLE__)
+#include <cv.h>
+#include <cvaux.h>
+//#include <highgui.h>
+#else
 #include <opencv/cv.h>
+#include <opencv/cvaux.h>
+//#include <opencv/highgui.h>
+#endif
 
 //TODO: Check where the data needs to be released to reduce memoryconsumption.
 #include "Eigenfaces.h"
 #include "FaceDetect.h"
-#include "LibFaceUtils.h"
+//#include "LibFaceUtils.h"
 
 #include "Log.h"
 
