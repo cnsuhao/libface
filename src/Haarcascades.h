@@ -12,6 +12,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -38,15 +39,20 @@
 namespace libface
 {
 
-// A Cascade structure has :
-// a name (for easy reference),
-// a filename (to load the actual cascade from)
-// a CvHaarClassifierCascade object pointer
-
 typedef struct CascadeStruct
 {
     std::string              name;
     CvHaarClassifierCascade* haarcasc;
+
+    CascadeStruct();
+
+    CascadeStruct(const std::string & argName, const std::string & argFile);
+
+    CascadeStruct(const CascadeStruct & that);
+
+    CascadeStruct & operator = (const CascadeStruct & that);
+
+    ~CascadeStruct();
 } Cascade;
 
 class FACEAPI Haarcascades
@@ -55,11 +61,21 @@ class FACEAPI Haarcascades
 public:
 
     /**
-     * Constructor which initializes the cascade directory's path
+     * Constructor which initializes the cascade directory's path.
      *
-     * @param path The path to the directory containing the cascade
+     * @param path The path to the directory containing the cascade.
      */
     Haarcascades(const std::string& path);
+
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    Haarcascades(const Haarcascades & that);
+
+    // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
+    //Haarcascades & operator = (const Haarcascades & that);
 
     /**
      * Destructor for Haarcascades
@@ -67,88 +83,103 @@ public:
     ~Haarcascades();
 
     /**
-     * Adds a new cascade with a specified d->weights
-     * @param newCascade A Cascade object
-     * @param newWeight The weight of the cascade
+     * Adds a new cascade with a specified d->weights.
+     *
+     * @param newCascade A Cascade object.
+     * @param newWeight The weight of the cascade.
      */
-    void addCascade(const Cascade& newCascade, int newWeight);
+    void addCascade(const Cascade & newCascade, const int & newWeight);
 
     /**
-     * Adds a new cascade with a specified d->weights
-     * @param name The filename of the cascade
-     * @param weight The weight of the cascade
+     * Adds a new cascade with a specified d->weights.
+     *
+     * This is a wrapper for addCascade(const Cascade & newCascade, const int & newWeight).
+     *
+     * @param name The filename of the cascade.
+     * @param weight The weight of the cascade.
      */
-    void addCascade(const std::string& name, int weight);
+    void addCascade(const std::string & name, const int & newWeight);
 
     /**
-     * Removes a cascade with the specified name
-     * @param name The name of the cascade to be removed
+     * Removes a cascade with the specified name.
+     *
+     * @param name The name of the cascade to be removed.
      */
     void removeCascade(const std::string& name);
 
     /**
-     * Removes a cascade with the specified index
-     * @param index The index of the cascade to be removed
+     * Removes a cascade with the specified index.
+     *
+     * @param index The index of the cascade to be removed.
      */
     void removeCascade(int index);
 
     /**
-     * Sets the weight of the cascade with the specified name
-     * @param name The name of the cascade whose weight is to be set
-     * @param weight The new weight
+     * Sets the weight of the cascade with the specified name.
+     *
+     * @param name The name of the cascade whose weight is to be set.
+     * @param weight The new weight.
      */
     void setWeight(const std::string& name, int weight);
 
     /**
-     * Sets the weight of the cascade with the specified index
-     * @param index The index of the cascade whose weight is to be set
-     * @param weight The new weight
+     * Sets the weight of the cascade with the specified index.
+     *
+     * @param index The index of the cascade whose weight is to be set.
+     * @param weight The new weight.
      */
     void setWeight(int index, int weight);
 
     /**
-     * Returns the weight of the cascade with the specified name
-     * @param name The name of the cascade whose weight is desired
-     * @return The weight of the cascade
+     * Returns the weight of the cascade with the specified name.
+     *
+     * @param name The name of the cascade whose weight is desired.
+     * @return The weight of the cascade.
      */
     int getWeight(const std::string& name) const;
 
     /**
-     * Returns the weight of the cascade with the specified index
-     * @param index The index of the cascade whose weight is desired
-     * @return The weight of the cascade
+     * Returns the weight of the cascade with the specified index.
+     *
+     * @param index The index of the cascade whose weight is desired.
+     * @return The weight of the cascade.
      */
     int getWeight(int index) const;
 
     /**
-     * Checks whether the cascade is in the set
-     * @param name The name of the cascade whose presence is to be checked
-     * @return Whether the cascade exists in the set or not
+     * Checks whether the cascade is in the set.
+     *
+     * @param name The name of the cascade whose presence is to be checked.
+     * @return Whether the cascade exists in the set or not.
      */
     bool hasCascade(const std::string& name) const;
 
     /**
-     * Returns the Cascade object for the Cascade with the specified name
-     * @param name The name of the desired cascade
-     * @return The Cascade object with the name
+     * Returns the Cascade object for the Cascade with the specified name.
+     *
+     * @param name The name of the desired cascade.
+     * @return The Cascade object with the name.
      */
     const Cascade& getCascade(const std::string& name) const;
 
     /**
-     * Returns the Cascade object for the Cascade with the specified index
-     * @param index The index of the desired cascade
-     * @return The Cascade object with the index
+     * Returns the Cascade object for the Cascade with the specified index.
+     *
+     * @param index The index of the desired cascade.
+     * @return The Cascade object with the index.
      */
     const Cascade& getCascade(int index) const;
 
     /**
-     * Returns the number of cascades loaded into the set
-     * @return The number of cascades
+     * Returns the number of cascades loaded into the set.
+     *
+     * @return The number of cascades.
      */
     int getSize() const;
 
     /**
-     * Clears the entire set of cascades
+     * Clears the entire set of cascades.
+     * It is not necessary to call this function during destruction.
      */
     void clear();
 

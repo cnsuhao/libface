@@ -33,30 +33,28 @@
  *
  * ============================================================ */
 
-#include <sys/stat.h>
+//#include <sys/stat.h>
 
 #include <iostream>
-#include <fstream>
-#include <cstdio>
-#include <cstdlib>
-#include <cctype>
-#include <cerrno>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-#include <iterator>
+//#include <fstream>
+//#include <cstdio>
+//#include <cstdlib>
+//#include <cctype>
+//#include <cerrno>
+//#include <vector>
+//#include <sstream>
+//#include <algorithm>
+//#include <iterator>
 
 #include "LibFace.h"
 #include "LibFaceUtils.h"
 #include "FaceDetect.h"
-#include "Face.h"
+//#include "Face.h"
 #include "Log.h"
 
 using namespace std;
 
-
 extern std::ostream std::clog;
-
 
 namespace libface {
 

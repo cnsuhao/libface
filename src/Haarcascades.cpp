@@ -12,6 +12,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -29,41 +30,72 @@
  * ============================================================ */
 
 #include <string>
-#include <cstdio>
-#include <cstdlib>
-#include <cassert>
-#include <cmath>
-#include <cfloat>
-#include <climits>
-#include <ctime>
-#include <cctype>
+//#include <cstdio>
+//#include <cstdlib>
+//#include <cassert>
+//#include <cmath>
+//#include <cfloat>
+//#include <climits>
+//#include <ctime>
+//#include <cctype>
 
 #if defined (__APPLE__)
 #include <cv.h>
-#include <highgui.h>
+//#include <highgui.h>
 #else
 #include <opencv/cv.h>
-#include <opencv/highgui.h>
+//#include <opencv/highgui.h>
 #endif
 
 #include "Haarcascades.h"
 
-// TODO: Free memory before erasing cascades from vector, LOTS of exception handling
+// TODO: LOTS of exception handling
 
 using namespace std;
 
 namespace libface
 {
 
+CascadeStruct::CascadeStruct() : name(), haarcasc(0) {};
+
+CascadeStruct::CascadeStruct(const std::string & argName, const std::string & argFile) : name(argName), haarcasc(0) {
+    // TODO If name is always the filename, the c'tor could be simplified to only take on argument.
+    // TODO Consider checking if argFile actually exists?
+    haarcasc = (CvHaarClassifierCascade*) cvLoad(argFile.c_str(), 0, 0, 0);
+};
+
+CascadeStruct::CascadeStruct(const CascadeStruct & that) : name(that.name), haarcasc(0) {
+    if(that.haarcasc) {
+        haarcasc = (CvHaarClassifierCascade*) cvClone(that.haarcasc);
+    }
+};
+
+CascadeStruct & CascadeStruct::operator = (const CascadeStruct & that) {
+    if(this == &that) {
+        return *this;
+    }
+    name = that.name;
+    if(that.haarcasc) {
+        haarcasc = (CvHaarClassifierCascade*) cvClone(that.haarcasc);
+    }
+    return *this;
+}
+
+CascadeStruct::~CascadeStruct() {
+    if(haarcasc) {
+        cvReleaseHaarClassifierCascade(&haarcasc);
+    }
+}
+
 class Haarcascades::HaarcascadesPriv
 {
 
 public:
 
-    HaarcascadesPriv()
-    {
-        size = 0;
-    }
+    HaarcascadesPriv() : cascadePath(), cascades(), weights(), size(0) {}
+    HaarcascadesPriv(const string & path) : cascadePath(path), cascades(), weights(), size(0) {}
+
+    // Custom copy constructors, destructor, etc. are not required as long there are no pointer data members.
 
     std::string          cascadePath;
     std::vector<Cascade> cascades;
@@ -71,46 +103,53 @@ public:
     int                  size;
 };
 
-Haarcascades::Haarcascades(const string& path)
-            : d(new HaarcascadesPriv)
-{
-    this->d->cascadePath = path;
+Haarcascades::Haarcascades(const string& path) : d(new HaarcascadesPriv(path)) {}
+
+Haarcascades::Haarcascades(const Haarcascades & that) : d(new HaarcascadesPriv(*that.d)) {}
+
+/*
+// This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
+Haarcascades & Haarcascades::operator = (const Haarcascades & that) {
+    if(this == &that) {
+        return *this;
+    }
+    d = new HaarcascadesPriv(*that.d);
 }
+*/
 
 Haarcascades::~Haarcascades()
 {
-    this->clear();
-    d->size = 0;
+    // deleting the pointer calls the d'tor of d, which calls the d'tors of all members of the class HaarcascadesPriv
     delete d;
 }
 
-void Haarcascades::addCascade(const Cascade& newCascade, int newWeight)
+void Haarcascades::addCascade(const Cascade& newCascade, const int & newWeight)
 {
-    if (this->hasCascade(newCascade.name))
+    if (this->hasCascade(newCascade.name)) {
         return;
+    }
 
     d->cascades.push_back(newCascade);
     d->weights.push_back(newWeight);
     d->size++;
 }
 
-void Haarcascades::addCascade(const string& name, int newWeight)
+void Haarcascades::addCascade(const string& name, const int & newWeight)
 {
-    if (this->hasCascade(name))
+    if (this->hasCascade(name)) {
         return;
+    }
 
-    Cascade newCascade;
-    newCascade.name     = name;
-    newCascade.haarcasc = (CvHaarClassifierCascade*) cvLoad((d->cascadePath + string("/") + name).data(), 0, 0, 0);
+    Cascade newCascade(name, (d->cascadePath + string("/") + name));
     this->addCascade(newCascade, newWeight);
 }
 
 bool Haarcascades::hasCascade(const string& name) const
 {
-    for (int i = 0; i < d->size-1; ++i)
-    {
-        if (name == d->cascades[i].name)
+    for (int i = 0; i < d->size-1; ++i) {
+        if (name == d->cascades.at(i).name) {
             return true;
+        }
     }
     return false;
 }
@@ -118,10 +157,10 @@ bool Haarcascades::hasCascade(const string& name) const
 void Haarcascades::removeCascade(const string& name)
 {
     int i;
-    for (i = 0; i < d->size-1; ++i)
-    {
-        if (name == d->cascades[i].name)
+    for (i = 0; i < d->size-1; ++i) {
+        if (name == d->cascades.at(i).name) {
             break;
+        }
     }
 
     d->cascades.erase(d->cascades.begin() + i);
@@ -138,17 +177,17 @@ void Haarcascades::removeCascade(int index)
 
 int Haarcascades::getWeight(const string& name) const
 {
-    for (int i = 0; i < d->size-1; ++i)
-    {
-        if (name == d->cascades[i].name)
-            return d->weights[i];
+    for (int i = 0; i < d->size-1; ++i) {
+        if (name == d->cascades.at(i).name) {
+            return d->weights.at(i);
+        }
     }
     return -1;	// No such name found, return -1
 }
 
 int Haarcascades::getWeight(int index) const
 {
-    return d->weights[index];
+    return d->weights.at(index);
 }
 
 void Haarcascades::setWeight(const string& name, int weight)
@@ -156,16 +195,16 @@ void Haarcascades::setWeight(const string& name, int weight)
     int i;
     for (i = 0; i < d->size-1; ++i)
     {
-        if (name == d->cascades[i].name)
+        if (name == d->cascades.at(i).name)
             break;
     }
 
-    d->weights[i] = weight;
+    d->weights.at(i) = weight;
 }
 
 void Haarcascades::setWeight(int index, int weight)
 {
-    d->weights[index] = weight;
+    d->weights.at(index) = weight;
 }
 
 const Cascade& Haarcascades::getCascade(const string& name) const
@@ -173,15 +212,15 @@ const Cascade& Haarcascades::getCascade(const string& name) const
     int i;
     for (i = 0; i < d->size-1; ++i)
     {
-        if (name == d->cascades[i].name)
+        if (name == d->cascades.at(i).name)
             break;
     }
-    return d->cascades[i];
+    return d->cascades.at(i);
 }
 
 const Cascade& Haarcascades::getCascade(int index) const
 {
-    return d->cascades[index];
+    return d->cascades.at(index);
 }
 
 int Haarcascades::getSize() const
@@ -191,10 +230,6 @@ int Haarcascades::getSize() const
 
 void Haarcascades::clear()
 {
-    for(unsigned int i = 0; i < d->cascades.size(); ++i)
-    {
-        cvReleaseHaarClassifierCascade(&d->cascades[i].haarcasc);
-    }
     d->cascades.clear();
     d->weights.clear();
     d->size = 0;
