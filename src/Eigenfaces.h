@@ -35,10 +35,22 @@
 #ifndef _EIGENFACES_H_
 #define _EIGENFACES_H_
 
-#include <string>
-
+// LibFace headers
 #include "LibFaceConfig.h"
 #include "LibFaceCore.h"
+
+// OpenCV headers
+#if defined (__APPLE__)
+#include <cv.h>
+#else
+#include <opencv/cv.h>
+#endif
+
+// C headers
+#include <map>
+#include <string>
+#include <utility> // for pair
+#include <vector>
 
 namespace libface
 {

@@ -36,12 +36,19 @@
 #ifndef _LIBFACE_H_
 #define _LIBFACE_H_
 
-#include "Eigenfaces.h"
-//#include "HMMfaces.h"
-#include "LibFaceConfig.h"
+// LibFace headers
 #include "LibFaceCore.h"
 
+// C headers
+#include <map>
+#include <string>
+#include <utility> // for pair
+#include <vector>
+
 namespace libface {
+
+// forward declaration
+class Face;
 
 /** This defines that everything is initialised in libface, both detection and recognition.
  */
@@ -66,7 +73,7 @@ public:
      * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
      * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades
      */
-    LibFace(Mode type = ALL, const std::string& configDir = ".", 
+    LibFace(Mode type = ALL, const std::string& configDir = ".",
             const std::string& cascadeDir = std::string(OPENCVDIR)+"/haarcascades");
 
     /**

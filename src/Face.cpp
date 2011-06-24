@@ -32,7 +32,11 @@
  *
  * ============================================================ */
 
+// own header
 #include "Face.h"
+
+// LibFace headers
+#include "Log.h"
 
 namespace libface {
 
@@ -51,6 +55,30 @@ Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) {
 
 	//Set the pointer to the face.
 	this->face   = face;
+}
+
+Face::Face(const Face & that) : x1(that.x1), y1(that.y1), x2(that.x2), y2(that.y2), id(that.id), width(that.width), height(that.height), face(0) {
+    LOG(libfaceDEBUG) << "Face copy constructor was called.";
+    if(that.face != 0) {
+        face = cvCloneImage(that.face);
+    }
+}
+
+Face & Face::operator = (const Face & that) {
+    LOG(libfaceDEBUG) << "Face assignment operator was called.";
+    // check self assignment
+    if(this == &that) {
+        return *this;
+    }
+    x1 = that.x1;
+    y1 = that.y1;
+    x2 = that.x2;
+    y2 = that.y2;
+    id = that.id;
+    width = that.width;
+    height = that.height;
+    face = cvCloneImage(that.face);
+    return *this;
 }
 
 Face::~Face() {
@@ -93,7 +121,6 @@ void Face::setFace(IplImage* face) {
 IplImage* Face::getFace() const {
 	if (this->face)
 		return this->face;
-
 	return 0;
 }
 

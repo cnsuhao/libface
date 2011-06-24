@@ -20,11 +20,11 @@
 #ifndef LOG_H_
 #define LOG_H_
 
+#include "LibFaceConfig.h"
+
 #include <sstream>
 #include <string>
 #include <stdio.h>
-
-#include "LibFaceConfig.h"
 
 namespace libface {
 

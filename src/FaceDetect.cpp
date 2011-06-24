@@ -31,28 +31,28 @@
  *
  * ============================================================ */
 
-#include <ctime>
+// own header
+#include "FaceDetect.h"
 
+// LibFace headers
+#include "Log.h"
+#include "Face.h"
+#include "Haarcascades.h"
+#include "LibFaceUtils.h"
+
+// OpenCV headers
 #if defined (__APPLE__)
 #include <cv.h>
-//#include <highgui.h>
+#include <highgui.h>
 #else
 #include <opencv/cv.h>
-//#include <opencv/highgui.h>
+#include <opencv/highgui.h>
 #endif
 
-//#include "LibFaceUtils.h"
-#include "Haarcascades.h"
-#include "FaceDetect.h"
-//#include "Face.h"
-#include "Log.h"
+// C headers
+#include <ctime>
 
 using namespace std;
-using namespace cv;
-
-namespace std {
-  extern ostream clog;
-}
 
 namespace libface {
 
@@ -201,7 +201,7 @@ vector<Face*>* FaceDetect::cascadeResult(const IplImage* inputImage, CvHaarClass
                 casc,
                 d->storage,
                 d->searchIncrement,             // Increase search scale by 5% everytime
-                d->grouping,                              // Drop groups of less than 2 detections
+                d->grouping,                    // Drop groups of less than 2 detections
                 CV_HAAR_DO_CANNY_PRUNING,
                 faceSize                        // Minimum face size to look for
         );
@@ -322,7 +322,7 @@ int FaceDetect::getRecommendedImageSizeForDetection() {
     return 800; // area, with typical photos, about 500000
 }
 
-std::vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
+vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     if(inputImage->width < 50 || inputImage->height < 50 || inputImage->imageData == 0)
     {
         LOG(libfaceINFO) << "Bad image given, not performing face detection.";

@@ -39,7 +39,6 @@
 
 #include <iostream>
 #include <vector>
-#include <math.h>
 
 // Extra libraries for use in client programs
 #if defined (__APPLE__)

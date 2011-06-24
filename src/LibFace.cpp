@@ -33,28 +33,24 @@
  *
  * ============================================================ */
 
-//#include <sys/stat.h>
-
-#include <iostream>
-//#include <fstream>
-//#include <cstdio>
-//#include <cstdlib>
-//#include <cctype>
-//#include <cerrno>
-//#include <vector>
-//#include <sstream>
-//#include <algorithm>
-//#include <iterator>
-
+// own header
 #include "LibFace.h"
-#include "LibFaceUtils.h"
-#include "FaceDetect.h"
-//#include "Face.h"
+
+// LibFace headers
 #include "Log.h"
+#include "Eigenfaces.h"
+#include "Face.h"
+#include "FaceDetect.h"
+#include "LibFaceUtils.h"
+
+// OpenCV headers
+#if defined (__APPLE__)
+#include <highgui.h>
+#else
+#include <opencv/highgui.h>
+#endif
 
 using namespace std;
-
-extern std::ostream std::clog;
 
 namespace libface {
 
@@ -69,11 +65,11 @@ public:
     }
 
     Mode                    type;
-    std::string             cascadeDir;
+    string                  cascadeDir;
     LibFaceDetectCore*      detectionCore;
     LibFaceRecognitionCore* recognitionCore;
     IplImage*               lastImage;
-    std::string             lastFileName;
+    string                  lastFileName;
 
     static int              facesize() { return 120; }
 };

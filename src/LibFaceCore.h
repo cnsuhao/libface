@@ -33,16 +33,26 @@
 #ifndef _LIBFACECORE_H_
 #define _LIBFACECORE_H_
 
+// LibFace headers
+#include "LibFaceConfig.h"
+
+// OpenCV headers
 #if defined (__APPLE__)
 #include <cv.h>
 #else
 #include <opencv/cv.h>
 #endif
 
-#include "Face.h"
+// C headers
+#include <map>
+#include <string>
+#include <vector>
 
 namespace libface
 {
+
+// forward declaration
+class Face;
 
 /**
  * Abstract class which all classes for face recognition must implement.

@@ -37,36 +37,25 @@
 #pragma warning( disable : 4996 )
 #endif // WIN32
 
-#include <sys/stat.h>
+// own header
+#include "Eigenfaces.h"
 
-//#include <ctime>
-//#include <cctype>
-#include <iostream>
-//#include <fstream>
-//#include <cstdio>
-//#include <cstdlib>
-//#include <cerrno>
-//#include <vector>
-//#include <sstream>
-//#include <algorithm>
-//#include <iterator>
+// LibFace headers
+#include "Log.h"
+#include "Face.h"
+#include "FaceDetect.h"
+#include "LibFaceUtils.h"
 
+// OpenCV headers
 #if defined (__APPLE__)
-#include <cv.h>
 #include <cvaux.h>
-//#include <highgui.h>
 #else
-#include <opencv/cv.h>
 #include <opencv/cvaux.h>
-//#include <opencv/highgui.h>
 #endif
 
-//TODO: Check where the data needs to be released to reduce memoryconsumption.
-#include "Eigenfaces.h"
-#include "FaceDetect.h"
-//#include "LibFaceUtils.h"
-
-#include "Log.h"
+// C headers
+#include <sys/stat.h>
+#include <iostream>
 
 using namespace std;
 
@@ -109,17 +98,17 @@ public:
 public:
 
     // Face data members, stored in the DB
-    std::vector<IplImage*> faceImgArr;                 // Array of face images
-    std::vector<int>       indexMap;
+    vector<IplImage*> faceImgArr;                 // Array of face images
+    vector<int>       indexMap;
 
     // Config data members
-    std::string            configFile;
+    string            configFile;
 
     double                 CUT_OFF;
     double                 UPPER_DIST;
     double                 LOWER_DIST;
     float                  RMS_THRESHOLD;
-    float                   THRESHOLD;
+    float                  THRESHOLD;
     int                    FACE_WIDTH;
     int                    FACE_HEIGHT;
 };
@@ -128,7 +117,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 
     float minDist = FLT_MAX;
 
-    std::vector<IplImage*> tempFaces;
+    vector<IplImage*> tempFaces;
     tempFaces.push_back(img1);
 
 
@@ -234,7 +223,7 @@ double Eigenfaces::EigenfacesPriv::rms(const IplImage* img1, const IplImage* img
 void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
     int i;
-    std::vector<IplImage*> tempFaces;
+    vector<IplImage*> tempFaces;
 
     tempFaces.push_back(newFace);
     tempFaces.push_back(faceImgArr.at(index));
@@ -322,7 +311,7 @@ Eigenfaces::Eigenfaces(const string& dir)
 
 Eigenfaces::~Eigenfaces() {
 
-    for (std::vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
+    for (vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
         cvReleaseImage(&(*it));
     d->faceImgArr.clear();
 
@@ -534,7 +523,7 @@ int Eigenfaces::update(vector<Face*>* newFaceArr) {
 
             //find (d->indexMap.begin(), d->indexMap.end(), id);
 
-            std::vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
+            vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
             if(it != d->indexMap.end()) {
 
                 LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
