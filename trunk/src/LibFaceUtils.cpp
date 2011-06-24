@@ -30,9 +30,18 @@
  *
  * ============================================================ */
 
-//#include <cmath>
-
+// own header
 #include "LibFaceUtils.h"
+
+// LibFace headers
+#include "Face.h"
+
+// OpenCV headers
+#if defined (__APPLE__)
+#include <highgui.h>
+#else
+#include <opencv/highgui.h>
+#endif
 
 using namespace std;
 
@@ -350,14 +359,14 @@ CvMat* LibFaceUtils::mean(CvMat* src)
  */
 IplImage* LibFaceUtils::stringToImage(const string& data, int depth, int channels)
 {
-    std::string::size_type start, stop;
+    string::size_type start, stop;
     start    = 0;
     stop     = data.find('\n', start);
     int cols = 0, rows = 0;
     vector<double> values;
 
     //First figure out how many rows and cols there are and store data in vector
-    while (stop != std::string::npos)
+    while (stop != string::npos)
     {
         string copy(data, start, stop);
         int extract = 1;
@@ -366,7 +375,7 @@ IplImage* LibFaceUtils::stringToImage(const string& data, int depth, int channel
 
         while(extract)
         {
-            std::string::size_type startIndex = copy.find("\t");
+            string::size_type startIndex = copy.find("\t");
 
             string value = copy.substr(0, startIndex);
 
@@ -411,14 +420,14 @@ IplImage* LibFaceUtils::stringToImage(const string& data, int depth, int channel
  */
 CvMat* LibFaceUtils::stringToMatrix(const string & data, int type)
 {
-    std::string::size_type start, stop;
+    string::size_type start, stop;
     start    = 0;
     stop     = data.find('\n', start);
     int cols = 0, rows = 0;
     vector<double> values;
 
     //First figure out how many rows and cols there are and store data in vector
-    while (stop != std::string::npos)
+    while (stop != string::npos)
     {
         string copy(data, start, stop);
         int extract = 1;
@@ -426,7 +435,7 @@ CvMat* LibFaceUtils::stringToMatrix(const string & data, int type)
 
         while(extract)
         {
-            std::string::size_type startIndex = copy.find("\t");
+            string::size_type startIndex = copy.find("\t");
             string value                      = copy.substr(0, startIndex);
             copy                              = copy.substr(startIndex+1);
 

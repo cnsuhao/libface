@@ -29,24 +29,7 @@
  *
  * ============================================================ */
 
-#include <string>
-//#include <cstdio>
-//#include <cstdlib>
-//#include <cassert>
-//#include <cmath>
-//#include <cfloat>
-//#include <climits>
-//#include <ctime>
-//#include <cctype>
-
-#if defined (__APPLE__)
-#include <cv.h>
-//#include <highgui.h>
-#else
-#include <opencv/cv.h>
-//#include <opencv/highgui.h>
-#endif
-
+// own header
 #include "Haarcascades.h"
 
 // TODO: LOTS of exception handling
@@ -58,7 +41,7 @@ namespace libface
 
 CascadeStruct::CascadeStruct() : name(), haarcasc(0) {};
 
-CascadeStruct::CascadeStruct(const std::string & argName, const std::string & argFile) : name(argName), haarcasc(0) {
+CascadeStruct::CascadeStruct(const string & argName, const string & argFile) : name(argName), haarcasc(0) {
     // TODO If name is always the filename, the c'tor could be simplified to only take on argument.
     // TODO Consider checking if argFile actually exists?
     haarcasc = (CvHaarClassifierCascade*) cvLoad(argFile.c_str(), 0, 0, 0);
@@ -97,10 +80,10 @@ public:
 
     // Custom copy constructors, destructor, etc. are not required as long there are no pointer data members.
 
-    std::string          cascadePath;
-    std::vector<Cascade> cascades;
-    std::vector<int>     weights;
-    int                  size;
+    string cascadePath;
+    vector<Cascade> cascades;
+    vector<int> weights;
+    int size;
 };
 
 Haarcascades::Haarcascades(const string& path) : d(new HaarcascadesPriv(path)) {}

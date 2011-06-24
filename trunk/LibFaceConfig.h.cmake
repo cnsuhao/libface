@@ -1,4 +1,4 @@
-/*
+/**
  * @file LibFaceConfig.h
  *
  * @section LICENSE

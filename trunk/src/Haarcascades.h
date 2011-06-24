@@ -32,9 +32,18 @@
 #ifndef _HAARCASCADES_H_
 #define _HAARCASCADES_H_
 
-#include <string>
-
+// LibFace headers
 #include "LibFaceConfig.h"
+
+// OpenCV headers
+#if defined (__APPLE__)
+#include <cv.h>
+#else
+#include <opencv/cv.h>
+#endif
+
+// C headers
+#include <string>
 
 namespace libface
 {
