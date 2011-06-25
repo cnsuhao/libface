@@ -32,6 +32,14 @@
 // own header
 #include "Haarcascades.h"
 
+// LibFace headers
+#include "Log.h"
+#include "LibFaceConfig.h"
+
+// C headers
+#include <string>
+#include <vector>
+
 // TODO: LOTS of exception handling
 
 using namespace std;
@@ -54,12 +62,18 @@ CascadeStruct::CascadeStruct(const CascadeStruct& that) : name(that.name), haarc
 };
 
 CascadeStruct& CascadeStruct::operator = (const CascadeStruct& that) {
+    LOG(libfaceWARNING) << "This operator has not been tested: CascadeStruct& operator =";
     if(this == &that) {
         return *this;
     }
     name = that.name;
+    if(haarcasc) {
+        cvReleaseHaarClassifierCascade(&haarcasc);
+    }
     if(that.haarcasc) {
         haarcasc = (CvHaarClassifierCascade*) cvClone(that.haarcasc);
+    } else {
+        haarcasc = 0;
     }
     return *this;
 }

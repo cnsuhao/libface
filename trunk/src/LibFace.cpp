@@ -112,7 +112,6 @@ private:
     }
 
     // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
-    // This will probably not work.
     LibFacePriv& operator = (const LibFacePriv& that) {
         LOG(libfaceWARNING) << "This operator has not been tested: LibFacePriv& operator = (const LibFacePriv& that).";
         if(this == &that) {

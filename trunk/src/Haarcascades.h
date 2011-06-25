@@ -77,13 +77,6 @@ public:
     Haarcascades(const std::string& path);
 
     /**
-     * Copy constructor.
-     *
-     * @param that Object to be copied.
-     */
-    Haarcascades(const Haarcascades& that);
-
-    /**
      * Destructor for Haarcascades
      */
     ~Haarcascades();
@@ -190,6 +183,14 @@ public:
     void clear();
 
 private:
+
+    // This constructor is implemented, but private, since it is not needed.
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    Haarcascades(const Haarcascades& that);
 
     // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
     // For now, it's private to prevent usage and unexpected behavior.
