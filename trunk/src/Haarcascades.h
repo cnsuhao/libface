@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file Haarcascades.h
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -55,11 +55,11 @@ typedef struct CascadeStruct
 
     CascadeStruct();
 
-    CascadeStruct(const std::string & argName, const std::string & argFile);
+    CascadeStruct(const std::string& argName, const std::string& argFile);
 
-    CascadeStruct(const CascadeStruct & that);
+    CascadeStruct(const CascadeStruct& that);
 
-    CascadeStruct & operator = (const CascadeStruct & that);
+    CascadeStruct& operator = (const CascadeStruct& that);
 
     ~CascadeStruct();
 } Cascade;
@@ -81,10 +81,7 @@ public:
      *
      * @param that Object to be copied.
      */
-    Haarcascades(const Haarcascades & that);
-
-    // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
-    //Haarcascades & operator = (const Haarcascades & that);
+    Haarcascades(const Haarcascades& that);
 
     /**
      * Destructor for Haarcascades
@@ -97,17 +94,17 @@ public:
      * @param newCascade A Cascade object.
      * @param newWeight The weight of the cascade.
      */
-    void addCascade(const Cascade & newCascade, const int & newWeight);
+    void addCascade(const Cascade& newCascade, const int& newWeight);
 
     /**
      * Adds a new cascade with a specified d->weights.
      *
-     * This is a wrapper for addCascade(const Cascade & newCascade, const int & newWeight).
+     * This is a wrapper for addCascade(const Cascade& newCascade, const int& newWeight).
      *
      * @param name The filename of the cascade.
      * @param weight The weight of the cascade.
      */
-    void addCascade(const std::string & name, const int & newWeight);
+    void addCascade(const std::string& name, const int& newWeight);
 
     /**
      * Removes a cascade with the specified name.
@@ -193,6 +190,10 @@ public:
     void clear();
 
 private:
+
+    // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
+    // For now, it's private to prevent usage and unexpected behavior.
+    Haarcascades& operator = (const Haarcascades& that);
 
     class HaarcascadesPriv;
     HaarcascadesPriv* const d;

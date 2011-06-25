@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 
     // "." means look for configuration file in current directory
 
-    LibFace libFace = LibFace(ALL, ".");
+    LibFace libFace(ALL, ".");
 
     // This is a vector of pointers to Face objects. The vector will be destructed later. that means that the pointers will get destructed, but the faces they point to will not get deconstructed. We should destruct them manually.
     vector<Face*>* result;
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
             IplImage* img = cvLoadImage(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
             Face* face = result->at(j);
             cvRectangle( img, cvPoint(face->getX1(), face->getY1()), cvPoint(face->getX2(), face->getY2()), CV_RGB(255,0,0), 3, 2, 0);
-            LibFaceUtils::showImage(img,argv[i]);
+            //LibFaceUtils::showImage(img,argv[i]);
             cvReleaseImage(&img);
         }
 
@@ -130,6 +130,7 @@ int main(int argc, char** argv)
         delete finalresult->at(0);
         finalresult->erase(finalresult->begin());
     }
+    delete finalresult;
 
     cout << "=== This was Test.cpp ===" << endl;
     return 0;

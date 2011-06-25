@@ -42,6 +42,7 @@
 
 // LibFace headers
 #include "Log.h"
+#include "LibFaceConfig.h"
 #include "Face.h"
 #include "FaceDetect.h"
 #include "LibFaceUtils.h"
@@ -65,21 +66,20 @@ class Eigenfaces::EigenfacesPriv {
 
 public:
 
-    EigenfacesPriv() {
-        CUT_OFF               = 10000000.0; //50000000.0;
-        UPPER_DIST            = 10000000;
-        LOWER_DIST            = 10000000;
-        THRESHOLD             = 1000000.0;
-        RMS_THRESHOLD         = 10.0;
-        FACE_WIDTH            = 120;
-        FACE_HEIGHT           = 120;
-
-    }
+    /**
+     * Constructor.
+     */
+    EigenfacesPriv() : faceImgArr(), indexMap(), configFile(), CUT_OFF(10000000.0), UPPER_DIST(10000000), LOWER_DIST(10000000), THRESHOLD(1000000.0), RMS_THRESHOLD(10.0), FACE_WIDTH(120), FACE_HEIGHT(120) {}
 
     float eigen(IplImage* img1, IplImage* img2);
 
     /**
      * Calculates Root Mean Squared error between 2 images.
+     *
+     * @param img1 First image.
+     * @param img2 Image image.
+     *
+     * @return Root mean squared error.
      */
     double rms(const IplImage* img1, const IplImage* img2);
 
@@ -95,74 +95,171 @@ public:
      */
     inline string stringify(unsigned int x) const;
 
-public:
-
     // Face data members, stored in the DB
-    vector<IplImage*> faceImgArr;                 // Array of face images
-    vector<int>       indexMap;
+    vector<IplImage*> faceImgArr; // Array of face images
+    vector<int> indexMap;
 
     // Config data members
-    string            configFile;
+    string configFile;
 
-    double                 CUT_OFF;
-    double                 UPPER_DIST;
-    double                 LOWER_DIST;
-    float                  RMS_THRESHOLD;
-    float                  THRESHOLD;
-    int                    FACE_WIDTH;
-    int                    FACE_HEIGHT;
+    double CUT_OFF;
+    double UPPER_DIST;
+    double LOWER_DIST;
+    float THRESHOLD;
+    float RMS_THRESHOLD;
+    int FACE_WIDTH;
+    int FACE_HEIGHT;
+
+private:
+
+    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    EigenfacesPriv(const EigenfacesPriv& that) : faceImgArr(that.faceImgArr), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
+        LOG(libfaceWARNING) << "This constructor has not been tested: EigenfacesPriv(const EigenfacesPriv& that).";
+    }
+
+    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    EigenfacesPriv& operator = (const EigenfacesPriv& that) {
+        LOG(libfaceWARNING) << "This operator has not been tested: EigenfacesPriv& operator =.";
+        if(this == &that) {
+            return *this;
+        }
+        faceImgArr = that.faceImgArr;
+        indexMap = that.indexMap;
+        configFile = that.configFile;
+        CUT_OFF = that.CUT_OFF;
+        UPPER_DIST = that.UPPER_DIST;
+        LOWER_DIST = that.LOWER_DIST;
+        THRESHOLD = that.THRESHOLD;
+        RMS_THRESHOLD = that.RMS_THRESHOLD;
+        FACE_WIDTH = that.FACE_WIDTH;
+        FACE_HEIGHT = that.FACE_HEIGHT;
+        return *this;
+    }
 };
 
 float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
+
+    // TODO just a question, why is malloc prefered here over new?
+    /*
+    I tried using new and delete, resulting in 24 bytes less being allocated per function call.
+    I believe this is because cvAlloc allocates more memory than actually needed.
+    Using an array of pointers instead of a vector saves an additional 24 bytes per call.
+    */
+
+//#define new_and_delete
+#ifdef new_and_delete
+
+    // tempfaces is also not used in this version
+
+    float minDist = FLT_MAX;
+
+//#define tempFaces_as_vector
+#ifdef tempFaces_as_vector
+    vector<IplImage*> tempFaces;
+    tempFaces.push_back(img1);
+    tempFaces.push_back(img2);
+#else
+    IplImage * tempFaces[2];
+    tempFaces[0] = img1;
+    tempFaces[1] = img2;
+#endif
+
+    float* eigenValues = new float[2];
+
+    float* projectedTestFace = new float;
+
+    CvSize size = cvSize(img1->width, img1->height);
+
+    //Set PCA's termination criterion
+    CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER, 1, 0);
+
+    // Initialize pointer to the average image
+    IplImage* pAvgTrainImg;
+    // allocate it
+    if(!(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1))) {
+       LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
+    }
+
+    // Initialise pointer to the pointers with eigen objects
+    IplImage** eigenObjects = new IplImage*[2];
+    // allocate it
+    for(int i = 0; i < 2; i++ ){
+        eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1);
+        if(!(eigenObjects[i])) {
+            LOG(libfaceERROR) << "Problems initializing eigenObjects";
+        }
+    }
+
+    // Perform PCA
+#ifdef tempFaces_as_vector
+    cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
+            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
+#else
+    cvCalcEigenObjects(2, tempFaces, eigenObjects,
+            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
+#endif
+
+    // This is a simple min distance mechanism for recognition. Perhaps we should check similarity of images.
+    if(eigenValues[0] < minDist) {
+        minDist = eigenValues[0];
+    }
+
+    delete projectedTestFace;
+    delete[] eigenValues;
+    cvReleaseImage(&pAvgTrainImg);
+    cvReleaseImage(&eigenObjects[0]);
+    cvReleaseImage(&eigenObjects[1]);
+    delete eigenObjects;
+
+    return minDist;
+
+#else
 
     float minDist = FLT_MAX;
 
     vector<IplImage*> tempFaces;
     tempFaces.push_back(img1);
-
-
-    int i;
-
     tempFaces.push_back(img2);
 
+    // Initialize array with eigen values
     float* eigenValues;
-    //Initialize array with eigen values
-    if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) )
-        cout<<"Problems initializing eigenValues..."<<endl;
+    // allocate it
+    if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) ) {
+        LOG(libfaceERROR) << "Problems initializing eigenValues...";
+    }
 
     float* projectedTestFace = (float*)malloc(sizeof(float));
 
     CvSize size = cvSize(tempFaces.at(0)->width, tempFaces.at(0)->height);
 
     //Set PCA's termination criterion
-    CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
-            1,0);
-    //Initialise pointer to the pointers with eigen objects
-    IplImage** eigenObjects = new IplImage *[2];
+    CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,1,0);
 
-
-
+    // Initialize pointer to the average image
     IplImage* pAvgTrainImg;
-    //Initialize pointer to the average image
-    if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) )
-        cout<<"Problems initializing pAvgTrainImg..."<<endl;
-
-    for(i = 0; i < 2; i++ ){
-        eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
-        if(!(eigenObjects[i] ) )
-            cout<<"Problems initializing eigenObjects"<<endl;
+    // allocate it
+    if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) ) {
+       LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
     }
 
-    //Perform PCA
+    // Initialise pointer to the pointers with eigen objects
+    IplImage** eigenObjects = new IplImage *[2];
+    // allocate it
+    for(int i = 0; i < 2; i++ ){
+        eigenObjects[i] = cvCreateImage( size, IPL_DEPTH_32F, 1 );
+        if(!(eigenObjects[i] ) ) {
+            LOG(libfaceERROR) << "Problems initializing eigenObjects";
+        }
+    }
+
+    // Perform PCA
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
             CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
-    //This is a simple min distance mechanism for recognition. Perhaps we should check similarity of
-    //images.
+    // This is a simple min distance mechanism for recognition. Perhaps we should check similarity of images.
     if(eigenValues[0] < minDist) {
         minDist = eigenValues[0];
     }
-
 
     //cvEigenDecomposite(tempFaces.at(0), nEigens, eigenObjects,
     //CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedTestFace );
@@ -178,12 +275,14 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     cvReleaseImage(&pAvgTrainImg);
     cvReleaseImage(&eigenObjects[0]);
     cvReleaseImage(&eigenObjects[1]);
+    delete eigenObjects;
 
     // Calling clear is actually not necessary, tempFaces will be destructed on return.
     // The images pointed to in tempFaces are owned by the calling function and may not be released here (which clear would not do).
     //tempFaces.clear();
 
     return minDist;
+#endif
 }
 
 
@@ -295,7 +394,7 @@ Eigenfaces::Eigenfaces(const string& dir)
 : d(new EigenfacesPriv) {
 
     struct stat stFileInfo;
-    d->configFile = dir + string("/libface-config.xml");
+    d->configFile = dir + "/" + CONFIG_XML;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 
@@ -347,7 +446,7 @@ map<string, string> Eigenfaces::getConfig() {
 }
 
 int Eigenfaces::loadConfig(const string& dir) {
-    d->configFile = dir + string("/libface-config.xml");
+    d->configFile = dir + "/" + CONFIG_XML;
 
     LOG(libfaceDEBUG) << "Load training data" << endl;
 
@@ -437,7 +536,7 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 
     if(minDist > d->THRESHOLD) {
 
-        LOG(libfaceDEBUG) << "The value of minDist (" << minDist << ") is above the threshold (" << d->THRESHOLD << ".";
+        LOG(libfaceDEBUG) << "The value of minDist (" << minDist << ") is above the threshold (" << d->THRESHOLD << ").";
 
         id = -1;
         minDist = -1;
@@ -452,7 +551,7 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 int Eigenfaces::saveConfig(const string& dir) {
     LOG(libfaceINFO) << "Saving config in "<< dir;
 
-    string configFile          = dir + string("/libface-config.xml");
+    string configFile          = dir + "/" + CONFIG_XML;
     CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.c_str(), 0, CV_STORAGE_WRITE);
 
     if (!fileStorage) {

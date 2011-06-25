@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file FaceDetec
+ * @file FaceDetect.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -60,7 +60,23 @@ class FaceDetect::FaceDetectPriv {
 
 public:
 
-    FaceDetectPriv() : cascadeSet(0), storage(0) {}
+    // Values for maximumDistance, minimumDuplicates, searchIncrement, minSize[], grouping correspond to the values in setAccuracy(1).
+    // TODO Verify that using these values as default is a good idea.
+    FaceDetectPriv() : cascadeSet(0), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
+        minSize[0] = 1;
+        minSize[1] = 20;
+        minSize[2] = 26;
+        minSize[3] = 35;
+    }
+
+    FaceDetectPriv(const string& cascadeDir) : cascadeSet(new Haarcascades(cascadeDir)), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
+        minSize[0] = 1;
+        minSize[1] = 20;
+        minSize[2] = 26;
+        minSize[3] = 35;
+    }
+
+
     ~FaceDetectPriv() {
         if(storage) {
             cvReleaseMemStorage(&storage);
@@ -72,7 +88,7 @@ public:
     CvMemStorage* storage;
     double        scaleFactor;        // Keeps the scaling factor of the internal image.
 
-    bool          countCertainity;
+    bool          countCertainty;
 
     int           maximumDistance;    // Maximum distance between two faces to call them unique
     int           minimumDuplicates;  // Minimum number of duplicates required to qualify as a genuine face
@@ -82,19 +98,49 @@ public:
     int           grouping;
     int           minSize[4];
     int           accu;
+
+private:
+
+    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(scaleFactor), countCertainty(countCertainty), maximumDistance(maximumDistance), minimumDuplicates(minimumDuplicates), searchIncrement(searchIncrement), grouping(grouping), accu(accu) {
+        LOG(libfaceWARNING) << "This constructor has not been tested: FaceDetectPriv(const FaceDetectPriv& that).";
+        for(unsigned i = 0; i < sizeof(minSize); ++i ) {
+            minSize[i] = that.minSize[i];
+        }
+        if(that.cascadeSet) {
+            cascadeSet = new Haarcascades(*that.cascadeSet);
+        }
+    }
+
+    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    FaceDetectPriv& operator = (const FaceDetectPriv& that) {
+        LOG(libfaceWARNING) << "This operator has not been tested: FaceDetectPriv& operator =.";
+        if(this == &that) {
+            return *this;
+        }
+        scaleFactor = that.scaleFactor;
+        countCertainty = that.countCertainty;
+        maximumDistance = that.maximumDistance;
+        minimumDuplicates = that.minimumDuplicates;
+        searchIncrement = that.searchIncrement;
+        grouping = that.grouping;
+        accu = that.accu;
+        cascadeSet = 0;
+        storage = 0;
+        if(that.cascadeSet) {
+            cascadeSet = new Haarcascades(*that.cascadeSet);
+        }
+        return *this;
+    }
+
 };
 
-FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv) {
-    d->cascadeSet = new Haarcascades(cascadeDir);
+FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv(cascadeDir)) {
 
     /* Cascades */
     //d->cascadeSet->addCascade("haarcascade_frontalface_alt.xml", 1);   // Weight 1 for frontal default
     d->cascadeSet->addCascade("haarcascade_frontalface_alt2.xml",1);  //default
     //d->cascadeSet->addCascade("haarcascade_profileface.xml", 1);
-
-    d->countCertainity = true;
-
-    this->setAccuracy(1);
 }
 
 FaceDetect::~FaceDetect() {
@@ -108,15 +154,17 @@ int FaceDetect::accuracy() const {
 
 void FaceDetect::setAccuracy(int i)
 {
-    if(i >= 1 && i <= 10)
-        d->accu = i;
+    // When changing numbers in setAccuracy, also change values in default constructor for FaceDetectPriv.
 
+    if(i >= 1 && i <= 10) {
+        d->accu = i;
+    }
     else {
         LOG(libfaceWARNING)  << "Bad accuracy value";
         return;
     }
 
-    d->maximumDistance   = 20;    // Maximum distance between two faces to call them unique
+    d->maximumDistance   = 20;   // Maximum distance between two faces to call them unique
     d->minimumDuplicates = 1;    // Minimum number of duplicates required to qualify as a genuine face
 
     // Now adjust values based on accuracy level

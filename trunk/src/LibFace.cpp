@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file LibFace.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -58,10 +58,34 @@ class LibFace::LibFacePriv {
 
 public:
 
-    LibFacePriv() {
-        detectionCore   = 0;
-        recognitionCore = 0;
-        lastImage       = 0;
+    LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir) : type(argType), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName() {
+        // We don't need face recognition if we just want detection, and vice versa.
+        // So there is a case for everything.
+        switch (type) {
+        case DETECT:
+            cascadeDir = argCascadeDir;
+            detectionCore = new FaceDetect(cascadeDir);
+            break;
+        case EIGEN:
+            recognitionCore = new Eigenfaces(argConfigDir);
+            break;
+        case HMM:
+            LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
+            break;
+        default:    // Initialize both detector and Eigenfaces
+            cascadeDir = argCascadeDir;
+            detectionCore = new FaceDetect(cascadeDir);
+            recognitionCore = new Eigenfaces(argConfigDir);
+        break;
+        }
+    }
+
+    ~LibFacePriv() {
+        delete detectionCore;
+        delete recognitionCore;
+        if(lastImage) {
+            cvReleaseImage(&lastImage);
+        }
     }
 
     Mode                    type;
@@ -72,53 +96,48 @@ public:
     string                  lastFileName;
 
     static int              facesize() { return 120; }
+
+private:
+
+    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    LibFacePriv(const LibFacePriv& that) : type(that.type), cascadeDir(that.cascadeDir), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName(that.lastFileName) {
+        LOG(libfaceWARNING) << "This constructor has not been tested: LibFacePriv(const LibFacePriv& that).";
+        if(that.detectionCore || that.recognitionCore) {
+            LOG(libfaceERROR) << "Cannot copy LibFacePriv because LibFaceDetectCore and LibFaceRecognitionCore are abstract base classes.";
+            // at least I wouldn't know how
+        }
+        if(that.lastImage) {
+            lastImage = cvCloneImage(that.lastImage);
+        }
+    }
+
+    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    // This will probably not work.
+    LibFacePriv& operator = (const LibFacePriv& that) {
+        LOG(libfaceWARNING) << "This operator has not been tested: LibFacePriv& operator = (const LibFacePriv& that).";
+        if(this == &that) {
+            return *this;
+        }
+        type = that.type;
+        cascadeDir = that.cascadeDir;
+        if(that.detectionCore || that.recognitionCore) {
+            LOG(libfaceERROR) << "Cannot copy LibFacePriv because LibFaceDetectCore and LibFaceRecognitionCore are abstract base classes.";
+            // at least I wouldn't know how
+        }
+        if(that.lastImage) {
+            lastImage = cvCloneImage(that.lastImage);
+        }
+        lastFileName = that.lastFileName;
+        return *this;
+    }
+
 };
 
-LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir)
-: d(new LibFacePriv) {
-
-    d->type = type;
-
+LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir) : d(new LibFacePriv(type, configDir, cascadeDir)) {
     LOG(libfaceINFO) << "Cascade directory located in : " << cascadeDir;
-
-    // We don't need face recognition if we just want detection, and vice versa.
-    // So there is a case for everything.
-    switch (d->type) {
-    case DETECT:
-        d->cascadeDir      = cascadeDir;
-        d->detectionCore   = new FaceDetect(d->cascadeDir);
-        break;
-    case EIGEN:
-        d->recognitionCore = new Eigenfaces(configDir);
-        break;
-    case HMM:
-        //d->recognitionCore = new HMMfaces();
-        LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
-        break;
-    default:    // Initialize both detector and Eigenfaces
-    d->cascadeDir      = cascadeDir;
-    d->detectionCore   = new FaceDetect(d->cascadeDir);
-    d->recognitionCore = new Eigenfaces(configDir);
-    //d->recognitionCore = new HMMfaces();
-    break;
-    }
 }
 
 LibFace::~LibFace() {
-    switch(d->type) {
-    case DETECT:
-        delete d->detectionCore;
-        break;
-    case EIGEN:
-        delete d->recognitionCore;
-        break;
-    default:
-        delete d->detectionCore;
-        delete d->recognitionCore;
-        break;
-    }
-    cvReleaseImage(&d->lastImage);
-
     delete d;
 }
 
@@ -134,7 +153,9 @@ vector<Face*>* LibFace::detectFaces(const string& filename, int scaleFactor) {
     //Check if image was already loaded once, by checking last loaded filename.
     if (filename != d->lastFileName) {
         d->lastFileName = filename;
-        cvReleaseImage(&d->lastImage);
+        if(d->lastImage) {
+            cvReleaseImage(&d->lastImage);
+        }
         d->lastImage    = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
     }
 
@@ -231,8 +252,9 @@ vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face*>*
     for (int i = 0; i < size; ++i)
         result.push_back(d->recognitionCore->recognize(newFaceImgArr.at(i)));
 
-    for (unsigned i=0; i<newFaceImgArr.size(); i++)
-        cvReleaseImage(&newFaceImgArr[i]);
+    for (unsigned i=0; i<newFaceImgArr.size(); i++) {
+        cvReleaseImage(&newFaceImgArr.at(i));
+    }
 
     return result;
 }

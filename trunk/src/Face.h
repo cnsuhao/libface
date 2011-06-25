@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file Face.h
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -70,14 +70,14 @@ public:
      *
      * @param that Object to be copied.
      */
-    Face(const Face & that);
+    Face(const Face& that);
 
     /**
      * Assignment operator.
      *
      * @param that Object to be copied.
      */
-    Face & operator = (const Face & that);
+    Face& operator = (const Face& that);
 
     // TODO do we need these?
     // bool operator == (const Face& that) const

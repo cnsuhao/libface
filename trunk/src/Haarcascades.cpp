@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file Haarcascades.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -41,19 +41,19 @@ namespace libface
 
 CascadeStruct::CascadeStruct() : name(), haarcasc(0) {};
 
-CascadeStruct::CascadeStruct(const string & argName, const string & argFile) : name(argName), haarcasc(0) {
+CascadeStruct::CascadeStruct(const string& argName, const string& argFile) : name(argName), haarcasc(0) {
     // TODO If name is always the filename, the c'tor could be simplified to only take on argument.
     // TODO Consider checking if argFile actually exists?
     haarcasc = (CvHaarClassifierCascade*) cvLoad(argFile.c_str(), 0, 0, 0);
 };
 
-CascadeStruct::CascadeStruct(const CascadeStruct & that) : name(that.name), haarcasc(0) {
+CascadeStruct::CascadeStruct(const CascadeStruct& that) : name(that.name), haarcasc(0) {
     if(that.haarcasc) {
         haarcasc = (CvHaarClassifierCascade*) cvClone(that.haarcasc);
     }
 };
 
-CascadeStruct & CascadeStruct::operator = (const CascadeStruct & that) {
+CascadeStruct& CascadeStruct::operator = (const CascadeStruct& that) {
     if(this == &that) {
         return *this;
     }
@@ -76,7 +76,7 @@ class Haarcascades::HaarcascadesPriv
 public:
 
     HaarcascadesPriv() : cascadePath(), cascades(), weights(), size(0) {}
-    HaarcascadesPriv(const string & path) : cascadePath(path), cascades(), weights(), size(0) {}
+    HaarcascadesPriv(const string& path) : cascadePath(path), cascades(), weights(), size(0) {}
 
     // Custom copy constructors, destructor, etc. are not required as long there are no pointer data members.
 
@@ -88,11 +88,11 @@ public:
 
 Haarcascades::Haarcascades(const string& path) : d(new HaarcascadesPriv(path)) {}
 
-Haarcascades::Haarcascades(const Haarcascades & that) : d(new HaarcascadesPriv(*that.d)) {}
+Haarcascades::Haarcascades(const Haarcascades& that) : d(new HaarcascadesPriv(*that.d)) {}
 
 /*
 // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
-Haarcascades & Haarcascades::operator = (const Haarcascades & that) {
+Haarcascades& Haarcascades::operator = (const Haarcascades& that) {
     if(this == &that) {
         return *this;
     }
@@ -106,7 +106,7 @@ Haarcascades::~Haarcascades()
     delete d;
 }
 
-void Haarcascades::addCascade(const Cascade& newCascade, const int & newWeight)
+void Haarcascades::addCascade(const Cascade& newCascade, const int& newWeight)
 {
     if (this->hasCascade(newCascade.name)) {
         return;
@@ -117,7 +117,7 @@ void Haarcascades::addCascade(const Cascade& newCascade, const int & newWeight)
     d->size++;
 }
 
-void Haarcascades::addCascade(const string& name, const int & newWeight)
+void Haarcascades::addCascade(const string& name, const int& newWeight)
 {
     if (this->hasCascade(name)) {
         return;

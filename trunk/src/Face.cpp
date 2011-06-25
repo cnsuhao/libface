@@ -16,6 +16,7 @@
  *         <a href="alexjironkin at gmail dot com">alexjironkin at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -40,33 +41,15 @@
 
 namespace libface {
 
-Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) {
-	//Set coordinates of the face rectangle;
-	this->x1     = x1;
-	this->x2     = x2;
-	this->y1     = y1;
-	this->y2     = y2;
+Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) : x1(x1), y1(y1), x2(x2), y2(y2), id(id), width(x2-x1), height(y2-y1), face(face) {}
 
-	this->width  = x2 - x1;
-	this->height = y2 - y1;
-
-	//Set id of the face. By default it is -1.
-	this->id     = id;
-
-	//Set the pointer to the face.
-	this->face   = face;
-}
-
-Face::Face(const Face & that) : x1(that.x1), y1(that.y1), x2(that.x2), y2(that.y2), id(that.id), width(that.width), height(that.height), face(0) {
-    LOG(libfaceDEBUG) << "Face copy constructor was called.";
-    if(that.face != 0) {
+Face::Face(const Face& that) : x1(that.x1), y1(that.y1), x2(that.x2), y2(that.y2), id(that.id), width(that.width), height(that.height), face(0) {
+    if(that.face) {
         face = cvCloneImage(that.face);
     }
 }
 
-Face & Face::operator = (const Face & that) {
-    LOG(libfaceDEBUG) << "Face assignment operator was called.";
-    // check self assignment
+Face& Face::operator = (const Face& that) {
     if(this == &that) {
         return *this;
     }
@@ -82,7 +65,6 @@ Face & Face::operator = (const Face & that) {
 }
 
 Face::~Face() {
-	LOG(libfaceDEBUG) << "Destroying face";
 	if(this->face)
 		cvReleaseImage(&this->face);
 }
