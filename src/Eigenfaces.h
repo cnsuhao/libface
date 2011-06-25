@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file Eigenfaces.h
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -139,6 +139,10 @@ public:
     int update(std::vector<Face*>* dataVector);
 
 private:
+
+    // Overwrite auto generated constructors with private ones. Currently neither implemented nor used.
+    Eigenfaces(const Eigenfaces& that);
+    Eigenfaces& operator = (const Eigenfaces& that);
 
     class EigenfacesPriv;
     EigenfacesPriv* const d;

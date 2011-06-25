@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file LibFaceUtils.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -14,6 +14,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -418,7 +419,7 @@ IplImage* LibFaceUtils::stringToImage(const string& data, int depth, int channel
  *
  *  @return Returns the pointer matrix with the values contained in the string.
  */
-CvMat* LibFaceUtils::stringToMatrix(const string & data, int type)
+CvMat* LibFaceUtils::stringToMatrix(const string& data, int type)
 {
     string::size_type start, stop;
     start    = 0;

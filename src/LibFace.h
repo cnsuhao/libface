@@ -1,5 +1,5 @@
 /** ===========================================================
- * @file
+ * @file LibFace.h
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
@@ -321,6 +321,10 @@ public:
     int update(std::vector<Face*>* faces, int scaleFactor=1);
 
 private:
+
+    // Overwrite auto generated constructors with private ones. Currently neither implemented nor used.
+    LibFace(const LibFace& that);
+    LibFace& operator = (const LibFace& that);
 
     class LibFacePriv;
     LibFacePriv* const d;

@@ -35,6 +35,7 @@
 #define LOG_LEVEL @LOG_LEVEL@
 #define APPLE @IS_APPLE@
 #define OPENCVDIR "@OpenCV_DIR@"
+#define CONFIG_XML "libface-config.xml"
 
 /* Shared library support, see http://gcc.gnu.org/wiki/Visibility */
 #ifdef WIN32

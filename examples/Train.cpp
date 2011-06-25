@@ -20,6 +20,7 @@
  *         <a href="adityabhatt at gmail dot com">adityabhatt at gmail dot com</a>
  * @author Copyright (C) 2010 by Gilles Caulier
  *         <a href="mailto:caulier dot gilles at gmail dot com">caulier dot gilles at gmail dot com</a>
+ * @author Copyright (C) 2011 by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  *
  * @section LICENSE
  *
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
     }
 
     // "." means look for configuration file in current directory
-    LibFace libFace = LibFace(ALL, ".");
+    LibFace libFace(ALL, ".");
 
     // This is a vector of pointers to Face objects. The vector will be destructed later. that means that the pointers will get destructed, but the faces they point to will not get deconstructed. We should destruct them manually.
     vector<Face*>* result;
@@ -115,7 +116,7 @@ int main(int argc, char** argv)
         cout << " ID "<< finalresult->at(i)->getId() << " assigned to face " << i << ", which is now being drawn."<< endl;
         stringstream title;
         title << "ID " << finalresult->at(i)->getId();
-        LibFaceUtils::showImage(finalresult->at(i)->getFace(),title.str());
+//        LibFaceUtils::showImage(finalresult->at(i)->getFace(),title.str());
     }
 
     libFace.saveConfig(".");
@@ -126,6 +127,7 @@ int main(int argc, char** argv)
         delete finalresult->at(0);
         finalresult->erase(finalresult->begin());
     }
+    delete finalresult;
 
     cout << "=== This was Train.cpp ===" << endl;
     return 0;

@@ -11,6 +11,7 @@
  *
  * @author Copyright (C) 2011 adopted  by Alex Jironkin
  *         <a href="alexjironkin at gmail dot com">alexjironkin at gmail dot com</a>
+ * @author Copyright (C) 2011 adopted by Stephan Pleines <a href="mailto:pleines.stephan@gmail.com">pleines.stephan@gmail.com</a>
  * @author Copyright (C) 2007 written by Petru Marginean
  *
  *  Created on: Feb 16, 2011
@@ -42,7 +43,6 @@ public:
 	Log();
 	virtual ~Log();
 	std::ostringstream& Get(TLogLevel level = libfaceINFO);
-public:
 	static TLogLevel& ReportingLevel();
 	static std::string ToString(TLogLevel level);
 	static TLogLevel FromString(const std::string& level);
@@ -53,7 +53,7 @@ private:
 	Log& operator =(const Log&);
 };
 
-inline Log::Log() {
+inline Log::Log() : os() {
 }
 
 /**
