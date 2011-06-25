@@ -60,7 +60,14 @@ Face& Face::operator = (const Face& that) {
     id = that.id;
     width = that.width;
     height = that.height;
-    face = cvCloneImage(that.face);
+    if(face) {
+        cvReleaseImage(&face);
+    }
+    if(that.face) {
+        face = cvCloneImage(that.face);
+    } else {
+        face = 0;
+    }
     return *this;
 }
 

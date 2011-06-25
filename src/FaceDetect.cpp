@@ -107,8 +107,10 @@ private:
         for(unsigned i = 0; i < sizeof(minSize); ++i ) {
             minSize[i] = that.minSize[i];
         }
+        delete cascadeSet;
         if(that.cascadeSet) {
-            cascadeSet = new Haarcascades(*that.cascadeSet);
+            LOG(libfaceWARNING) << "To enable this constructor you have to uncomment the following line and make Haarcascades(const Haarcascades& that) public.";
+            //cascadeSet = new Haarcascades(*that.cascadeSet);
         }
     }
 
@@ -125,10 +127,16 @@ private:
         searchIncrement = that.searchIncrement;
         grouping = that.grouping;
         accu = that.accu;
-        cascadeSet = 0;
-        storage = 0;
+        storage = 0; // TODO storage is not copied, does it need to be copied?
+        if(cascadeSet) {
+            delete cascadeSet;
+        }
         if(that.cascadeSet) {
-            cascadeSet = new Haarcascades(*that.cascadeSet);
+            LOG(libfaceWARNING) << "To enable this constructor you have to uncomment the following line and make Haarcascades(const Haarcascades& that) public, and comment the next but one line.";
+            //cascadeSet = new Haarcascades(*that.cascadeSet);
+            cascadeSet = 0;
+        } else {
+            cascadeSet = 0;
         }
         return *this;
     }
