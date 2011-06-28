@@ -74,10 +74,11 @@ public:
     float eigen(IplImage* img1, IplImage* img2);
 
     /**
-     * Calculates Root Mean Squared error between 2 images.
+     * Calculates Root Mean Squared error between 2 images. The method doesn't modify input images.
+     * N.B. only 1 channel is used at present.
      *
-     * @param img1 First image.
-     * @param img2 Image image.
+     * @param img1 First input image to compare with.
+     * @param img2 Second input image to compare with.
      *
      * @return Root mean squared error.
      */
@@ -85,12 +86,17 @@ public:
 
     /**
      * Performs PCA on the current training data, projects the training faces, and stores them in a DB.
+     *
+     * @param index Index of the previous image to be merged with.
+     * @param newFace A pointer to the new face to be merged with previous one stored at index.
      */
     void learn(int index, IplImage* newFace);
 
     /**
      * Converts integer to string, convenience function. TODO: Move to Utils
+     *
      * @param x The integer to be converted to std::string
+     *
      * @return Stringified version of integeer
      */
     inline string stringify(unsigned int x) const;
@@ -112,12 +118,16 @@ public:
 
 private:
 
-    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    /**
+     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+     */
     EigenfacesPriv(const EigenfacesPriv& that) : faceImgArr(that.faceImgArr), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
         LOG(libfaceWARNING) << "This constructor has not been tested: EigenfacesPriv(const EigenfacesPriv& that).";
     }
 
-    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    /**
+     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    */
     EigenfacesPriv& operator = (const EigenfacesPriv& that) {
         LOG(libfaceWARNING) << "This operator has not been tested: EigenfacesPriv& operator =.";
         if(this == &that) {
@@ -285,16 +295,6 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 #endif
 }
 
-
-/**
- * Calculates Root Mean Squared error between 2 images. The method doesn't modify input images.
- * N.B. only 1 channel is used at present.
- *
- * @param img1 - first input image to compare with.
- * @param img2 - second input image to compare with.
- *
- * @return Returns RMS between 2 images.
- */
 double Eigenfaces::EigenfacesPriv::rms(const IplImage* img1, const IplImage* img2) {
 
     IplImage* temp = cvCreateImage(cvSize(img1->width, img1->height),img1->depth,img1->nChannels);
@@ -313,12 +313,6 @@ double Eigenfaces::EigenfacesPriv::rms(const IplImage* img1, const IplImage* img
     return sqrt(err);
 }
 
-/**
- * Performs PCA on the current training data, projects the training faces, and stores them in a DB.
- *
- * @param index - Index of the previous image to be merged with.
- * @param newFace - A pointer to the new face to be merged with previous one stored at index.
- */
 void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
     int i;
@@ -485,7 +479,7 @@ int Eigenfaces::loadConfig(const string& dir) {
 }
 
 int Eigenfaces::loadConfig(const map<string, string>& c) {
-    // FIXME: Because std::map has no convenient const accessor, make a copy.
+    // TODO FIXME: Because std::map has no convenient const accessor, make a copy.
     map<string, string> config(c);
 
     LOG(libfaceINFO) << "Load config data from a map.";

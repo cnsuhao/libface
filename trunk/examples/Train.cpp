@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         cout << " ID "<< finalresult->at(i)->getId() << " assigned to face " << i << ", which is now being drawn."<< endl;
         stringstream title;
         title << "ID " << finalresult->at(i)->getId();
-//        LibFaceUtils::showImage(finalresult->at(i)->getFace(),title.str());
+        LibFaceUtils::showImage(finalresult->at(i)->getFace(),title.str());
     }
 
     libFace.saveConfig(".");

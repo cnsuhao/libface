@@ -58,6 +58,13 @@ class LibFace::LibFacePriv {
 
 public:
 
+    /**
+     * Constructor.
+     *
+     * @param argType Type of the face recognition/detection/both to use. ALL by default.
+     * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
+     * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades.
+     */
     LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir) : type(argType), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName() {
         // We don't need face recognition if we just want detection, and vice versa.
         // So there is a case for everything.
@@ -80,12 +87,25 @@ public:
         }
     }
 
+    /**
+     * Destructor.
+     */
     ~LibFacePriv() {
         delete detectionCore;
         delete recognitionCore;
         if(lastImage) {
             cvReleaseImage(&lastImage);
         }
+    }
+
+
+    /**
+     * TODO
+     *
+     * @return int TODO
+     */
+    static int facesize() {
+        return 120;
     }
 
     Mode                    type;
@@ -95,11 +115,12 @@ public:
     IplImage*               lastImage;
     string                  lastFileName;
 
-    static int              facesize() { return 120; }
-
 private:
 
-    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    /**
+     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+     * Does not work because of abstract base classes?
+     */
     LibFacePriv(const LibFacePriv& that) : type(that.type), cascadeDir(that.cascadeDir), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName(that.lastFileName) {
         LOG(libfaceWARNING) << "This constructor has not been tested: LibFacePriv(const LibFacePriv& that).";
         if(that.detectionCore || that.recognitionCore) {
@@ -111,7 +132,10 @@ private:
         }
     }
 
-    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    /**
+     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+     * Does not work because of abstract base classes?
+     */
     LibFacePriv& operator = (const LibFacePriv& that) {
         LOG(libfaceWARNING) << "This operator has not been tested: LibFacePriv& operator = (const LibFacePriv& that).";
         if(this == &that) {

@@ -68,7 +68,7 @@ public:
     FaceDetect(const std::string& cascadeDir);
 
     /**
-     *   Default destructor. Deletes d.
+     *  Default destructor. Deletes d.
      */
     ~FaceDetect();
 
@@ -86,6 +86,7 @@ public:
      * full path to image.
      *
      * @param filename A full path to the image.
+     *
      * @return Returns a vector of Face objects. Each object hold information about 1 face.
      */
     std::vector<Face*>* detectFaces(const std::string& filename);
@@ -113,8 +114,14 @@ public:
 
 private:
 
-    // Overwrite auto generated constructors with private ones. Currently neither implemented nor used.
+    /**
+     * Overwrite auto generated copy constructor with private one. Currently neither implemented nor used.
+     */
     FaceDetect(const FaceDetect& that);
+
+    /**
+     * Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
+     */
     FaceDetect& operator = (const FaceDetect& that);
 
     /**

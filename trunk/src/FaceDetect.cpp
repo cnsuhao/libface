@@ -62,6 +62,9 @@ public:
 
     // Values for maximumDistance, minimumDuplicates, searchIncrement, minSize[], grouping correspond to the values in setAccuracy(1).
     // TODO Verify that using these values as default is a good idea.
+    /**
+     * Default constructor.
+     */
     FaceDetectPriv() : cascadeSet(0), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
         minSize[0] = 1;
         minSize[1] = 20;
@@ -69,6 +72,10 @@ public:
         minSize[3] = 35;
     }
 
+    /** Constructor.
+     *
+     * @param Directory containing haarcascade files.
+     */
     FaceDetectPriv(const string& cascadeDir) : cascadeSet(new Haarcascades(cascadeDir)), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
         minSize[0] = 1;
         minSize[1] = 20;
@@ -77,6 +84,9 @@ public:
     }
 
 
+    /**
+     * Destructor.
+     */
     ~FaceDetectPriv() {
         if(storage) {
             cvReleaseMemStorage(&storage);
@@ -101,7 +111,9 @@ public:
 
 private:
 
-    // Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+    /**
+     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
+     */
     FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(scaleFactor), countCertainty(countCertainty), maximumDistance(maximumDistance), minimumDuplicates(minimumDuplicates), searchIncrement(searchIncrement), grouping(grouping), accu(accu) {
         LOG(libfaceWARNING) << "This constructor has not been tested: FaceDetectPriv(const FaceDetectPriv& that).";
         for(unsigned i = 0; i < sizeof(minSize); ++i ) {
@@ -114,7 +126,9 @@ private:
         }
     }
 
-    // Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+    /**
+     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
+     */
     FaceDetectPriv& operator = (const FaceDetectPriv& that) {
         LOG(libfaceWARNING) << "This operator has not been tested: FaceDetectPriv& operator =.";
         if(this == &that) {

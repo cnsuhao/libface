@@ -53,15 +53,38 @@ typedef struct CascadeStruct
     std::string              name;
     CvHaarClassifierCascade* haarcasc;
 
+    /**
+     * Default constructor.
+     */
     CascadeStruct();
 
+    /**
+     * Constructor
+     *
+     * @param argName
+     * @param argFile
+     */
     CascadeStruct(const std::string& argName, const std::string& argFile);
 
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
     CascadeStruct(const CascadeStruct& that);
 
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     */
     CascadeStruct& operator = (const CascadeStruct& that);
 
+    /**
+     * Destructor.
+     */
     ~CascadeStruct();
+
 } Cascade;
 
 class FACEAPI Haarcascades
@@ -77,7 +100,7 @@ public:
     Haarcascades(const std::string& path);
 
     /**
-     * Destructor for Haarcascades
+     * Destructor for Haarcascades.
      */
     ~Haarcascades();
 
@@ -141,6 +164,7 @@ public:
      * Returns the weight of the cascade with the specified index.
      *
      * @param index The index of the cascade whose weight is desired.
+     *
      * @return The weight of the cascade.
      */
     int getWeight(int index) const;
@@ -149,6 +173,7 @@ public:
      * Checks whether the cascade is in the set.
      *
      * @param name The name of the cascade whose presence is to be checked.
+     *
      * @return Whether the cascade exists in the set or not.
      */
     bool hasCascade(const std::string& name) const;
@@ -157,6 +182,7 @@ public:
      * Returns the Cascade object for the Cascade with the specified name.
      *
      * @param name The name of the desired cascade.
+     *
      * @return The Cascade object with the name.
      */
     const Cascade& getCascade(const std::string& name) const;
@@ -165,6 +191,7 @@ public:
      * Returns the Cascade object for the Cascade with the specified index.
      *
      * @param index The index of the desired cascade.
+     *
      * @return The Cascade object with the index.
      */
     const Cascade& getCascade(int index) const;
@@ -184,16 +211,17 @@ public:
 
 private:
 
-    // This constructor is implemented, but private, since it is not needed.
     /**
-     * Copy constructor.
+     * Copy constructor. Private, since it is not needed/used.
      *
      * @param that Object to be copied.
      */
     Haarcascades(const Haarcascades& that);
 
-    // This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
-    // For now, it's private to prevent usage and unexpected behavior.
+    /**
+     * This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
+     * For now, it's private to prevent usage and unexpected behavior.
+     */
     Haarcascades& operator = (const Haarcascades& that);
 
     class HaarcascadesPriv;

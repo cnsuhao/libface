@@ -74,12 +74,13 @@ public:
 
     /**
      * Returns the number of unique faces in the database.
+     *
+     * @return Number of unique faces in the database.
      */
     int count() const;
 
     /**
-     * Get the mapping between config variables and the data. This can be stored and then
-     * loaded back into config.
+     * Get the mapping between config variables and the data. This can be stored and then loaded back into config.
      *
      * @return Returns a config std::map with variable names as keys and data encoded as std::string.
      */
@@ -107,7 +108,7 @@ public:
      * Method to attempt to compare images with the known projected images. Uses a specified type of
      * distance to see how far away they are from each of the images in the projection.
      *
-     * @param input The pointer to IplImage * image, which is to be recognized.
+     * @param input The pointer to IplImage* image, which is to be recognized.
      *
      * @return A pair with ID and closeness of the closest face.
      *
@@ -140,8 +141,19 @@ public:
 
 private:
 
-    // Overwrite auto generated constructors with private ones. Currently neither implemented nor used.
+    /** Overwrite auto generated copy constructors with private one. Currently neither implemented nor used.
+     *
+     * @param that Object to be copied.
+     *
+     */
     Eigenfaces(const Eigenfaces& that);
+
+    /** Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
+     *
+     * @param that Object to be copied.
+     * @return Reference to assignee.
+     *
+     */
     Eigenfaces& operator = (const Eigenfaces& that);
 
     class EigenfacesPriv;

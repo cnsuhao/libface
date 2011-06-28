@@ -71,7 +71,7 @@ public:
      *
      * @param type Type of the face recognition/detection/both to use. ALL by default.
      * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
-     * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades
+     * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades.
      */
     LibFace(Mode type = ALL, const std::string& configDir = ".",
             const std::string& cascadeDir = std::string(OPENCVDIR)+"/haarcascades");
@@ -84,7 +84,9 @@ public:
     // OpenCV compatibility methods
 
     /**
-     * Get the count of all faces trained
+     * Get the count of all faces trained.
+     *
+     * @return Number of all faces trained.
      */
     int count() const;
 
@@ -322,8 +324,14 @@ public:
 
 private:
 
-    // Overwrite auto generated constructors with private ones. Currently neither implemented nor used.
+    /**
+     * Overwrite auto generated copy constructor with private one. Currently neither implemented nor used.
+     */
     LibFace(const LibFace& that);
+
+    /**
+     * Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
+     */
     LibFace& operator = (const LibFace& that);
 
     class LibFacePriv;

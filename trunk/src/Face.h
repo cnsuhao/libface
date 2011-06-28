@@ -89,96 +89,100 @@ public:
     ~Face();
 
     /**
-    * Sets the value for the x coordinate of the top left corner of the face.
-    * @param x1 X coordinates of the top left corner of the face.
-    */
+     * Sets the value for the x coordinate of the top left corner of the face.
+     *
+     * @param x1 X coordinates of the top left corner of the face.
+     */
     void setX1(int x1);
 
     /**
      * Sets the value for the x coordinate of the bottom right corner of the face.
+     *
      * @param x2 X coordinates of the bottom right corner of the face.
      */
     void setX2(int x2);
 
     /**
-    * Sets the value for the y coordinate of the top left corner of the face.
-    * @param y1 Y coordinates of the top left corner of the face.
-    */
+     * Sets the value for the y coordinate of the top left corner of the face.
+     *
+     * @param y1 Y coordinates of the top left corner of the face.
+     */
     void setY1(int y1);
 
     /**
-    * Sets the value for the y coordinate of the bottom right corner of the face.
-    * @param y2 Y coordinates of the bottom right corner of the face.
-    */
+     * Sets the value for the y coordinate of the bottom right corner of the face.
+     *
+     * @param y2 Y coordinates of the bottom right corner of the face.
+     */
     void setY2(int y2);
 
     /**
-    * Sets the id of the face.
-    * @param id ID of the face.
-    */
+     * Sets the id of the face.
+     * @param id ID of the face.
+     */
     void setId(int id);
 
     /**
-    * Sets the image of the face.
-    * Note: Does not take ownership of the IplImage object, you need to release it after use.
-    * @param face pointer to the IplImage of the face.
-    */
+     * Sets the image of the face.
+     *
+     * @param face pointer to the IplImage of the face.
+     */
     void setFace(IplImage* face);
 
     /**
-    * Gets the image of the face.
-    *
-    * @return Pointer the IplImage image of the face.
-    */
+     * Gets the image of the face.
+     *
+     * @return Pointer the IplImage image of the face.
+     */
     IplImage* getFace() const;
 
     /**
-    * Gets the height of the face rectangle.
-    *
-    * @return Returns the height of the face rectangle.
-    */
+     * Gets the height of the face rectangle.
+     *
+     * @return Returns the height of the face rectangle.
+     */
     int getHeight() const;
 
     /**
-    * Gets the width of the face rectangle.
-    *
-    * @return Returns the width of the face rectangle.
-    */
+     * Gets the width of the face rectangle.
+     *
+     * @return Returns the width of the face rectangle.
+     */
     int getWidth() const;
 
     /**
-    * Gets the x coordinate of the top left corner of the face.
-    *
-    * @return x coordinate of the top left corner of the face.
-    */
+     * Gets the x coordinate of the top left corner of the face.
+     *
+     * @return x coordinate of the top left corner of the face.
+     */
     int getX1() const;
 
     /**
-    * Gets the x coordinate of the bottom right corner of the face.
-    *
-    * @return x coordinate of the bottom right corner of the face.
-    */
+     * Gets the x coordinate of the bottom right corner of the face.
+     *
+     * @return x coordinate of the bottom right corner of the face.
+     */
     int getX2() const;
 
     /**
-    * Gets the y coordinate of the top left corner of the face.
-    *
-    * @return y coordinate of the top left corner of the face.
-    */
+     * Gets the y coordinate of the top left corner of the face.
+     *
+     * @return y coordinate of the top left corner of the face.
+     */
     int getY1() const;
 
     /**
-    * Gets the y coordinate of the bottom right corner of the face.
-    *
-    * @return y coordinate of the bottom right corner of the face.
-    */
+     * Gets the y coordinate of the bottom right corner of the face.
+     *
+     * @return y coordinate of the bottom right corner of the face.
+     */
     int getY2() const;
 
     /**
-    * Gets the ID of the face.
-    *
-    * @return ID of the face.
-    */
+     * Gets the ID of the face.
+     *
+     * @return ID of the face.
+     */
     int getId() const;
 
     /**
@@ -190,6 +194,7 @@ private:
 
     // NOTE: We cannot use a d private container there due to use vector.push_back()
     //       C++ call instancied in FaceDetect class.
+    // TODO: This should work if we wrote a custom copy c'tor. - Stephan
 
     int             x1;
     int             y1;
