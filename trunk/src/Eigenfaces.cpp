@@ -92,15 +92,6 @@ public:
      */
     void learn(int index, IplImage* newFace);
 
-    /**
-     * Converts integer to string, convenience function. TODO: Move to Utils
-     *
-     * @param x The integer to be converted to std::string
-     *
-     * @return Stringified version of integeer
-     */
-    inline string stringify(unsigned int x) const;
-
     // Face data members, stored in the DB
     vector<IplImage*> faceImgArr; // Array of face images
     vector<int> indexMap;
@@ -155,6 +146,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     I believe this is because cvAlloc allocates more memory than actually needed.
     Using an array of pointers instead of a vector saves an additional 24 bytes per call.
     */
+    // same applies to function learn
 
 //#define new_and_delete
 #ifdef new_and_delete
@@ -323,11 +315,11 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
     float* projectedFace = (float*)malloc(sizeof(float));
 
-    CvSize size=cvSize(FACE_WIDTH, FACE_HEIGHT);
+    CvSize size = cvSize(FACE_WIDTH, FACE_HEIGHT);
 
     //Set PCA's termination criterion
-    CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER,
-            1,0);
+    CvTermCriteria mycrit = cvTermCriteria(CV_TERMCRIT_NUMBER, 1, 0);
+
     //Initialise pointer to the pointers with eigen objects
     IplImage** eigenObjects = new IplImage *[2];
 
@@ -371,21 +363,11 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
     cvReleaseImage(&pAvgTrainImg);
     cvReleaseImage(&eigenObjects[0]);
     cvReleaseImage(&eigenObjects[1]);
+    delete[] eigenObjects;
 
-    tempFaces.clear();
 }
 
-string Eigenfaces::EigenfacesPriv::stringify(unsigned int x) const {
-    ostringstream o;
-
-    if (!(o << x)) {
-        LOG(libfaceERROR) << "Could not convert"; }
-
-    return o.str();
-}
-
-Eigenfaces::Eigenfaces(const string& dir)
-: d(new EigenfacesPriv) {
+Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
 
     struct stat stFileInfo;
     d->configFile = dir + "/" + CONFIG_XML;
@@ -395,7 +377,6 @@ Eigenfaces::Eigenfaces(const string& dir)
     int intStat = stat(d->configFile.c_str(),&stFileInfo);
     if (intStat == 0) {
         LOG(libfaceINFO) << "libface config file exists. Loading previous config.";
-
         loadConfig(dir);
     } else {
         LOG(libfaceINFO) << "libface config file does not exist. Will create new config.";
@@ -406,6 +387,7 @@ Eigenfaces::~Eigenfaces() {
 
     for (vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
         cvReleaseImage(&(*it));
+
     d->faceImgArr.clear();
 
     d->indexMap.clear();
@@ -451,8 +433,6 @@ int Eigenfaces::loadConfig(const string& dir) {
         return 1;
     }
 
-    //d->clearTrainingStructures();
-
     int nIds = cvReadIntByName(fileStorage, 0, "nIds", 0), i;
     d->FACE_WIDTH = cvReadIntByName(fileStorage, 0, "FACE_WIDTH",d->FACE_WIDTH);
     d->FACE_HEIGHT = cvReadIntByName(fileStorage, 0, "FACE_HEIGHT",d->FACE_HEIGHT);
@@ -486,7 +466,7 @@ int Eigenfaces::loadConfig(const map<string, string>& c) {
 
     int nIds  = atoi(config["nIds"].c_str()), i;
 
-    //Not sure what depath and # of channels should be in faceImgArr. Store them in config?
+    // Not sure what depth and # of channels should be in faceImgArr. Store them in config?
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
