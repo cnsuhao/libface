@@ -62,7 +62,6 @@ public:
     static CvPoint     center(const Face&);
     static int         distance(CvPoint, CvPoint);
     static int         distance(const Face&, const Face&);
-
     static CvMat*      addScalar(CvMat* src, CvScalar value);
     static CvMat*      combine(CvMat* src, CvMat* vector);
     static void        divVec(CvMat* src, double value);
@@ -84,7 +83,6 @@ public:
     static IplImage*   copyRect(const IplImage* src, const CvRect& rect);
     static IplImage*   scaledSection(const IplImage* src, const CvRect& sourceRect, double scaleFactor);
     static IplImage*   scaledSection(const IplImage* src, const CvRect& sourceRect, const CvSize& destSize);
-
     static std::string imageToString(IplImage* src);
     static std::string matrixToString(CvMat* src);
 };

@@ -96,7 +96,7 @@ int main(int argc, char** argv)
             IplImage* img = cvLoadImage(argv[i], CV_LOAD_IMAGE_GRAYSCALE);
             Face* face = result->at(j);
             cvRectangle( img, cvPoint(face->getX1(), face->getY1()), cvPoint(face->getX2(), face->getY2()), CV_RGB(255,0,0), 3, 2, 0);
-            //LibFaceUtils::showImage(img,argv[i]);
+            LibFaceUtils::showImage(img,argv[i]);
             cvReleaseImage(&img);
         }
 
