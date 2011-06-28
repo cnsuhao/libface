@@ -219,7 +219,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     cvReleaseImage(&pAvgTrainImg);
     cvReleaseImage(&eigenObjects[0]);
     cvReleaseImage(&eigenObjects[1]);
-    delete eigenObjects;
+    delete[] eigenObjects;
 
     return minDist;
 
@@ -285,7 +285,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     cvReleaseImage(&pAvgTrainImg);
     cvReleaseImage(&eigenObjects[0]);
     cvReleaseImage(&eigenObjects[1]);
-    delete eigenObjects;
+    delete[] eigenObjects;
 
     // Calling clear is actually not necessary, tempFaces will be destructed on return.
     // The images pointed to in tempFaces are owned by the calling function and may not be released here (which clear would not do).
