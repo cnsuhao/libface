@@ -35,6 +35,7 @@
 #include "LibFaceUtils.h"
 
 // LibFace headers
+#include "Log.h"
 #include "Face.h"
 
 // OpenCV headers
@@ -686,6 +687,16 @@ IplImage* LibFaceUtils::scaledSection(const IplImage* src, const CvRect& sourceR
 
     cvReleaseImageHeader(&srcHeader);
     return result;
+}
+
+string LibFaceUtils::stringify(const unsigned int& x) const {
+    ostringstream o;
+
+    if (!(o << x)) {
+        LOG(libfaceERROR) << "Could not convert";
+    }
+
+    return o.str();
 }
 
 } // namespace libface

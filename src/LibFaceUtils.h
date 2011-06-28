@@ -85,6 +85,15 @@ public:
     static IplImage*   scaledSection(const IplImage* src, const CvRect& sourceRect, const CvSize& destSize);
     static std::string imageToString(IplImage* src);
     static std::string matrixToString(CvMat* src);
+
+    /**
+     * Converts unsigned integer to string, convenience function.
+     *
+     * @param x The unsigned integer to be converted to std::string
+     *
+     * @return Stringified version of integeer
+     */
+    inline std::string stringify(const unsigned int& x) const;
 };
 
 } // namespace libface
