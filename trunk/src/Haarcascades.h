@@ -59,10 +59,10 @@ typedef struct CascadeStruct
     CascadeStruct();
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param argName
-     * @param argFile
+     * @param argName TODO
+     * @param argFile TODO
      */
     CascadeStruct(const std::string& argName, const std::string& argFile);
 
@@ -77,6 +77,8 @@ typedef struct CascadeStruct
      * Assignment operator.
      *
      * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
      */
     CascadeStruct& operator = (const CascadeStruct& that);
 
@@ -98,6 +100,22 @@ public:
      * @param path The path to the directory containing the cascade.
      */
     Haarcascades(const std::string& path);
+
+    /**
+     * Copy constructor. Private, since it is not needed/used.
+     *
+     * @param that Object to be copied.
+     */
+    Haarcascades(const Haarcascades& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    Haarcascades& operator = (const Haarcascades& that);
 
     /**
      * Destructor for Haarcascades.
@@ -210,19 +228,6 @@ public:
     void clear();
 
 private:
-
-    /**
-     * Copy constructor. Private, since it is not needed/used.
-     *
-     * @param that Object to be copied.
-     */
-    Haarcascades(const Haarcascades& that);
-
-    /**
-     * This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
-     * For now, it's private to prevent usage and unexpected behavior.
-     */
-    Haarcascades& operator = (const Haarcascades& that);
 
     class HaarcascadesPriv;
     HaarcascadesPriv* const d;

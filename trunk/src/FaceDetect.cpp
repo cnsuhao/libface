@@ -65,34 +65,34 @@ public:
     /**
      * Default constructor.
      */
-    FaceDetectPriv() : cascadeSet(0), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
-        minSize[0] = 1;
-        minSize[1] = 20;
-        minSize[2] = 26;
-        minSize[3] = 35;
-    }
+    FaceDetectPriv();
 
     /** Constructor.
      *
      * @param Directory containing haarcascade files.
      */
-    FaceDetectPriv(const string& cascadeDir) : cascadeSet(new Haarcascades(cascadeDir)), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
-        minSize[0] = 1;
-        minSize[1] = 20;
-        minSize[2] = 26;
-        minSize[3] = 35;
-    }
+    FaceDetectPriv(const string& cascadeDir);
 
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    FaceDetectPriv(const FaceDetectPriv& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    FaceDetectPriv& operator = (const FaceDetectPriv& that);
 
     /**
      * Destructor.
      */
-    ~FaceDetectPriv() {
-        if(storage) {
-            cvReleaseMemStorage(&storage);
-        }
-        delete cascadeSet;
-    }
+    ~FaceDetectPriv();
 
     Haarcascades* cascadeSet;
     CvMemStorage* storage;
@@ -109,53 +109,71 @@ public:
     int           minSize[4];
     int           accu;
 
-private:
+};
 
-    /**
-     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
-     */
-    FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(scaleFactor), countCertainty(countCertainty), maximumDistance(maximumDistance), minimumDuplicates(minimumDuplicates), searchIncrement(searchIncrement), grouping(grouping), accu(accu) {
-        LOG(libfaceWARNING) << "This constructor has not been tested: FaceDetectPriv(const FaceDetectPriv& that).";
-        for(unsigned i = 0; i < sizeof(minSize); ++i ) {
-            minSize[i] = that.minSize[i];
-        }
-        delete cascadeSet;
-        if(that.cascadeSet) {
-            LOG(libfaceWARNING) << "To enable this constructor you have to uncomment the following line and make Haarcascades(const Haarcascades& that) public.";
-            //cascadeSet = new Haarcascades(*that.cascadeSet);
-        }
+FaceDetect::FaceDetectPriv::FaceDetectPriv() : cascadeSet(0), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
+    minSize[0] = 1;
+    minSize[1] = 20;
+    minSize[2] = 26;
+    minSize[3] = 35;
+}
+
+FaceDetect::FaceDetectPriv::FaceDetectPriv(const string& cascadeDir) : cascadeSet(new Haarcascades(cascadeDir)), storage(0), scaleFactor(1.0), countCertainty(true), maximumDistance(20), minimumDuplicates(1), searchIncrement(1.269F), grouping(1), accu(1) {
+    minSize[0] = 1;
+    minSize[1] = 20;
+    minSize[2] = 26;
+    minSize[3] = 35;
+}
+
+FaceDetect::FaceDetectPriv::FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(scaleFactor), countCertainty(countCertainty), maximumDistance(maximumDistance), minimumDuplicates(minimumDuplicates), searchIncrement(searchIncrement), grouping(grouping), accu(accu) {
+    LOG(libfaceDEBUG) << "FaceDetectPriv(const FaceDetectPriv& that) : This constructor has only been tested briefly.";
+    for(unsigned i = 0; i < 4; ++i ) {
+        minSize[i] = that.minSize[i];
     }
+    if(that.cascadeSet) {
+        cascadeSet = new Haarcascades(*that.cascadeSet);
+    }
+    if(that.storage) {
+        // don't know how to copy storage, should not be necessary anway
+        LOG(libfaceWARNING) << "FaceDetectPriv& operator = : storage is not being copied.";
+    }
+}
 
-    /**
-     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
-     */
-    FaceDetectPriv& operator = (const FaceDetectPriv& that) {
-        LOG(libfaceWARNING) << "This operator has not been tested: FaceDetectPriv& operator =.";
-        if(this == &that) {
-            return *this;
-        }
-        scaleFactor = that.scaleFactor;
-        countCertainty = that.countCertainty;
-        maximumDistance = that.maximumDistance;
-        minimumDuplicates = that.minimumDuplicates;
-        searchIncrement = that.searchIncrement;
-        grouping = that.grouping;
-        accu = that.accu;
-        storage = 0; // TODO storage is not copied, does it need to be copied?
-        if(cascadeSet) {
-            delete cascadeSet;
-        }
-        if(that.cascadeSet) {
-            LOG(libfaceWARNING) << "To enable this constructor you have to uncomment the following line and make Haarcascades(const Haarcascades& that) public, and comment the next but one line.";
-            //cascadeSet = new Haarcascades(*that.cascadeSet);
-            cascadeSet = 0;
-        } else {
-            cascadeSet = 0;
-        }
+FaceDetect::FaceDetectPriv& FaceDetect::FaceDetectPriv::operator = (const FaceDetectPriv& that) {
+    LOG(libfaceWARNING) << "FaceDetectPriv& operator = : This operator has not been tested.";
+    if(this == &that) {
         return *this;
     }
+    scaleFactor = that.scaleFactor;
+    countCertainty = that.countCertainty;
+    maximumDistance = that.maximumDistance;
+    minimumDuplicates = that.minimumDuplicates;
+    searchIncrement = that.searchIncrement;
+    grouping = that.grouping;
+    accu = that.accu;
+    if(that.storage) {
+        // don't know how to copy storage, should not be necessary anway
+        LOG(libfaceWARNING) << "FaceDetectPriv& operator = : storage is not being copied.";
+    } else {
+        storage = 0;
+    }
+    if(cascadeSet) {
+        delete cascadeSet;
+        cascadeSet = 0;
+    }
+    if(that.cascadeSet) {
+        cascadeSet = new Haarcascades(*that.cascadeSet);
+    }
+    return *this;
+}
 
-};
+FaceDetect::FaceDetectPriv::~FaceDetectPriv() {
+    if(storage) {
+        // storage should already have been released, but let's double check
+        cvReleaseMemStorage(&storage);
+    }
+    delete cascadeSet;
+}
 
 FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv(cascadeDir)) {
 
@@ -163,6 +181,26 @@ FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv(cascadeD
     //d->cascadeSet->addCascade("haarcascade_frontalface_alt.xml", 1);   // Weight 1 for frontal default
     d->cascadeSet->addCascade("haarcascade_frontalface_alt2.xml",1);  //default
     //d->cascadeSet->addCascade("haarcascade_profileface.xml", 1);
+}
+
+FaceDetect::FaceDetect(const FaceDetect& that) : d(that.d ? new FaceDetectPriv(*that.d) : 0) {
+    LOG(libfaceDEBUG) << "FaceDetect(const FaceDetect& that) : This constructor has only been tested briefly.";
+    if(!d) {
+        LOG(libfaceERROR) << "FaceDetect(const FaceDetect& that) : d points to NULL.";
+    }
+}
+
+FaceDetect& FaceDetect::operator = (const FaceDetect& that) {
+    LOG(libfaceWARNING) << "FaceDetect& operator = (const FaceDetect& that) : This operator has not been tested.";
+    if(this == &that) {
+        return *this;
+    }
+    if( (that.d == 0) || (d == 0) ) {
+        LOG(libfaceERROR) << "Eigenfaces::operator = (const Eigenfaces& that) : d or that.d points to NULL.";
+    } else {
+        *d = *that.d;
+    }
+    return *this;
 }
 
 FaceDetect::~FaceDetect() {
@@ -174,8 +212,7 @@ int FaceDetect::accuracy() const {
     return d->accu;
 }
 
-void FaceDetect::setAccuracy(int i)
-{
+void FaceDetect::setAccuracy(int i) {
     // When changing numbers in setAccuracy, also change values in default constructor for FaceDetectPriv.
 
     if(i >= 1 && i <= 10) {
@@ -449,6 +486,7 @@ vector<Face*>* FaceDetect::detectFaces(const IplImage* inputImage) {
     vector<Face*>* faces;
 
     d->storage = cvCreateMemStorage(0);
+
     for (int i = 0; i < d->cascadeSet->getSize(); ++i) {
         IplImage* constTemp = temp ? temp : cvCloneImage(inputImage);
         faces               = this->cascadeResult(constTemp, d->cascadeSet->getCascade(i).haarcasc, cvSize(faceSize,faceSize));

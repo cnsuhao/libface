@@ -76,6 +76,8 @@ public:
      * Assignment operator.
      *
      * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
      */
     Face& operator = (const Face& that);
 

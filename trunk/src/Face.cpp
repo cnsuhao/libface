@@ -65,8 +65,6 @@ Face& Face::operator = (const Face& that) {
     }
     if(that.face) {
         face = cvCloneImage(that.face);
-    } else {
-        face = 0;
     }
     return *this;
 }
