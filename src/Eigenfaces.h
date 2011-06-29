@@ -60,12 +60,27 @@ class FACEAPI Eigenfaces : public LibFaceRecognitionCore
 public:
 
     /**
-     * Constructor for Eigenfaces. Takes a directory string as argument to determine the location of config
-     * xml file.
+     * Constructor for Eigenfaces. Takes a directory string as argument to determine the location of config xml file.
      *
-     * @param dir The directory in which the DB is to be found/created
+     * @param dir The directory in which the DB is to be found/created.
      */
     Eigenfaces(const std::string& dir = ".");
+
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    Eigenfaces(const Eigenfaces& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    Eigenfaces& operator = (const Eigenfaces& that);
 
     /**
      * Destructor that frees the data variables.
@@ -140,21 +155,6 @@ public:
     int update(std::vector<Face*>* dataVector);
 
 private:
-
-    /** Overwrite auto generated copy constructors with private one. Currently neither implemented nor used.
-     *
-     * @param that Object to be copied.
-     *
-     */
-    Eigenfaces(const Eigenfaces& that);
-
-    /** Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
-     *
-     * @param that Object to be copied.
-     * @return Reference to assignee.
-     *
-     */
-    Eigenfaces& operator = (const Eigenfaces& that);
 
     class EigenfacesPriv;
     EigenfacesPriv* const d;

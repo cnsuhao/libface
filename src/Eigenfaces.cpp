@@ -69,8 +69,37 @@ public:
     /**
      * Constructor.
      */
-    EigenfacesPriv() : faceImgArr(), indexMap(), configFile(), CUT_OFF(10000000.0), UPPER_DIST(10000000), LOWER_DIST(10000000), THRESHOLD(1000000.0), RMS_THRESHOLD(10.0), FACE_WIDTH(120), FACE_HEIGHT(120) {}
+    EigenfacesPriv();
 
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    EigenfacesPriv(const EigenfacesPriv& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    EigenfacesPriv& operator = (const EigenfacesPriv& that);
+
+    /**
+     * Destructor.
+     */
+    ~EigenfacesPriv();
+
+    /**
+     * TODO
+     *
+     * @param img1
+     * @param img2
+     * @return
+     *
+     */
     float eigen(IplImage* img1, IplImage* img2);
 
     /**
@@ -93,7 +122,8 @@ public:
     void learn(int index, IplImage* newFace);
 
     // Face data members, stored in the DB
-    vector<IplImage*> faceImgArr; // Array of face images
+    // Array of face images. It is assumed that all elements of faceImgArr always point to valid IplImages. Otherwise runtime errors will occur.
+    vector<IplImage*> faceImgArr;
     vector<int> indexMap;
 
     // Config data members
@@ -106,37 +136,56 @@ public:
     float RMS_THRESHOLD;
     int FACE_WIDTH;
     int FACE_HEIGHT;
+};
 
-private:
 
-    /**
-     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
-     */
-    EigenfacesPriv(const EigenfacesPriv& that) : faceImgArr(that.faceImgArr), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
-        LOG(libfaceWARNING) << "This constructor has not been tested: EigenfacesPriv(const EigenfacesPriv& that).";
+Eigenfaces::EigenfacesPriv::EigenfacesPriv() : faceImgArr(), indexMap(), configFile(), CUT_OFF(10000000.0), UPPER_DIST(10000000), LOWER_DIST(10000000), THRESHOLD(1000000.0), RMS_THRESHOLD(10.0), FACE_WIDTH(120), FACE_HEIGHT(120) {
+
+}
+
+Eigenfaces::EigenfacesPriv::EigenfacesPriv(const EigenfacesPriv& that) : faceImgArr(), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
+    LOG(libfaceDEBUG) << "EigenfacesPriv(const EigenfacesPriv& that) : This constructor has only been tested briefly.";
+    // copy images pointed to by faceImgArr
+    for(unsigned i = 0; i < that.faceImgArr.size(); ++i) {
+        faceImgArr.push_back(cvCloneImage(that.faceImgArr.at(i)));
     }
+}
 
-    /**
-     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
-    */
-    EigenfacesPriv& operator = (const EigenfacesPriv& that) {
-        LOG(libfaceWARNING) << "This operator has not been tested: EigenfacesPriv& operator =.";
-        if(this == &that) {
-            return *this;
-        }
-        faceImgArr = that.faceImgArr;
-        indexMap = that.indexMap;
-        configFile = that.configFile;
-        CUT_OFF = that.CUT_OFF;
-        UPPER_DIST = that.UPPER_DIST;
-        LOWER_DIST = that.LOWER_DIST;
-        THRESHOLD = that.THRESHOLD;
-        RMS_THRESHOLD = that.RMS_THRESHOLD;
-        FACE_WIDTH = that.FACE_WIDTH;
-        FACE_HEIGHT = that.FACE_HEIGHT;
+Eigenfaces::EigenfacesPriv& Eigenfaces::EigenfacesPriv::operator = (const EigenfacesPriv& that) {
+    LOG(libfaceWARNING) << "EigenfacesPriv& operator = : This operator has not been tested";
+    if(this == &that) {
         return *this;
     }
-};
+
+    // release old images
+    for(unsigned i = 0; i < faceImgArr.size(); ++i) {
+        cvReleaseImage(&faceImgArr.at(i));
+    }
+    faceImgArr.clear();
+
+    // clone new images
+    for(unsigned i = 0; i < that.faceImgArr.size(); ++i) {
+        faceImgArr.push_back(cvCloneImage(that.faceImgArr.at(i)));
+    }
+
+    indexMap = that.indexMap;
+    configFile = that.configFile;
+    CUT_OFF = that.CUT_OFF;
+    UPPER_DIST = that.UPPER_DIST;
+    LOWER_DIST = that.LOWER_DIST;
+    THRESHOLD = that.THRESHOLD;
+    RMS_THRESHOLD = that.RMS_THRESHOLD;
+    FACE_WIDTH = that.FACE_WIDTH;
+    FACE_HEIGHT = that.FACE_HEIGHT;
+
+    return *this;
+}
+
+Eigenfaces::EigenfacesPriv::~EigenfacesPriv() {
+    for(unsigned i = 0; i < faceImgArr.size(); ++i) {
+        cvReleaseImage(&faceImgArr.at(i));
+    }
+}
 
 float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 
@@ -343,7 +392,6 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
             CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
-
     cvEigenDecomposite(tempFaces.at(0), 1, eigenObjects,
             CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedFace );
 
@@ -368,7 +416,6 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 }
 
 Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
-
     struct stat stFileInfo;
     d->configFile = dir + "/" + CONFIG_XML;
 
@@ -383,15 +430,27 @@ Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
     }
 }
 
+Eigenfaces::Eigenfaces(const Eigenfaces& that) : d(that.d ?  new EigenfacesPriv(*that.d) : 0) {
+    LOG(libfaceDEBUG) << "Eigenfaces(const Eigenfaces& that) : This constructor has only been tested briefly.";
+    if(!d) {
+        LOG(libfaceERROR) << "Eigenfaces(const Eigenfaces& that) : d points to NULL.";
+    }
+}
+
+Eigenfaces& Eigenfaces::operator = (const Eigenfaces& that) {
+    LOG(libfaceWARNING) << "Eigenfaces::operator = (const Eigenfaces& that) : This operator has not been tested.";
+    if(this == &that) {
+        return *this;
+    }
+    if( (that.d == 0) || (d == 0) ) {
+        LOG(libfaceERROR) << "Eigenfaces::operator = (const Eigenfaces& that) : d or that.d points to NULL.";
+    } else {
+        *d = *that.d;
+    }
+    return *this;
+}
+
 Eigenfaces::~Eigenfaces() {
-
-    for (vector<IplImage*>::iterator it = d->faceImgArr.begin(); it != d->faceImgArr.end(); ++it)
-        cvReleaseImage(&(*it));
-
-    d->faceImgArr.clear();
-
-    d->indexMap.clear();
-
     delete d;
 }
 
@@ -494,7 +553,7 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
     clock_t recog = clock();
     size_t j;
 
-    for( j = 0; j<d->faceImgArr.size(); j++) {
+    for( j = 0; j < d->faceImgArr.size(); j++) {
 
         float err = d->eigen(input, d->faceImgArr.at(j));
 

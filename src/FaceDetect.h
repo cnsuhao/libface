@@ -68,6 +68,22 @@ public:
     FaceDetect(const std::string& cascadeDir);
 
     /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    FaceDetect(const FaceDetect& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    FaceDetect& operator = (const FaceDetect& that);
+
+    /**
      *  Default destructor. Deletes d.
      */
     ~FaceDetect();
@@ -113,16 +129,6 @@ public:
     static int getRecommendedImageSizeForDetection();
 
 private:
-
-    /**
-     * Overwrite auto generated copy constructor with private one. Currently neither implemented nor used.
-     */
-    FaceDetect(const FaceDetect& that);
-
-    /**
-     * Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
-     */
-    FaceDetect& operator = (const FaceDetect& that);
 
     /**
      *  Inherited method from LibFaceDetectCore for detecting faces in an image using a single cascade. Uses CANNY_PRUNING at present.

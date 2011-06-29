@@ -65,39 +65,28 @@ public:
      * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
      * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades.
      */
-    LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir) : type(argType), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName() {
-        // We don't need face recognition if we just want detection, and vice versa.
-        // So there is a case for everything.
-        switch (type) {
-        case DETECT:
-            cascadeDir = argCascadeDir;
-            detectionCore = new FaceDetect(cascadeDir);
-            break;
-        case EIGEN:
-            recognitionCore = new Eigenfaces(argConfigDir);
-            break;
-        case HMM:
-            LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
-            break;
-        default:    // Initialize both detector and Eigenfaces
-            cascadeDir = argCascadeDir;
-            detectionCore = new FaceDetect(cascadeDir);
-            recognitionCore = new Eigenfaces(argConfigDir);
-        break;
-        }
-    }
+    LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir);
+
+    /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    LibFacePriv(const LibFacePriv& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    LibFacePriv& operator = (const LibFacePriv& that);
 
     /**
      * Destructor.
      */
-    ~LibFacePriv() {
-        delete detectionCore;
-        delete recognitionCore;
-        if(lastImage) {
-            cvReleaseImage(&lastImage);
-        }
-    }
-
+    ~LibFacePriv();
 
     /**
      * TODO
@@ -115,49 +104,161 @@ public:
     IplImage*               lastImage;
     string                  lastFileName;
 
-private:
+};
 
-    /**
-     * Copy constructor. Provided for sake of completness and to overwrite auto generated copy constructor. Private, since not needed.
-     * Does not work because of abstract base classes?
-     */
-    LibFacePriv(const LibFacePriv& that) : type(that.type), cascadeDir(that.cascadeDir), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName(that.lastFileName) {
-        LOG(libfaceWARNING) << "This constructor has not been tested: LibFacePriv(const LibFacePriv& that).";
-        if(that.detectionCore || that.recognitionCore) {
-            LOG(libfaceERROR) << "Cannot copy LibFacePriv because LibFaceDetectCore and LibFaceRecognitionCore are abstract base classes.";
-            // at least I wouldn't know how
+LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir) : type(argType), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName() {
+    // We don't need face recognition if we just want detection, and vice versa.
+    // So there is a case for everything.
+    switch (type) {
+    case DETECT:
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type DETECT";
+        cascadeDir = argCascadeDir;
+        detectionCore = new FaceDetect(cascadeDir);
+        break;
+    case EIGEN:
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type EIGEN";
+        recognitionCore = new Eigenfaces(argConfigDir);
+        break;
+    case HMM:
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type HMM";
+        LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
+        break;
+    default:    // Initialize both detector and Eigenfaces
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type default";
+        cascadeDir = argCascadeDir;
+        detectionCore = new FaceDetect(cascadeDir);
+        recognitionCore = new Eigenfaces(argConfigDir);
+    break;
+    }
+}
+
+LibFace::LibFacePriv::LibFacePriv(const LibFacePriv& that) : type(that.type), cascadeDir(that.cascadeDir), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName(that.lastFileName) {
+    LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : This constructor has only been tested briefly.";
+
+    // copy lastImage
+    if(that.lastImage) {
+        lastImage = cvCloneImage(that.lastImage);
+    }
+
+    // copy detectionCore - construction of new object due to polymorphism
+    if(that.detectionCore) {
+        if(dynamic_cast<FaceDetect*>(that.detectionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.detectionCore is of type FaceDetect*.";
+            detectionCore = new FaceDetect(*dynamic_cast<FaceDetect*>(that.detectionCore));
         }
-        if(that.lastImage) {
-            lastImage = cvCloneImage(that.lastImage);
+        // If other derived classes are implemented, add more cases here.
+        if(detectionCore == 0) {
+            LOG(libfaceERROR) << "Unable to copy that.detectionCore";
         }
     }
 
-    /**
-     * Assignment operator. Provided for sake of completness and to overwrite auto generated assignment operator. Private, since not needed.
-     * Does not work because of abstract base classes?
-     */
-    LibFacePriv& operator = (const LibFacePriv& that) {
-        LOG(libfaceWARNING) << "This operator has not been tested: LibFacePriv& operator = (const LibFacePriv& that).";
-        if(this == &that) {
-            return *this;
+    // copy recognitionCore - construction of new object due to polymorphism
+    if(that.recognitionCore) {
+        if(dynamic_cast<Eigenfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.recognitionCore is of type Eigenfaces*.";
+            recognitionCore = new Eigenfaces(*dynamic_cast<Eigenfaces*>(that.recognitionCore));
         }
-        type = that.type;
-        cascadeDir = that.cascadeDir;
-        if(that.detectionCore || that.recognitionCore) {
-            LOG(libfaceERROR) << "Cannot copy LibFacePriv because LibFaceDetectCore and LibFaceRecognitionCore are abstract base classes.";
-            // at least I wouldn't know how
+        // If other derived classes are implemented, add more cases here.
+        if(recognitionCore == 0) {
+            LOG(libfaceERROR) << "Unable to copy that.recognitionCore.";
         }
-        if(that.lastImage) {
-            lastImage = cvCloneImage(that.lastImage);
-        }
-        lastFileName = that.lastFileName;
+    }
+}
+
+LibFace::LibFacePriv& LibFace::LibFacePriv::operator = (const LibFacePriv& that) {
+    LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : This operator has only been tested briefly.";
+    if(this == &that) {
         return *this;
     }
 
-};
+    lastFileName = that.lastFileName;
+    type = that.type;
+    cascadeDir = that.cascadeDir;
+
+    // release lastImage
+    if(lastImage) {
+        cvReleaseImage(&lastImage);
+    }
+
+    // copy that lastImage
+    if(that.lastImage) {
+        lastImage = cvCloneImage(that.lastImage);
+    }
+
+
+    if( (detectionCore == 0) && (that.detectionCore != 0) ) {
+        LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : You are assigning an instance ob LibFace *with* a detectionCore to an instance *without* a detectionCore. This is absolutely possible, but is it really intended?";
+    }
+
+    if( (detectionCore != 0) && (that.detectionCore == 0) ) {
+        LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : You are assigning an instance ob LibFace *without* a detectionCore to an instance *with* a detectionCore. This is absolutely possible, but is it really intended?";
+    }
+
+    // copy detectionCore - construction of new object due to polymorphism - is there a more elegant solution?
+    delete detectionCore;
+    detectionCore = 0;
+    if(that.detectionCore) {
+        if(dynamic_cast<FaceDetect*>(that.detectionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.detectionCore is of type FaceDetect*.";
+            detectionCore = new FaceDetect(*dynamic_cast<FaceDetect*>(that.detectionCore));
+        }
+        // If other derived classes are implemented, add more cases here.- is there a more elegant solution?
+        if(detectionCore == 0) {
+            LOG(libfaceERROR) << "Unable to copy that.detectionCore";
+        }
+    }
+
+    if( (recognitionCore == 0) && (that.recognitionCore != 0) ) {
+        LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : You are assigning an instance ob LibFace *with* a recognitionCore to an instance *without* a recognitionCore. This is absolutely possible, but is it really intended?";
+    }
+
+    if( (recognitionCore != 0) && (that.recognitionCore == 0) ) {
+        LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : You are assigning an instance ob LibFace *without* a recognitionCore to an instance *with* a recognitionCore. This is absolutely possible, but is it really intended?";
+    }
+
+    // copy recognitionCore - construction of new object due to polymorphism - is there a more elegant solution?
+    delete recognitionCore;
+    recognitionCore = 0;
+    if(that.recognitionCore) {
+    if(dynamic_cast<Eigenfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.recognitionCore is of type Eigenfaces*.";
+            recognitionCore = new Eigenfaces(*dynamic_cast<Eigenfaces*>(that.recognitionCore));
+        }
+        // If other derived classes are implemented, add more cases here.- is there a more elegant solution?
+        if(recognitionCore == 0) {
+            LOG(libfaceERROR) << "Unable to copy that.recognitionCore.";
+        }
+    }
+
+    return *this;
+}
+
+LibFace::LibFacePriv::~LibFacePriv() {
+    delete detectionCore;
+    delete recognitionCore;
+    if(lastImage) {
+        cvReleaseImage(&lastImage);
+    }
+}
 
 LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir) : d(new LibFacePriv(type, configDir, cascadeDir)) {
     LOG(libfaceINFO) << "Cascade directory located in : " << cascadeDir;
+}
+
+LibFace::LibFace(const LibFace& that) : d(that.d ? new LibFacePriv(*that.d) : 0) {
+    LOG(libfaceDEBUG) << "LibFace(const LibFace& that) : This constructor has only been tested briefly.";
+    if(!d) {
+        LOG(libfaceERROR) << "LibFace(const LibFace& that) : d points to NULL.";
+    }
+}
+
+LibFace& LibFace::operator = (const LibFace& that) {
+    LOG(libfaceDEBUG) << "LibFace& operator = (const LibFace& that) This operator has only been tested briefly.";
+    if(this == &that) {
+        return *this;
+    }
+    *d = *that.d;
+    return *this;
 }
 
 LibFace::~LibFace() {

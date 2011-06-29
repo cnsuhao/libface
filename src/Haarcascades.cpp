@@ -62,7 +62,7 @@ CascadeStruct::CascadeStruct(const CascadeStruct& that) : name(that.name), haarc
 };
 
 CascadeStruct& CascadeStruct::operator = (const CascadeStruct& that) {
-    LOG(libfaceWARNING) << "This operator has not been tested: CascadeStruct& operator =";
+    LOG(libfaceWARNING) << "CascadeStruct& operator = : This operator has not been tested.";
     if(this == &that) {
         return *this;
     }
@@ -72,8 +72,6 @@ CascadeStruct& CascadeStruct::operator = (const CascadeStruct& that) {
     }
     if(that.haarcasc) {
         haarcasc = (CvHaarClassifierCascade*) cvClone(that.haarcasc);
-    } else {
-        haarcasc = 0;
     }
     return *this;
 }
@@ -89,7 +87,16 @@ class Haarcascades::HaarcascadesPriv
 
 public:
 
+    /**
+     * Constructor.
+     */
     HaarcascadesPriv() : cascadePath(), cascades(), weights(), size(0) {}
+
+    /**
+     * Constructor.
+     *
+     * @param path The path to the directory containing the cascade.
+     */
     HaarcascadesPriv(const string& path) : cascadePath(path), cascades(), weights(), size(0) {}
 
     // Custom copy constructors, destructor, etc. are not required as long there are no pointer data members.
@@ -102,17 +109,25 @@ public:
 
 Haarcascades::Haarcascades(const string& path) : d(new HaarcascadesPriv(path)) {}
 
-Haarcascades::Haarcascades(const Haarcascades& that) : d(new HaarcascadesPriv(*that.d)) {}
+Haarcascades::Haarcascades(const Haarcascades& that) : d(that.d ? new HaarcascadesPriv(*that.d) : 0) {
+    if(!d) {
+        LOG(libfaceERROR) << "Haarcascades(const Haarcascades& that) : d points to NULL.";
+    }
+}
 
-/*
-// This operator cannot be used because d is const, but overwriting the auto generated operator might be a good idea.
+
 Haarcascades& Haarcascades::operator = (const Haarcascades& that) {
+    LOG(libfaceWARNING) << "Haarcascades::operator = (const Haarcascades& that) : This operator has not been tested.";
     if(this == &that) {
         return *this;
     }
-    d = new HaarcascadesPriv(*that.d);
+    if( (that.d == 0) || (d == 0) ) {
+        LOG(libfaceERROR) << "Eigenfaces::operator = (const Eigenfaces& that) : d or that.d points to NULL.";
+    } else {
+        *d = *that.d;
+    }
+    return *this;
 }
-*/
 
 Haarcascades::~Haarcascades()
 {

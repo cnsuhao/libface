@@ -77,6 +77,22 @@ public:
             const std::string& cascadeDir = std::string(OPENCVDIR)+"/haarcascades");
 
     /**
+     * Copy constructor.
+     *
+     * @param that Object to be copied.
+     */
+    LibFace(const LibFace& that);
+
+    /**
+     * Assignment operator.
+     *
+     * @param that Object to be copied.
+     *
+     * @return Reference to assignee.
+     */
+    LibFace& operator = (const LibFace& that);
+
+    /**
      * Destructor for the library.
      */
     ~LibFace();
@@ -323,16 +339,6 @@ public:
     int update(std::vector<Face*>* faces, int scaleFactor=1);
 
 private:
-
-    /**
-     * Overwrite auto generated copy constructor with private one. Currently neither implemented nor used.
-     */
-    LibFace(const LibFace& that);
-
-    /**
-     * Overwrite auto generated assignment operator with private one. Currently neither implemented nor used.
-     */
-    LibFace& operator = (const LibFace& that);
 
     class LibFacePriv;
     LibFacePriv* const d;
