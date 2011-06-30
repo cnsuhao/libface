@@ -97,14 +97,12 @@ public:
 Face::FacePriv::FacePriv(int x1, int y1, int x2, int y2, int id, IplImage* face) : x1(x1), y1(y1), x2(x2), y2(y2), id(id), width(x2-x1), height(y2-y1), face(face) {}
 
 Face::FacePriv::FacePriv(const FacePriv& that) : x1(that.x1), y1(that.y1), x2(that.x2), y2(that.y2), id(that.id), width(that.width), height(that.height), face(0) {
-    LOG(libfaceDEBUG) << "FacePriv::FacePriv(const FacePriv& hat) : This constructor has only been tested briefly.";
     if(that.face) {
         face = cvCloneImage(that.face);
     }
 }
 
 Face::FacePriv& Face::FacePriv::operator = (const FacePriv& that) {
-    LOG(libfaceDEBUG) << "FacePriv& FacePriv::operator = : This constructor has only been tested briefly.";
     if(this == &that) {
         return *this;
     }
@@ -140,14 +138,12 @@ void Face::FacePriv::releaseData() {
 Face::Face(int x1, int y1, int x2, int y2, int id, IplImage* face) : d(new FacePriv(x1, y1, x2, y2, id, face)) {}
 
 Face::Face(const Face& that) : d(that.d ? new FacePriv(*that.d) : 0) {
-    LOG(libfaceDEBUG) << "Face::Face(const Face& that) : This constructor has only been tested briefly.";
     if(!d) {
         LOG(libfaceERROR) << "Face::Face(const Face& that) : d points to NULL.";
     }
 }
 
 Face& Face::operator = (const Face& that) {
-    LOG(libfaceDEBUG) << "Face::operator = : This constructor has only been tested briefly.";
     if(this == &that) {
         return *this;
     }

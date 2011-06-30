@@ -126,7 +126,6 @@ FaceDetect::FaceDetectPriv::FaceDetectPriv(const string& cascadeDir) : cascadeSe
 }
 
 FaceDetect::FaceDetectPriv::FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(that.scaleFactor), countCertainty(that.countCertainty), maximumDistance(that.maximumDistance), minimumDuplicates(that.minimumDuplicates), searchIncrement(that.searchIncrement), grouping(that.grouping), accu(that.accu) {
-    LOG(libfaceDEBUG) << "FaceDetectPriv(const FaceDetectPriv& that) : This constructor has only been tested briefly.";
     for(unsigned i = 0; i < 4; ++i ) {
         minSize[i] = that.minSize[i];
     }
@@ -157,12 +156,10 @@ FaceDetect::FaceDetectPriv& FaceDetect::FaceDetectPriv::operator = (const FaceDe
     } else {
         storage = 0;
     }
-    if(cascadeSet) {
-        delete cascadeSet;
-        cascadeSet = 0;
-    }
-    if(that.cascadeSet) {
-        cascadeSet = new Haarcascades(*that.cascadeSet);
+    if( (that.cascadeSet == 0) || (cascadeSet == 0) ) {
+        LOG(libfaceERROR) << "FaceDetectPriv::operator = (const FaceDetectPriv& that) : cascadeSet or that.cascadeSet points to NULL.";
+    } else {
+        *cascadeSet = *that.cascadeSet;
     }
     return *this;
 }
@@ -184,7 +181,6 @@ FaceDetect::FaceDetect(const string& cascadeDir) : d(new FaceDetectPriv(cascadeD
 }
 
 FaceDetect::FaceDetect(const FaceDetect& that) : d(that.d ? new FaceDetectPriv(*that.d) : 0) {
-    LOG(libfaceDEBUG) << "FaceDetect(const FaceDetect& that) : This constructor has only been tested briefly.";
     if(!d) {
         LOG(libfaceERROR) << "FaceDetect(const FaceDetect& that) : d points to NULL.";
     }
