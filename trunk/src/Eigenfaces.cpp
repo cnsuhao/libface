@@ -144,7 +144,6 @@ Eigenfaces::EigenfacesPriv::EigenfacesPriv() : faceImgArr(), indexMap(), configF
 }
 
 Eigenfaces::EigenfacesPriv::EigenfacesPriv(const EigenfacesPriv& that) : faceImgArr(), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
-    LOG(libfaceDEBUG) << "EigenfacesPriv(const EigenfacesPriv& that) : This constructor has only been tested briefly.";
     // copy images pointed to by faceImgArr
     for(unsigned i = 0; i < that.faceImgArr.size(); ++i) {
         faceImgArr.push_back(cvCloneImage(that.faceImgArr.at(i)));
@@ -152,7 +151,7 @@ Eigenfaces::EigenfacesPriv::EigenfacesPriv(const EigenfacesPriv& that) : faceImg
 }
 
 Eigenfaces::EigenfacesPriv& Eigenfaces::EigenfacesPriv::operator = (const EigenfacesPriv& that) {
-    LOG(libfaceWARNING) << "EigenfacesPriv& operator = : This operator has not been tested";
+    LOG(libfaceWARNING) << "EigenfacesPriv& operator = : This operator has not been tested.";
     if(this == &that) {
         return *this;
     }
@@ -431,7 +430,6 @@ Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
 }
 
 Eigenfaces::Eigenfaces(const Eigenfaces& that) : d(that.d ?  new EigenfacesPriv(*that.d) : 0) {
-    LOG(libfaceDEBUG) << "Eigenfaces(const Eigenfaces& that) : This constructor has only been tested briefly.";
     if(!d) {
         LOG(libfaceERROR) << "Eigenfaces(const Eigenfaces& that) : d points to NULL.";
     }

@@ -133,8 +133,6 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
 }
 
 LibFace::LibFacePriv::LibFacePriv(const LibFacePriv& that) : type(that.type), cascadeDir(that.cascadeDir), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName(that.lastFileName) {
-    LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : This constructor has only been tested briefly.";
-
     // copy lastImage
     if(that.lastImage) {
         lastImage = cvCloneImage(that.lastImage);
@@ -166,7 +164,6 @@ LibFace::LibFacePriv::LibFacePriv(const LibFacePriv& that) : type(that.type), ca
 }
 
 LibFace::LibFacePriv& LibFace::LibFacePriv::operator = (const LibFacePriv& that) {
-    LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : This operator has only been tested briefly.";
     if(this == &that) {
         return *this;
     }
@@ -246,14 +243,12 @@ LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir) :
 }
 
 LibFace::LibFace(const LibFace& that) : d(that.d ? new LibFacePriv(*that.d) : 0) {
-    LOG(libfaceDEBUG) << "LibFace(const LibFace& that) : This constructor has only been tested briefly.";
     if(!d) {
         LOG(libfaceERROR) << "LibFace(const LibFace& that) : d points to NULL.";
     }
 }
 
 LibFace& LibFace::operator = (const LibFace& that) {
-    LOG(libfaceDEBUG) << "LibFace::operator = (const LibFace& that) This operator has only been tested briefly.";
     if(this == &that) {
         return *this;
     }
@@ -275,7 +270,7 @@ int LibFace::count() const {
 
 vector<Face*>* LibFace::detectFaces(const string& filename, int scaleFactor) {
     if(filename.length() == 0) {
-        LOG(libfaceWARNING) << "No image passed for detection";
+        LOG(libfaceWARNING) << "No image passed for detection.";
         return 0;
     }
     //Check if image was already loaded once, by checking last loaded filename.
@@ -284,7 +279,7 @@ vector<Face*>* LibFace::detectFaces(const string& filename, int scaleFactor) {
         if(d->lastImage) {
             cvReleaseImage(&d->lastImage);
         }
-        d->lastImage    = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
+        d->lastImage = cvLoadImage(filename.data(), CV_LOAD_IMAGE_GRAYSCALE);
     }
 
     return d->detectionCore->detectFaces(d->lastImage);
