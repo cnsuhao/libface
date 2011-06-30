@@ -125,7 +125,7 @@ FaceDetect::FaceDetectPriv::FaceDetectPriv(const string& cascadeDir) : cascadeSe
     minSize[3] = 35;
 }
 
-FaceDetect::FaceDetectPriv::FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(scaleFactor), countCertainty(countCertainty), maximumDistance(maximumDistance), minimumDuplicates(minimumDuplicates), searchIncrement(searchIncrement), grouping(grouping), accu(accu) {
+FaceDetect::FaceDetectPriv::FaceDetectPriv(const FaceDetectPriv& that) : cascadeSet(0), storage(0), scaleFactor(that.scaleFactor), countCertainty(that.countCertainty), maximumDistance(that.maximumDistance), minimumDuplicates(that.minimumDuplicates), searchIncrement(that.searchIncrement), grouping(that.grouping), accu(that.accu) {
     LOG(libfaceDEBUG) << "FaceDetectPriv(const FaceDetectPriv& that) : This constructor has only been tested briefly.";
     for(unsigned i = 0; i < 4; ++i ) {
         minSize[i] = that.minSize[i];

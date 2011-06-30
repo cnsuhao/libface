@@ -34,6 +34,14 @@ namespace libface {
         if (level > Log::ReportingLevel()) ; \
         else Log().Get(level)
 
+/*
+To see which function is calling LOG, you can use
+else Log().Get(level) << __FUNCTION__ << " "
+or if you are using gcc
+else Log().Get(level) << __PRETTY_FUNCTION__ << " ".
+You can also include __LINE__ and __FILE__ ...
+*/
+
 inline std::string NowTime();
 
 enum TLogLevel {libfaceERROR, libfaceWARNING, libfaceINFO, libfaceDEBUG};

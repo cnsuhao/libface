@@ -253,11 +253,15 @@ LibFace::LibFace(const LibFace& that) : d(that.d ? new LibFacePriv(*that.d) : 0)
 }
 
 LibFace& LibFace::operator = (const LibFace& that) {
-    LOG(libfaceDEBUG) << "LibFace& operator = (const LibFace& that) This operator has only been tested briefly.";
+    LOG(libfaceDEBUG) << "LibFace::operator = (const LibFace& that) This operator has only been tested briefly.";
     if(this == &that) {
         return *this;
     }
-    *d = *that.d;
+    if( (that.d == 0) || (d == 0) ) {
+        LOG(libfaceERROR) << "LibFace::operator = (const LibFace& that) : d or that.d points to NULL.";
+    } else {
+        *d = *that.d;
+    }
     return *this;
 }
 
