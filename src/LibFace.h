@@ -340,6 +340,20 @@ public:
 
 private:
 
+    /**
+     * Check if d->detectionCore is a NULL pointer. Note: Alternatively, we could check d->type.
+     *
+     * @return bool 1 if detection functions cannot be used. 0 otherwise.
+     */
+    bool noDetection() const;
+
+    /**
+     * Check if d->recognitionCore is a NULL pointer. Note: Alternatively, we could check d->type.
+     *
+     * @return bool 1 if recognition functions cannot be used. 0 otheriwse.
+     */
+    bool noRecognition() const;
+
     class LibFacePriv;
     LibFacePriv* const d;
 };
