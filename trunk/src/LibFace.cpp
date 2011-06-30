@@ -265,10 +265,16 @@ LibFace::~LibFace() {
 }
 
 int LibFace::count() const {
+    if(noRecognition()) {
+        return 0;
+    }
     return d->recognitionCore->count();
 }
 
 vector<Face*>* LibFace::detectFaces(const string& filename, int scaleFactor) {
+    if(noDetection()) {
+        return new vector<Face*>;
+    }
     if(filename.length() == 0) {
         LOG(libfaceWARNING) << "No image passed for detection.";
         return 0;
@@ -286,20 +292,35 @@ vector<Face*>* LibFace::detectFaces(const string& filename, int scaleFactor) {
 }
 
 vector<Face*>* LibFace::detectFaces(const char* arr, int width, int height, int step, int depth, int channels, int scaleFactor) {
+    if(noDetection()) {
+        return new vector<Face*>;
+    }
     IplImage* image = LibFaceUtils::charToIplImage(arr, width, height, step, depth, channels);
     return d->detectionCore->detectFaces(image);
 }
 
 vector<Face*>* LibFace::detectFaces(const IplImage* image) {
+    if(noDetection()) {
+        return new vector<Face*>;
+    }
     return d->detectionCore->detectFaces(image);
 }
 
 map<string,string> LibFace::getConfig() {
-    map<string,string> result = d->recognitionCore->getConfig();
+    map<string,string> result;
+
+    if(noRecognition()) {
+        return result;
+    }
+
+    result = d->recognitionCore->getConfig();
     return result;
 }
 
 double LibFace::getDetectionAccuracy() const {
+    if(noDetection()) {
+        return 0.0;
+    }
     return d->detectionCore->accuracy();
 }
 
@@ -320,6 +341,9 @@ int LibFace::loadConfig(const string& dir) {
 }
 
 int LibFace::loadConfig(const map<string, string>& config) {
+    if(noRecognition()) {
+        return 1;
+    }
     return d->recognitionCore->loadConfig(config);
 }
 
@@ -334,6 +358,10 @@ vector<pair<int, float> > LibFace::recognise(const string& filename, vector<Face
 
 vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face*>* faces, int scaleFactor) {
     vector<pair<int, float> > result;
+
+    if(noRecognition()) {
+        return result;
+    }
 
     if (faces->size() == 0) {
         LOG(libfaceWARNING) << " No faces passed to libface::recognise() , not recognizing...";
@@ -390,6 +418,10 @@ vector<pair<int, float> > LibFace::recognise(const char* arr, vector<Face*>* fac
 vector<pair<int, float> > LibFace::recognise(vector<Face*>* faces, int scaleFactor) {
     vector<pair<int, float> > result;
 
+    if(noRecognition()) {
+        return result;
+    }
+
     if (faces->size() == 0) {
         LOG(libfaceWARNING) << " No faces passed to libface::recognise() , not recognizing.";
         return result;
@@ -434,16 +466,26 @@ vector<pair<int, float> > LibFace::recognise(vector<Face*>* faces, int scaleFact
 }
 
 int LibFace::saveConfig(const string& dir) {
-    int result  = 0;
+    if(noRecognition()) {
+        return 1;
+    }
     d->recognitionCore->saveConfig(dir);
-    return result;
+    return 0;
 }
 
 void LibFace::setDetectionAccuracy(double value) {
-    d->detectionCore->setAccuracy(value);
+    if(noDetection()) {
+        // cannot return here
+    } else {
+        d->detectionCore->setAccuracy(value);
+    }
 }
 
 int LibFace::update(const IplImage* img, vector<Face*>* faces, int scaleFactor) {
+
+    if(noRecognition()) {
+        return 1;
+    }
 
     if (faces->size() == 0) {
         LOG(libfaceWARNING) << " No faces passed to update.";
@@ -498,6 +540,10 @@ int LibFace::update(const string& filename, vector<Face*>* faces, int scaleFacto
 int LibFace::update(vector<Face*> *faces, int scaleFactor) {
     int assignedIDs = 0;
 
+    if(noRecognition()) {
+        return assignedIDs;
+    }
+
     if (faces->size() == 0) {
         LOG(libfaceWARNING) << " No faces passed to libface::update() , not updating.";
         return assignedIDs;
@@ -528,6 +574,24 @@ int LibFace::update(vector<Face*> *faces, int scaleFactor) {
     assignedIDs = d->recognitionCore->update(&newFaceArr);
 
     return assignedIDs;
+}
+
+bool LibFace::noDetection() const {
+    if(d->detectionCore) {
+        return 0;
+    } else {
+        LOG(libfaceERROR) << "Trying to use a function that requires LibFace to be loaded in detection mode, which is not the case.";
+        return 1;
+    }
+}
+
+bool LibFace::noRecognition() const {
+    if(d->recognitionCore) {
+        return 0;
+    } else {
+        LOG(libfaceERROR) << "Trying to use a function that requires LibFace to be loaded in recognition mode, which is not the case.";
+        return 1;
+    }
 }
 
 } // namespace libface
