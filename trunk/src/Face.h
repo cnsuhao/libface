@@ -187,25 +187,11 @@ public:
      */
     int getId() const;
 
-    /**
-     * Manually release the data held in the face object.
-     */
-    void releaseData();
-
 private:
 
-    // NOTE: We cannot use a d private container there due to use vector.push_back()
-    //       C++ call instancied in FaceDetect class.
-    // TODO: This should work if we wrote a custom copy c'tor. - Stephan
+    class FacePriv;
+    FacePriv* const d;
 
-    int             x1;
-    int             y1;
-    int             x2;
-    int             y2;
-    int             id;
-    int             width;
-    int             height;
-    IplImage*       face;
 };
 
 } // namespace libface
