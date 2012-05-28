@@ -32,6 +32,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <iostream>
+
+using namespace std;
 using namespace libface;
 
 MainWindow::MainWindow(QWidget* parent)
@@ -85,7 +88,7 @@ void MainWindow::changeEvent(QEvent* e)
 void MainWindow::openImage()
 {
     QString file = QFileDialog::getOpenFileName(this,
-            tr("Open Image"), QDir::currentPath(), tr("Image Files (*.png *.jpg *.bmp)"));
+            tr("Open Image"), QDir::currentPath(), tr("Image Files (*.png *.jpg *.bmp *.pgm)"));
 
     clearScene();
 
@@ -121,6 +124,9 @@ void MainWindow::detectFaces()
 {
     int i;
     currentFaces = libFace->detectFaces(currentPhoto);
+
+    if(!currentPhoto.length()) return;
+
     int size     = currentFaces->size();
 
     for (i=0 ; i<size ; i++)
@@ -153,6 +159,8 @@ void MainWindow::clearScene() {
 
 void MainWindow::recognise()
 {
+    if(currentFaces == NULL) return;
+
     libFace->recognise(currentFaces,1);
 
     int i;
