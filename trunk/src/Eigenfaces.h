@@ -154,6 +154,19 @@ public:
      */
     int update(std::vector<Face*>* dataVector);
 
+
+    /**
+     * New Addition
+     * Training phase of face recognition
+     */
+    void training(InputArray src, InputArray labels, int no_principal_components = 0);
+
+    /**
+     * New Addition
+     * Testing phase of face recognition
+     */
+    int testing(InputArray src);
+
 private:
 
     class EigenfacesPriv;

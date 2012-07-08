@@ -136,6 +136,17 @@ public:
     float RMS_THRESHOLD;
     int FACE_WIDTH;
     int FACE_HEIGHT;
+
+
+    /**
+     * New Addition
+     */
+    int m_no_principal_components;
+    vector<Mat> m_projections;
+    vector<int> m_labels;
+    Mat m_eigenvectors;
+    Mat m_eigenvalues;
+    Mat m_mean;
 };
 
 
@@ -273,6 +284,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 
     // Initialize array with eigen values
     float* eigenValues;
+
     // allocate it
     if( !(eigenValues = (float*) cvAlloc( 2*sizeof(float) ) ) ) {
         LOG(libfaceERROR) << "Problems initializing eigenValues...";
@@ -306,7 +318,15 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
             CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
+
+
+
     // This is a simple min distance mechanism for recognition. Perhaps we should check similarity of images.
+
+    /**
+     * Scope of Improvement - 1, Change the distance mechanism -----------------------------------------------------
+     */
+
     if(eigenValues[0] < minDist) {
         minDist = eigenValues[0];
     }
@@ -565,6 +585,8 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
 
     LOG(libfaceDEBUG) << "Recognition took: " << (double)recog / ((double)CLOCKS_PER_SEC) << "sec.";
 
+    cout << "Distance: " << minDist << endl;
+
     if(minDist > d->THRESHOLD) {
 
         LOG(libfaceDEBUG) << "The value of minDist (" << minDist << ") is above the threshold (" << d->THRESHOLD << ").";
@@ -579,10 +601,114 @@ pair<int, float> Eigenfaces::recognize(IplImage* input) {
     return make_pair<int, float>(id, minDist);
 }
 
+
+/**
+  * New Addition
+  */
+static Mat convertToRowMatrix(InputArray src, int matrix_type, double alpha=1, double beta=0)
+{
+    // number of samples in the InputArray
+    int num_of_samples = (int) src.total();
+
+    // if there is no data in InputArray, return an empty matrix
+    if(num_of_samples == 0) return Mat();
+
+    // dimensionality of samples
+    int dimension = (int)src.getMat(0).total();
+
+    // create data matrix
+    Mat data(num_of_samples, dimension, matrix_type);
+
+    // copy data
+    for(int i = 0; i < num_of_samples; i++) {
+        Mat x_i = data.row(i);
+        src.getMat(i).reshape(1, 1).convertTo(x_i, matrix_type, alpha, beta);
+    }
+
+    return data;
+}
+
+
+/**
+  * New Addition
+  */
+void Eigenfaces::training(InputArray src, InputArray label_array, int no_principal_components){
+
+    //cout << "In Eigenfaces ........................ " << endl;
+
+    if(src.total() == 0) {
+        cout << "Training Data is Empty ... can't proceed" << endl;
+        exit(0);
+    }
+
+    vector<int> labels = label_array.getMat();
+    Mat calc = src.getMat(0);
+
+    d->FACE_WIDTH = calc.rows;
+    d->FACE_HEIGHT = calc.cols;
+
+    Mat data = convertToRowMatrix(src, CV_64FC1);
+
+    int n = data.rows;
+
+    if(n != labels.size()) {
+        string error_message = format("The number of samples (src) must equal the number of labels (labels). Was len(samples)=%d, len(labels)=%d.", n, labels.size());
+        error(cv::Exception(CV_StsBadArg, error_message,  "cv::Eigenfaces::train", __FILE__, __LINE__));
+    }
+
+    assert(no_principal_components >= 0);
+    no_principal_components > n ? no_principal_components = n : true;
+
+    // calculate PCA
+    PCA pca(data, Mat(), CV_PCA_DATA_AS_ROW, no_principal_components);
+
+    // copy the PCA results
+    d->m_mean = pca.mean.reshape(1,1); // store the mean vector
+    d->m_eigenvalues = pca.eigenvalues.clone(); // eigenvalues by row
+    transpose(pca.eigenvectors, d->m_eigenvectors); // eigenvectors by column
+    d->m_labels = labels; // store labels for prediction
+
+
+    // save projections
+    for(int sampleIdx = 0; sampleIdx < data.rows; sampleIdx++) {
+        Mat p = subspaceProject(d->m_eigenvectors, d->m_mean, data.row(sampleIdx));
+        d->m_projections.push_back(p);
+    }
+
+    //Mat tmp = d->m_projections.at(0);
+    //cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
+    //cout << "Matrix = " << endl << " " << tmp << endl;
+
+}
+
+/**
+ * New Addition
+ */
+int Eigenfaces::testing(InputArray src){
+
+    Mat test = src.getMat();
+
+    Mat q = subspaceProject(d->m_eigenvectors, d->m_mean, test.reshape(1,1));
+    double minDist = DBL_MAX;
+    int outputClass = -1;
+
+    for(int i = 0; i < d->m_projections.size(); i++) {
+
+        double distance = norm(d->m_projections[i], q, NORM_L2);
+
+        if(distance < minDist) {
+            minDist = distance;
+            outputClass = d->m_labels[i];
+        }
+    }
+
+    return outputClass;
+}
+
 int Eigenfaces::saveConfig(const string& dir) {
     LOG(libfaceINFO) << "Saving config in "<< dir;
 
-    string configFile          = dir + "/" + CONFIG_XML;
+    // string configFile          = dir + "/" + CONFIG_XML;
     CvFileStorage* fileStorage = cvOpenFileStorage(d->configFile.c_str(), 0, CV_STORAGE_WRITE);
 
     if (!fileStorage) {
@@ -592,25 +718,33 @@ int Eigenfaces::saveConfig(const string& dir) {
     }
 
     // Start storing
-    unsigned int nIds = d->faceImgArr.size(), i;
+    //unsigned int nIds = d->faceImgArr.size(), i;
+
+    unsigned int nIds = d->m_projections.size(), i;
+    cout << "Total: " << nIds << endl;
 
     // Write some initial params and matrices
     cvWriteInt( fileStorage, "nIds", nIds );
-    cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
-    cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
-    cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
+//    cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
+//    cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
+//    cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
+
+        cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
+        cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
+        cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
 
     // Write all the training faces
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
-        cvWrite(fileStorage, facename, d->faceImgArr.at(i), cvAttrList(0,0));
+        IplImage tmp = d->m_projections.at(i);
+        cvWrite(fileStorage, facename, &tmp, cvAttrList(0,0));
     }
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
         sprintf(idname, "id_%d", i);
-        cvWriteInt(fileStorage, idname, d->indexMap.at(i));
+        cvWriteInt(fileStorage, idname, d->m_labels.at(i));
     }
 
     // Release the fileStorage

@@ -56,6 +56,7 @@ enum Mode {
     ALL,
     DETECT,
     EIGEN,
+    FISHER,
     HMM
 };
 
@@ -337,6 +338,18 @@ public:
      * @return 0 if update was successful.
      */
     int update(std::vector<Face*>* faces, int scaleFactor=1);
+
+
+    /**
+     * New update - For Recognition training
+     */
+    void training(std::vector<Face*>* faces, int scaleFactor =1);
+
+    /**
+     * New update - For Recognition testing
+     */
+    vector<int> testing(std::vector<Face*>* faces);
+
 
 private:
 

@@ -53,14 +53,14 @@
      <item>
       <widget class="QPushButton" name="openImageBtn">
        <property name="text">
-        <string>Open Image</string>
+        <string>Training</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="detectFacesBtn">
        <property name="text">
-        <string>Detect Faces</string>
+        <string>Testing</string>
        </property>
       </widget>
      </item>
@@ -104,7 +104,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

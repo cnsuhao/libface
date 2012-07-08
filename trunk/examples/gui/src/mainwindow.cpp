@@ -29,25 +29,36 @@
  *
  * ============================================================ */
 
+#include <iostream>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <iostream>
+// OpenCV headers
+#if defined (__APPLE__)
+#include <cv.h>
+#include <highgui.h>
+#else
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+#endif
 
 using namespace std;
 using namespace libface;
 
 MainWindow::MainWindow(QWidget* parent)
-          : QMainWindow(parent),
-            ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+      ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    this->connect(ui->openImageBtn, SIGNAL(clicked()), this, SLOT(openImage()));
-    this->connect(ui->openConfigBtn, SIGNAL(clicked()), this, SLOT(openConfig()));
-    this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(detectFaces()));
-    this->connect(ui->recogniseBtn, SIGNAL(clicked()), this, SLOT(recognise()));
-    this->connect(ui->updateDatabaseBtn, SIGNAL(clicked()), this, SLOT(updateConfig()));
+    //this->connect(ui->openImageBtn, SIGNAL(clicked()), this, SLOT(openImage()));
+    this->connect(ui->openImageBtn, SIGNAL(clicked()), this, SLOT(Training()));
+    //this->connect(ui->openConfigBtn, SIGNAL(clicked()), this, SLOT(openConfig()));
+    //this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(detectFaces()));
+    this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(Testing()));
+    //this->connect(ui->recogniseBtn, SIGNAL(clicked()), this, SLOT(recognise()));
+    //this->connect(ui->updateDatabaseBtn, SIGNAL(clicked()), this, SLOT(updateConfig()));
     this->connect(ui->saveConfigBtn, SIGNAL(clicked()), this, SLOT(saveConfig()));
 
     myScene = new QGraphicsScene();
@@ -77,15 +88,15 @@ void MainWindow::changeEvent(QEvent* e)
     QMainWindow::changeEvent(e);
     switch (e->type())
     {
-        case QEvent::LanguageChange:
-            ui->retranslateUi(this);
-            break;
-        default:
-            break;
+    case QEvent::LanguageChange:
+        ui->retranslateUi(this);
+        break;
+    default:
+        break;
     }
 }
 
-void MainWindow::openImage()
+/* void MainWindow::openImage()
 {
     QString file = QFileDialog::getOpenFileName(this,
             tr("Open Image"), QDir::currentPath(), tr("Image Files (*.png *.jpg *.bmp *.pgm)"));
@@ -109,18 +120,9 @@ void MainWindow::openImage()
     lastPhotoItem->setScale(scale);
 
     myScene->addItem(lastPhotoItem);
-}
+} */
 
-void MainWindow::openConfig()
-{
-    QString directory = QFileDialog::getExistingDirectory(this,tr("Select Config Directory"),QDir::currentPath());
-
-    ui->configLocation->setText(directory);
-
-    libFace = new LibFace(ALL,directory.toStdString());
-}
-
-void MainWindow::detectFaces()
+/* void MainWindow::detectFaces()
 {
     int i;
     currentFaces = libFace->detectFaces(currentPhoto);
@@ -132,7 +134,7 @@ void MainWindow::detectFaces()
     for (i=0 ; i<size ; i++)
     {
         Face* face          = currentFaces->at(i);
-        FaceItem* faceItem = new FaceItem(0, 
+        FaceItem* faceItem = new FaceItem(0,
                                           myScene, face->getX1()*scale,
                                           face->getY1()*scale,
                                           (face->getX2()-face->getX1())*scale,
@@ -140,6 +142,150 @@ void MainWindow::detectFaces()
 
         //cout << "Face:\t(" << face.getX1()*scale << ","<<face.getY1()*scale <<")" <<endl;
     }
+} */
+
+void MainWindow::Training()
+{
+
+    cout << endl << "Training ************************************************************ " << endl << endl;
+    /**
+     * Select a folder consisting of input images labeled in folders
+     */
+    //    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+    //                                                    "/home",
+    //                                                    QFileDialog::ShowDirsOnly
+    //                                                    | QFileDialog::DontResolveSymlinks);
+
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/train");
+    QStringList filters;
+    QDir myDir(dir);
+    QStringList folderList =  myDir.entryList (filters);
+
+    cout << "Dir: " << dir.toAscii().data() << endl << " Files: " << endl;
+
+    int count = 0;
+    filters << "*.png" << "*.jpg" << "*.pgm";
+
+    QStringList fileList;
+    QString imageFile;
+
+    currentFaces = new vector<Face*>();
+    IplImage* img;
+    Face* face;
+
+    foreach (const QString &str, folderList) {
+        count ++;
+        if(count < 3){
+            continue;
+        }
+
+        fileList.clear();
+
+        cout << str.toAscii().data() << endl;
+
+        // get input images from individual folders
+        myDir.setPath(dir + "/" + str);
+        fileList <<  myDir.entryList (filters);
+        //cout << "size: " << fileList.size() << endl;
+
+
+        // Now, we will get the id from the foldername
+        QString tmpStr(str);
+        tmpStr.remove(0,1);
+
+        int id = tmpStr.toInt();
+
+        cout << "ID: " << id << endl;
+
+
+        // Creating the vector of faces
+        foreach (const QString &filename, fileList){
+            cout << count - 2 << ": " << filename.toAscii().data() << endl;
+
+            // Store the image in a IplImage
+            imageFile = dir + "/" + str + "/" + filename;
+
+            img = cvLoadImage(imageFile.toAscii().data(), CV_LOAD_IMAGE_GRAYSCALE);
+
+            face = new Face(0,0,img->width,img->height);
+            face->setFace(img);
+            face->setId(id);
+
+            currentFaces->push_back(face);
+        }
+
+    }
+
+    // Training Main Part - Eigenface
+    libFace->training(currentFaces,1);
+
+
+    // Training Fisherface
+
+}
+
+
+void MainWindow::Testing()
+{
+    cout << endl << "Testing --------------------------------------------------------------- " << endl << endl;
+
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/test");
+    QStringList filters;
+
+    filters << "*.png" << "*.jpg" << "*.pgm";
+
+    QDir myDir(dir);
+    QStringList folderList =  myDir.entryList (filters);
+
+    cout << "Dir: " << dir.toAscii().data() << endl << " Files: " << endl;
+
+    QString imageFile;
+
+    testFaces = new vector<Face*>();
+    IplImage* img;
+    Face* face;
+
+    foreach (const QString &str, folderList) {
+
+        //cout << str.toAscii().data() << endl;
+
+        // Store the image in a IplImage
+        imageFile = dir + "/" + str;
+
+        img = cvLoadImage(imageFile.toAscii().data(), CV_LOAD_IMAGE_GRAYSCALE);
+
+        face = new Face(0,0,img->width,img->height);
+        face->setFace(img);
+
+        testFaces->push_back(face);
+    }
+
+    vector<int> result = libFace->testing(testFaces);
+
+    int total = testFaces->size();
+    for (int i = 0 ; i < total ; i++ ){
+        cout << folderList.at(i).toAscii().data() << " -> " << result.at(i) << endl;
+    }
+}
+
+void MainWindow::recognise()
+{
+    //        libFace->recognise(currentFaces,1);
+
+    //    int i;
+    //    for(i=0;i<currentFaces->size();i++)
+    //        printf("Face ID: %d\n",currentFaces->at(i)->getId());
+
+    return;
+}
+
+void MainWindow::openConfig()
+{
+    QString directory = QFileDialog::getExistingDirectory(this,tr("Select Config Directory"),QDir::currentPath());
+
+    ui->configLocation->setText(directory);
+
+    libFace = new LibFace(ALL,directory.toStdString());
 }
 
 void MainWindow::updateConfig() {
@@ -155,19 +301,6 @@ void MainWindow::clearScene() {
     {
         myScene->removeItem(list.at(i));
     }
-}
-
-void MainWindow::recognise()
-{
-    if(currentFaces == NULL) return;
-
-    libFace->recognise(currentFaces,1);
-
-    int i;
-    for(i=0;i<currentFaces->size();i++)
-    	printf("Face ID: %d\n",currentFaces->at(i)->getId());
-
-    //TODO: create mapping to items.
 }
 
 void MainWindow::saveConfig()
