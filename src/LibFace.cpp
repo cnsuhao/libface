@@ -50,6 +50,12 @@
 #include <opencv/highgui.h>
 #endif
 
+/**
+  * New Addition
+  */
+#include "opencv2/core/core.hpp"
+using namespace cv;
+
 using namespace std;
 
 namespace libface {
@@ -119,12 +125,17 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type EIGEN";
         recognitionCore = new Eigenfaces(argConfigDir);
         break;
+    case FISHER:
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type EIGEN";
+        //recognitionCore = new Fisherfaces(argConfigDir);
+        break;
     case HMM:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type HMM";
         LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
         break;
     default:    // Initialize both detector and Eigenfaces
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type default";
+        cout << "LibFace mode: Default" << endl;
         cascadeDir = argCascadeDir;
         detectionCore = new FaceDetect(cascadeDir);
         recognitionCore = new Eigenfaces(argConfigDir);
@@ -379,6 +390,9 @@ vector<pair<int, float> > LibFace::recognise(const IplImage* img, vector<Face*>*
     vector<IplImage*> newFaceImgArr;
 
     int size = faces->size();
+
+    cout << "Recognise: # of faces: " << size << endl;
+
     for (int i=0 ; i<size ; i++) {
         Face* face = faces->at(i);
         int x1     = face->getX1();
@@ -462,6 +476,55 @@ vector<pair<int, float> > LibFace::recognise(vector<Face*>* faces, int scaleFact
     }
 
     LOG(libfaceDEBUG) << "Size of result = " << result.size();
+    return result;
+}
+
+
+void LibFace::training(vector<Face*>* faces, int scaleFactor){
+
+    vector<Mat> images;
+    vector<int> labels;
+
+    int size = faces->size();
+    for (int i = 0 ; i < size ; i++) {
+
+        Face* face = faces->at(i);
+
+        const IplImage* faceImg = face->getFace();
+
+        images.push_back(cvarrToMat(faceImg));
+        labels.push_back(face->getId());
+    }
+
+//    Mat tmp = images.at(0);
+//    cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
+//    cout << "Matrix = " << endl << " " << tmp << endl;
+
+//    for (int i =  0 ; i < labels.size() ; i++)
+//        cout << labels[i] << endl;
+
+    d->recognitionCore->training(images,labels);
+
+}
+
+vector<int> LibFace::testing(vector<Face*>* faces){
+
+    vector<int> result;
+
+    vector<Mat> images;
+    int size = faces->size();
+
+    for (int i = 0 ; i < size ; i++) {
+
+        Face* face = faces->at(i);
+
+        const IplImage* faceImg = face->getFace();
+
+        int res = d->recognitionCore->testing(cvarrToMat(faceImg));
+
+        result.push_back(res);
+    }
+
     return result;
 }
 

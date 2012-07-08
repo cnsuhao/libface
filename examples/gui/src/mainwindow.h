@@ -62,9 +62,9 @@ public:
 
 public slots:
 
-    void openImage();
+    void Training();
     void openConfig();
-    void detectFaces();
+    void Testing();
     void updateConfig();
     void recognise();
     void saveConfig();
@@ -87,6 +87,7 @@ private:
     string               currentPhoto;
     double               scale;
     vector<Face*>*         currentFaces;
+    vector<Face*>*         testFaces;
 };
 
 #endif // MAINWINDOW_H

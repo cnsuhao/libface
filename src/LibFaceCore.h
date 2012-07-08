@@ -44,6 +44,12 @@
 #include <opencv/cv.h>
 #endif
 
+/**
+  * New Addition
+  */
+#include "opencv2/core/core.hpp"
+using namespace cv;
+
 // C headers
 #include <map>
 #include <string>
@@ -129,6 +135,19 @@ public:
 	 * @return The number of faces the DB has been trained with
 	 */
 	virtual int count() const = 0;
+
+
+    /**
+     * New Addition
+     * Training phase of face recognition
+     */
+    virtual void training(InputArray src, InputArray labels, int no_principal_components = 0) = 0;
+
+    /**
+     * New Addition
+     * Testing phase of face recognition
+     */
+    virtual int testing(InputArray src) = 0;
 };
 
 // -------------------------------------------------------------------------------------------
