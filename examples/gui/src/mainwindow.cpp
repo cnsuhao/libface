@@ -73,7 +73,10 @@ MainWindow::MainWindow(QWidget* parent)
     myView->show();
 
 
-    libFace = new LibFace(libface::ALL,QDir::currentPath().toStdString());
+//    libFace = new LibFace(libface::ALL,QDir::currentPath().toStdString());
+//    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
+    libFace = new LibFace(libface::FISHER,QDir::currentPath().toStdString());
+
 
     ui->configLocation->setText(QDir::currentPath());
 }
