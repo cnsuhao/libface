@@ -39,6 +39,7 @@
 // LibFace headers
 #include "Log.h"
 #include "Eigenfaces.h"
+#include "FisherFaces.h"
 #include "Face.h"
 #include "FaceDetect.h"
 #include "LibFaceUtils.h"
@@ -126,8 +127,8 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
         recognitionCore = new Eigenfaces(argConfigDir);
         break;
     case FISHER:
-        LOG(libfaceDEBUG) << "LibFacePriv(...) : type EIGEN";
-        //recognitionCore = new Fisherfaces(argConfigDir);
+        LOG(libfaceDEBUG) << "LibFacePriv(...) : type FISHER";
+        recognitionCore = new Fisherfaces(argConfigDir);
         break;
     case HMM:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type HMM";
@@ -139,7 +140,7 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
         cascadeDir = argCascadeDir;
         detectionCore = new FaceDetect(cascadeDir);
         recognitionCore = new Eigenfaces(argConfigDir);
-    break;
+        break;
     }
 }
 
@@ -167,6 +168,11 @@ LibFace::LibFacePriv::LibFacePriv(const LibFacePriv& that) : type(that.type), ca
             LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.recognitionCore is of type Eigenfaces*.";
             recognitionCore = new Eigenfaces(*dynamic_cast<Eigenfaces*>(that.recognitionCore));
         }
+        else if(dynamic_cast<Fisherfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
+            recognitionCore = new Fisherfaces(*dynamic_cast<Fisherfaces*>(that.recognitionCore));
+        }
+
         // If other derived classes are implemented, add more cases here.
         if(recognitionCore == 0) {
             LOG(libfaceERROR) << "Unable to copy that.recognitionCore.";
@@ -228,10 +234,17 @@ LibFace::LibFacePriv& LibFace::LibFacePriv::operator = (const LibFacePriv& that)
     delete recognitionCore;
     recognitionCore = 0;
     if(that.recognitionCore) {
-    if(dynamic_cast<Eigenfaces*>(that.recognitionCore)) {
+
+        if(dynamic_cast<Eigenfaces*>(that.recognitionCore)) {
             LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.recognitionCore is of type Eigenfaces*.";
             recognitionCore = new Eigenfaces(*dynamic_cast<Eigenfaces*>(that.recognitionCore));
         }
+
+        else if(dynamic_cast<Fisherfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
+            recognitionCore = new Fisherfaces(*dynamic_cast<Fisherfaces*>(that.recognitionCore));
+        }
+
         // If other derived classes are implemented, add more cases here.- is there a more elegant solution?
         if(recognitionCore == 0) {
             LOG(libfaceERROR) << "Unable to copy that.recognitionCore.";
