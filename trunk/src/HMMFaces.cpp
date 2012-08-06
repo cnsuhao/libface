@@ -35,7 +35,7 @@
 // own header
 #include "HMMFaces.h"
 
-#include "ContEHMM.h"
+#include "HMMCore.h"
 
 // LibFace headers
 #include "Log.h"
@@ -67,7 +67,7 @@ typedef struct{
     int m_id;
     string m_name;
     multimap<string,IplImage*> m_face_images;
-    CContEHMM m_hmm;
+    ContEHMM m_hmm;
 }Person;
 
 class HMMfaces::HMMfacesPriv {
@@ -96,7 +96,7 @@ public:
       * TODO - will be changed lately
       */
     multimap<int,IplImage*> all_faces;
-    vector<CContEHMM* > m_hmm;
+    vector<ContEHMM* > m_hmm;
 
     // Config data members
     string configFile;
@@ -262,7 +262,7 @@ void HMMfaces::training(InputArray src, InputArray label_array, int no_principal
     // For every index value/person, create a hmm
     if(! d->m_hmm.size())
         for(int i = 0 ; i < d->indexMap.size(); i++){
-            CContEHMM* tmp = new CContEHMM();
+            ContEHMM* tmp = new ContEHMM();
             tmp->CreateHMM(d->m_stnum,d->m_mixnum,vect_len);
             d->m_hmm.push_back(tmp);
         }

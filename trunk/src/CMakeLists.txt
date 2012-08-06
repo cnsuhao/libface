@@ -28,7 +28,7 @@ ADD_LIBRARY(face ${LIB_TYPE}
                  LibFace.cpp
                  Haarcascades.cpp
 		         FisherFaces.cpp
-                 ContEHMM.cpp
+                 HMMCore.cpp
                  HMMFaces.cpp
                  )
 
@@ -57,6 +57,6 @@ INSTALL(FILES LibFace.h
               Haarcascades.h
               Log.h
 	          FisherFaces.h
-              ContEHMM.h
+              HMMCore.h
               HMMFaces.h
               DESTINATION include/${PROJECT_NAME})
