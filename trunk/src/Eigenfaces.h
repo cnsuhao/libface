@@ -167,6 +167,13 @@ public:
      */
     int testing(InputArray src);
 
+    int testing(IplImage* img){return 0;}
+
+    /**
+      *
+      */
+    void updateTest(vector<Face *> *newFaceArr){}
+
 private:
 
     class EigenfacesPriv;
