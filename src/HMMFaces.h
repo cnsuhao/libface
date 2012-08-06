@@ -1,14 +1,14 @@
 /** ===========================================================
- * @file Fisherfaces.cpp
+ * @file HMMfaces.cpp
  *
  * This file is a part of libface project
  * <a href="http://libface.sourceforge.net">http://libface.sourceforge.net</a>
  *
  * @date    2009-12-27
- * @brief   Fisherfaces Main File.
+ * @brief   HMMfaces Main File.
  * @section DESCRIPTION
  *
- * This class is an implementation of Fisherfaces algorithm.
+ * This class is an implementation of HMMfaces algorithm.
 
  * @author Copyright (C) 2012 by A.H.M. Mahfuzur Rahman
  *         <a href="mamun_nightcrawler at gmail dot com">mamun_nightcrawler at gmail dot com</a>
@@ -29,8 +29,8 @@
  * ============================================================ */
 
 
-#ifndef FISHERFACES_H
-#define FISHERFACES_H
+#ifndef HMMfaces_H
+#define HMMfaces_H
 
 // LibFace headers
 #include "LibFaceConfig.h"
@@ -52,23 +52,23 @@
 namespace libface
 {
 
-class FACEAPI Fisherfaces : public LibFaceRecognitionCore
+class FACEAPI HMMfaces : public LibFaceRecognitionCore
 {
 public:
 
     /**
-     * Constructor for Fisherfaces. Takes a directory string as argument to determine the location of config xml file.
+     * Constructor for HMMfaces. Takes a directory string as argument to determine the location of config xml file.
      *
      * @param dir The directory in which the DB is to be found/created.
      */
-    Fisherfaces(const std::string& dir = ".");
+    HMMfaces(const std::string& dir = ".");
 
     /**
      * Copy constructor.
      *
      * @param that Object to be copied.
      */
-    Fisherfaces(const Fisherfaces& that);
+    HMMfaces(const HMMfaces& that);
 
     /**
      * Assignment operator.
@@ -77,12 +77,12 @@ public:
      *
      * @return Reference to assignee.
      */
-    Fisherfaces& operator = (const Fisherfaces& that);
+    HMMfaces& operator = (const HMMfaces& that);
 
     /**
      * Destructor that frees the data variables.
      */
-    ~Fisherfaces();
+    ~HMMfaces();
 
     /**
      * Returns the number of unique faces in the database.
@@ -162,21 +162,21 @@ public:
      * New Addition
      * Testing phase of face recognition
      */
-    int testing(InputArray src);
+    int testing(InputArray src){return 0;}
 
-    int testing(IplImage* img){return 0;}
+    int testing(IplImage* img);
 
     /**
       *
       */
-    void updateTest(vector<Face *> *newFaceArr){}
+    void updateTest(vector<Face *> *newFaceArr);
 
 private:
 
-    class FisherfacesPriv;
-    FisherfacesPriv* const d;
+    class HMMfacesPriv;
+    HMMfacesPriv* const d;
 };
 
 } // namespace libface
 
-#endif // FISHERFACES_H
+#endif // HMMfaces_H

@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget* parent)
     //this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(detectFaces()));
     this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(Testing()));
     //this->connect(ui->recogniseBtn, SIGNAL(clicked()), this, SLOT(recognise()));
-    //this->connect(ui->updateDatabaseBtn, SIGNAL(clicked()), this, SLOT(updateConfig()));
+    this->connect(ui->updateDatabaseBtn, SIGNAL(clicked()), this, SLOT(updateConfig()));
     this->connect(ui->saveConfigBtn, SIGNAL(clicked()), this, SLOT(saveConfig()));
 
     myScene = new QGraphicsScene();
@@ -75,10 +75,12 @@ MainWindow::MainWindow(QWidget* parent)
 
 //    libFace = new LibFace(libface::ALL,QDir::currentPath().toStdString());
 //    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
-    libFace = new LibFace(libface::FISHER,QDir::currentPath().toStdString());
-
+    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
 
     ui->configLocation->setText(QDir::currentPath());
+
+    getTrainigData();
+    getTestData();
 }
 
 MainWindow::~MainWindow()
@@ -147,17 +149,12 @@ void MainWindow::changeEvent(QEvent* e)
     }
 } */
 
-void MainWindow::Training()
-{
+void MainWindow::getTrainigData(){
 
-    cout << endl << "Training ************************************************************ " << endl << endl;
+    cout << endl << "Training Data ---------------- " << endl << endl;
     /**
      * Select a folder consisting of input images labeled in folders
      */
-    //    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-    //                                                    "/home",
-    //                                                    QFileDialog::ShowDirsOnly
-    //                                                    | QFileDialog::DontResolveSymlinks);
 
     QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/train");
     QStringList filters;
@@ -209,6 +206,7 @@ void MainWindow::Training()
             imageFile = dir + "/" + str + "/" + filename;
 
             img = cvLoadImage(imageFile.toAscii().data(), CV_LOAD_IMAGE_GRAYSCALE);
+            //cout << "Width:" << img->roi->width << endl;
 
             face = new Face(0,0,img->width,img->height);
             face->setFace(img);
@@ -219,18 +217,12 @@ void MainWindow::Training()
 
     }
 
-    // Training Main Part - Eigenface
-    libFace->training(currentFaces,1);
-
-
-    // Training Fisherface
-
+    cout << "Total Faces: " << currentFaces->size() << endl;
 }
 
+void MainWindow::getTestData(){
 
-void MainWindow::Testing()
-{
-    cout << endl << "Testing --------------------------------------------------------------- " << endl << endl;
+    cout << endl << "Testing Data ---------------------- " << endl << endl;
 
     QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/test");
     QStringList filters;
@@ -263,6 +255,25 @@ void MainWindow::Testing()
         testFaces->push_back(face);
     }
 
+}
+
+
+void MainWindow::Training()
+{
+
+    libFace->training(currentFaces,1);
+
+}
+
+
+void MainWindow::Testing()
+{
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/test");
+    QStringList filters;
+    filters << "*.png" << "*.jpg" << "*.pgm";
+    QDir myDir(dir);
+    QStringList folderList =  myDir.entryList (filters);
+
     vector<int> result = libFace->testing(testFaces);
 
     int total = testFaces->size();
@@ -279,6 +290,9 @@ void MainWindow::recognise()
     //    for(i=0;i<currentFaces->size();i++)
     //        printf("Face ID: %d\n",currentFaces->at(i)->getId());
 
+    cout << "MainWindow::updateConfig() called" << endl;
+
+
     return;
 }
 
@@ -292,7 +306,9 @@ void MainWindow::openConfig()
 }
 
 void MainWindow::updateConfig() {
+
     libFace->update(currentFaces);
+    libFace->testUpdate(testFaces);
 }
 
 void MainWindow::clearScene() {

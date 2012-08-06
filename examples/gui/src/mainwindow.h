@@ -60,6 +60,9 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void getTrainigData();
+    void getTestData();
+
 public slots:
 
     void Training();

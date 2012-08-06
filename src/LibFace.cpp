@@ -40,6 +40,7 @@
 #include "Log.h"
 #include "Eigenfaces.h"
 #include "FisherFaces.h"
+#include "HMMFaces.h"
 #include "Face.h"
 #include "FaceDetect.h"
 #include "LibFaceUtils.h"
@@ -132,7 +133,7 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
         break;
     case HMM:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type HMM";
-        LOG(libfaceERROR) << "HMM are not implemented yet! Good try though!";
+        recognitionCore = new HMMfaces(argConfigDir);
         break;
     default:    // Initialize both detector and Eigenfaces
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type default";
@@ -172,6 +173,11 @@ LibFace::LibFacePriv::LibFacePriv(const LibFacePriv& that) : type(that.type), ca
             LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
             recognitionCore = new Fisherfaces(*dynamic_cast<Fisherfaces*>(that.recognitionCore));
         }
+        else if(dynamic_cast<HMMfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv(const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
+            recognitionCore = new HMMfaces(*dynamic_cast<HMMfaces*>(that.recognitionCore));
+        }
+
 
         // If other derived classes are implemented, add more cases here.
         if(recognitionCore == 0) {
@@ -244,6 +250,12 @@ LibFace::LibFacePriv& LibFace::LibFacePriv::operator = (const LibFacePriv& that)
             LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
             recognitionCore = new Fisherfaces(*dynamic_cast<Fisherfaces*>(that.recognitionCore));
         }
+
+        else if(dynamic_cast<HMMfaces*>(that.recognitionCore)) {
+            LOG(libfaceDEBUG) << "LibFacePriv& operator = (const LibFacePriv& that) : that.recognitionCore is of type Fisherfaces*.";
+            recognitionCore = new HMMfaces(*dynamic_cast<HMMfaces*>(that.recognitionCore));
+        }
+
 
         // If other derived classes are implemented, add more cases here.- is there a more elegant solution?
         if(recognitionCore == 0) {
@@ -509,12 +521,12 @@ void LibFace::training(vector<Face*>* faces, int scaleFactor){
         labels.push_back(face->getId());
     }
 
-//    Mat tmp = images.at(0);
-//    cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
-//    cout << "Matrix = " << endl << " " << tmp << endl;
+    //    Mat tmp = images.at(0);
+    //    cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
+    //    cout << "Matrix = " << endl << " " << tmp << endl;
 
-//    for (int i =  0 ; i < labels.size() ; i++)
-//        cout << labels[i] << endl;
+    //    for (int i =  0 ; i < labels.size() ; i++)
+    //        cout << labels[i] << endl;
 
     d->recognitionCore->training(images,labels);
 
@@ -524,17 +536,27 @@ vector<int> LibFace::testing(vector<Face*>* faces){
 
     vector<int> result;
 
-    vector<Mat> images;
     int size = faces->size();
 
     for (int i = 0 ; i < size ; i++) {
 
         Face* face = faces->at(i);
 
-        const IplImage* faceImg = face->getFace();
+        IplImage* faceImg = face->getFace();
 
-        int res = d->recognitionCore->testing(cvarrToMat(faceImg));
+        int res;
 
+        // See which test function to call
+        switch(d->type){
+
+        case HMM:
+            res = d->recognitionCore->testing(faceImg);
+            break;
+
+        default:    // Initialize both detector and Eigenfaces
+            res = d->recognitionCore->testing(cvarrToMat(faceImg));
+            break;
+        }
         result.push_back(res);
     }
 
@@ -614,6 +636,7 @@ int LibFace::update(const string& filename, vector<Face*>* faces, int scaleFacto
 }
 
 int LibFace::update(vector<Face*> *faces, int scaleFactor) {
+
     int assignedIDs = 0;
 
     if(noRecognition()) {
@@ -650,6 +673,12 @@ int LibFace::update(vector<Face*> *faces, int scaleFactor) {
     assignedIDs = d->recognitionCore->update(&newFaceArr);
 
     return assignedIDs;
+}
+
+int LibFace::testUpdate(std::vector<Face*> *faces){
+
+    d->recognitionCore->updateTest(faces);
+    return 0;
 }
 
 bool LibFace::noDetection() const {

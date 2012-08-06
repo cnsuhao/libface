@@ -148,6 +148,13 @@ public:
      * Testing phase of face recognition
      */
     virtual int testing(InputArray src) = 0;
+
+    virtual int testing(IplImage* img) = 0;
+
+    /**
+      * Specially for HMM
+      */
+    virtual void updateTest(vector<Face*>* newFaceArr) = 0;
 };
 
 // -------------------------------------------------------------------------------------------

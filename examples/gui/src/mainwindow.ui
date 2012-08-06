@@ -51,6 +51,13 @@
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
+      <widget class="QPushButton" name="updateDatabaseBtn">
+       <property name="text">
+        <string>Update Input</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="openImageBtn">
        <property name="text">
         <string>Training</string>
@@ -68,13 +75,6 @@
       <widget class="QPushButton" name="recogniseBtn">
        <property name="text">
         <string>Recognise</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="updateDatabaseBtn">
-       <property name="text">
-        <string>Update Database</string>
        </property>
       </widget>
      </item>
