@@ -7,6 +7,8 @@
 #include <opencv/cv.h>
 #endif
 
+#include <opencv2/legacy/legacy.hpp>
+
 #include <string>
 #include <map>
 using namespace std;
@@ -14,29 +16,50 @@ using namespace std;
 namespace libface
 {
 
-class FACEAPI PersonImage
+class ContEHMM
 {
 public:
+    bool Release();
+    ContEHMM();
+    virtual ~ContEHMM();
 
-    PersonImage(int id,string name):m_id(id),m_name(name){};
-    ~PersonImage();
+    bool CreateHMM( int* num_states, int* num_mix, int vect_size );
+    int GetVectSize() { return m_vectSize; };
 
-    void setID(int id){m_id = id;}
-    void setName(string name){m_name = name;}
-    void addImage(int first, IplImage* second){
-        m_face_images.insert(pair<int,IplImage*>(first,second));
-    }
+    //IppiEHMM* GetIppiEHMM() { return m_hmm; };
+    CvEHMM* GetIppiEHMM() { return m_hmm; };
 
-    int getID(){return m_id;}
-    string getName(){return m_name;}
-    multimap<int,IplImage*> getFaceImages(){return m_face_images;}
 
-private:
-    int m_id;
-    string m_name;
-    multimap<int,IplImage*> m_face_images;
+protected:
+    CvEHMM* m_hmm;
+    int m_vectSize;
 
 };
+
+//class FACEAPI PersonImage
+//{
+//public:
+
+//    PersonImage(int id,string name):m_id(id),m_name(name){};
+//    ~PersonImage();
+
+//    void setID(int id){m_id = id;}
+//    void setName(string name){m_name = name;}
+//    void addImage(int first, IplImage* second){
+//        m_face_images.insert(pair<int,IplImage*>(first,second));
+//    }
+
+//    int getID(){return m_id;}
+//    string getName(){return m_name;}
+//    multimap<int,IplImage*> getFaceImages(){return m_face_images;}
+
+//private:
+//    int m_id;
+//    string m_name;
+//    multimap<int,IplImage*> m_face_images;
+//    ContEHMM m_hmm;
+
+//};
 
 } // namespace libface
 
