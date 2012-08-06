@@ -1,21 +1,23 @@
-#include "ContEHMM.h"
+#include "HMMCore.h"
 #include <assert.h>
 
+namespace libface
+{
 
-CContEHMM::CContEHMM()
+ContEHMM::ContEHMM()
 {
     m_hmm = NULL;
     m_vectSize = 0;
 }
 
-CContEHMM::~CContEHMM()
+ContEHMM::~ContEHMM()
 {
     if (m_hmm) cvRelease2DHMM( &m_hmm );  
     m_vectSize = 0;
 
 }
 
-bool CContEHMM::CreateHMM( int* num_states, int* num_mix, int vect_size )
+bool ContEHMM::CreateHMM( int* num_states, int* num_mix, int vect_size )
 {
     if (m_hmm) cvRelease2DHMM( &m_hmm );
     m_hmm = 0;
@@ -26,7 +28,7 @@ bool CContEHMM::CreateHMM( int* num_states, int* num_mix, int vect_size )
     return true;
 }
     
-bool CContEHMM::Release()
+bool ContEHMM::Release()
 {
     if (m_hmm)
     {
@@ -35,4 +37,6 @@ bool CContEHMM::Release()
     }
 
     return TRUE;
+}
+
 }
