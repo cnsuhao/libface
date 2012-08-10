@@ -74,7 +74,7 @@
      <item>
       <widget class="QPushButton" name="recogniseBtn">
        <property name="text">
-        <string>Recognise</string>
+        <string>Load Config</string>
        </property>
       </widget>
      </item>
