@@ -207,14 +207,14 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     */
     // same applies to function learn
 
-//#define new_and_delete
+    //#define new_and_delete
 #ifdef new_and_delete
 
     // tempfaces is also not used in this version
 
     float minDist = FLT_MAX;
 
-//#define tempFaces_as_vector
+    //#define tempFaces_as_vector
 #ifdef tempFaces_as_vector
     vector<IplImage*> tempFaces;
     tempFaces.push_back(img1);
@@ -238,7 +238,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     IplImage* pAvgTrainImg;
     // allocate it
     if(!(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1))) {
-       LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
+        LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
     }
 
     // Initialise pointer to the pointers with eigen objects
@@ -254,10 +254,10 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     // Perform PCA
 #ifdef tempFaces_as_vector
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
-            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
+                       CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
 #else
     cvCalcEigenObjects(2, tempFaces, eigenObjects,
-            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
+                       CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues);
 #endif
 
     // This is a simple min distance mechanism for recognition. Perhaps we should check similarity of images.
@@ -301,7 +301,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
     IplImage* pAvgTrainImg;
     // allocate it
     if( !(pAvgTrainImg = cvCreateImage( size, IPL_DEPTH_32F, 1) ) ) {
-       LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
+        LOG(libfaceERROR) << "Problems initializing pAvgTrainImg...";
     }
 
     // Initialise pointer to the pointers with eigen objects
@@ -316,7 +316,7 @@ float Eigenfaces::EigenfacesPriv::eigen(IplImage* img1, IplImage* img2) {
 
     // Perform PCA
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
-            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
+                       CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
 
 
@@ -409,14 +409,14 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
     //Perform PCA
     cvCalcEigenObjects(2, &tempFaces.front(), eigenObjects,
-            CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
+                       CV_EIGOBJ_NO_CALLBACK, 0, NULL, &mycrit, pAvgTrainImg, eigenValues );
 
     cvEigenDecomposite(tempFaces.at(0), 1, eigenObjects,
-            CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedFace );
+                       CV_EIGOBJ_NO_CALLBACK, NULL, pAvgTrainImg, projectedFace );
 
     IplImage *proj = cvCreateImage(size, IPL_DEPTH_8U, 1);
     cvEigenProjection(eigenObjects, 1,
-            CV_EIGOBJ_NO_CALLBACK, NULL, projectedFace, pAvgTrainImg, proj);
+                      CV_EIGOBJ_NO_CALLBACK, NULL, projectedFace, pAvgTrainImg, proj);
 
     //LibFaceUtils::showImage(proj);
 
@@ -713,25 +713,18 @@ int Eigenfaces::saveConfig(const string& dir) {
 
     if (!fileStorage) {
         LOG(libfaceERROR) << "Can't open file for storing :" << d->configFile << ". Save has failed!.";
-
         return 1;
     }
-
-    // Start storing
-    //unsigned int nIds = d->faceImgArr.size(), i;
 
     unsigned int nIds = d->m_projections.size(), i;
     cout << "Total: " << nIds << endl;
 
     // Write some initial params and matrices
     cvWriteInt( fileStorage, "nIds", nIds );
-//    cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
-//    cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
-//    cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
 
-        cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
-        cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
-        cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
+    cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
+    cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
+    cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
 
     // Write all the training faces
     for ( i = 0; i < nIds; i++ ) {

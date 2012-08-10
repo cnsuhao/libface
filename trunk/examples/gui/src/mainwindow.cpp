@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget* parent)
     //this->connect(ui->openConfigBtn, SIGNAL(clicked()), this, SLOT(openConfig()));
     //this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(detectFaces()));
     this->connect(ui->detectFacesBtn, SIGNAL(clicked()), this, SLOT(Testing()));
-    //this->connect(ui->recogniseBtn, SIGNAL(clicked()), this, SLOT(recognise()));
+    this->connect(ui->recogniseBtn, SIGNAL(clicked()), this, SLOT(recognise()));
     this->connect(ui->updateDatabaseBtn, SIGNAL(clicked()), this, SLOT(updateConfig()));
     this->connect(ui->saveConfigBtn, SIGNAL(clicked()), this, SLOT(saveConfig()));
 
@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 //    libFace = new LibFace(libface::ALL,QDir::currentPath().toStdString());
 //    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
-    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
+    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
 
     ui->configLocation->setText(QDir::currentPath());
 
@@ -284,14 +284,7 @@ void MainWindow::Testing()
 
 void MainWindow::recognise()
 {
-    //        libFace->recognise(currentFaces,1);
-
-    //    int i;
-    //    for(i=0;i<currentFaces->size();i++)
-    //        printf("Face ID: %d\n",currentFaces->at(i)->getId());
-
-    cout << "MainWindow::updateConfig() called" << endl;
-
+    libFace->loadConfig(QDir::currentPath().toStdString());
 
     return;
 }
