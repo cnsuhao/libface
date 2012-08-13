@@ -99,7 +99,7 @@ public:
 	 *
 	 * @return 0 if load was successful, non-zero otherwise.
 	 */
-	virtual int loadConfig(const std::string& dir)  = 0;
+    virtual int loadConfig(const std::string& dir)  = 0;
 
 
 	/**

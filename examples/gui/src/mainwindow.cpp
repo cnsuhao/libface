@@ -73,9 +73,9 @@ MainWindow::MainWindow(QWidget* parent)
     myView->show();
 
 
-//    libFace = new LibFace(libface::ALL,QDir::currentPath().toStdString());
+//    libFace = new LibFace(libface::FISHER,QDir::currentPath().toStdString());
+    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
 //    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
-    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
 
     ui->configLocation->setText(QDir::currentPath());
 
@@ -284,6 +284,7 @@ void MainWindow::Testing()
 
 void MainWindow::recognise()
 {
+    cout << "Load Config Called" << endl;
     libFace->loadConfig(QDir::currentPath().toStdString());
 
     return;
