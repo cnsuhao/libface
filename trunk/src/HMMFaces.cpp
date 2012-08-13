@@ -109,6 +109,9 @@ public:
     int FACE_WIDTH;
     int FACE_HEIGHT;
 
+    int num_of_persons;
+    bool config_loaded;
+
     /**
      * HMM Parameters
      */
@@ -122,6 +125,8 @@ public:
 
 
 HMMfaces::HMMfacesPriv::HMMfacesPriv() : faceImgArr(), indexMap(), configFile(), CUT_OFF(10000000.0), UPPER_DIST(10000000), LOWER_DIST(10000000), THRESHOLD(1000000.0), RMS_THRESHOLD(10.0), FACE_WIDTH(120), FACE_HEIGHT(120) {
+
+    config_loaded = false;
 
     m_stnum[0] = 5;
     m_stnum[1] = 3;
@@ -188,7 +193,7 @@ HMMfaces::HMMfacesPriv::~HMMfacesPriv() {
 
 HMMfaces::HMMfaces(const string& dir) : d(new HMMfacesPriv) {
     struct stat stFileInfo;
-    d->configFile = dir + "/" + CONFIG_XML;
+    d->configFile = dir + "/" + "hmm";
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 
@@ -237,6 +242,48 @@ map<string, string> HMMfaces::getConfig() {
 }
 
 int HMMfaces::loadConfig(const string& dir) {
+
+    cout << "HMMFaces: loadConfig" << endl;
+
+    // Convert string to c-string and create the filename path
+    if(d->config_loaded)
+        return 0;
+
+    if(d->configFile.size() == 0)
+        d->configFile = dir + "/" + "hmm";
+
+    char* filename = new char[d->configFile.size()+1];
+    std::copy(d->configFile.begin(),d->configFile.end(),filename);
+    filename[d->configFile.size()] = '\0';
+
+    cout << "filename: " << filename << endl;
+
+    FILE* file = fopen( filename, "r+" );
+    if (!file) return false;
+
+    // if d->m_hmm is not empty then load in these variables
+    if(d->m_hmm.size()){
+        for(int i = 0 ; i < d->m_hmm.size() ; i++){
+            ContEHMM* tmp = d->m_hmm.at(i);
+            tmp->Load(file);
+            cout << "load config" << endl;
+        }
+    }
+    // else create new
+    else{
+        char temp_char[128];
+//        fprintf(file, "%s %d\n", "<NumberOfHMM>", d->num_of_persons );
+        fscanf(file, "%s %d\n", temp_char, &d->num_of_persons);
+        cout << "NumberofHMM : " << d->num_of_persons << endl;
+        for(int i = 0 ; i < d->num_of_persons ; i++){
+            ContEHMM* tmp = new ContEHMM();
+            tmp->Load(file);
+            d->m_hmm.push_back(tmp);
+            cout << ".............." << endl;
+        }
+    }
+
+    d->config_loaded = true;
     return 0;
 }
 
@@ -374,15 +421,21 @@ int HMMfaces::testing(IplImage* img){
 
     cvImgToObs_DCT( ipl, obsInfo->obs, d->m_dctSize, d->m_obsSize, d->m_delta );
 
+    cout << "Size: " << d->indexMap.size() << endl;
+    cout << "hmm size: " << d->m_hmm.size() << endl;
 
     for( int i = 0 ; i < d->indexMap.size() ; i++ )
     {
         CvEHMM* hmm = d->m_hmm.at(i)->GetIppiEHMM();
+        cout << "1" << endl;
         cvEstimateObsProb( obsInfo, hmm );
         like_array[i] = cvEViterbi( obsInfo, hmm );
     }
 
+
+
     cvReleaseObsInfo( &obsInfo );
+
 
     int three_first[3];
     for(int i = 0; i < MIN(3,d->indexMap.size()) ; i++ )
@@ -406,6 +459,29 @@ int HMMfaces::testing(IplImage* img){
 }
 
 int HMMfaces::saveConfig(const string& dir) {
+
+    // Convert string to c-string and create the filename path
+    char* filename = new char[dir.size() + 1 + 4];
+    std::copy(dir.begin(),dir.end(),filename);
+    filename[dir.size()] = '/';
+    filename[dir.size() + 1] = 'h';
+    filename[dir.size() + 2] = 'm';
+    filename[dir.size() + 3] = 'm';
+    filename[dir.size() + 4] = '\0';
+
+    cout << "filename: " << filename << endl;
+
+    FILE* file = fopen( filename, "a+" );
+    if (!file) return false;
+
+    fprintf(file, "%s %d\n", "<NumberOfHMM>", d->num_of_persons );
+
+    for(int i = 0 ; i < d->m_hmm.size() ; i++){
+        ContEHMM* tmp = d->m_hmm.at(i);
+        tmp->Save(file);
+    }
+
+    fclose(file);
 
     return 0;
 }
@@ -438,6 +514,7 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
     clock_t update;
     update = clock();
 
+    d->num_of_persons = 0;
 
     for (unsigned i = 0; i < newFaceArr->size() ; ++i) {
         if(newFaceArr->at(i)->getId() == -1) {
@@ -488,6 +565,7 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
                 d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(newFaceArr->at(i)->getFace())));
                 // A new face with a new ID is added. So map it's DB storage index with it's ID
                 d->indexMap.push_back(id);
+                d->num_of_persons++;
             }
         }
     }

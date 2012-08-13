@@ -9,6 +9,7 @@
 
 #include <opencv2/legacy/legacy.hpp>
 
+#include <iostream>
 #include <string>
 #include <map>
 using namespace std;
@@ -28,6 +29,9 @@ public:
 
     //IppiEHMM* GetIppiEHMM() { return m_hmm; };
     CvEHMM* GetIppiEHMM() { return m_hmm; };
+
+    bool Save( FILE* file );
+    bool Load( FILE* file );
 
 
 protected:

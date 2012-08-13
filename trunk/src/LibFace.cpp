@@ -370,16 +370,17 @@ CvSize LibFace::getRecommendedImageSizeForRecognition(const CvSize&) const {
 
 int LibFace::loadConfig(const string& dir) {
 
-    /*
-    return d->recognitionCore->loadData(dir);
-     */
+    cout << "LibFace::loadConfig" << endl;
+    return d->recognitionCore->loadConfig(dir);
+
     return 0;
 }
 
 int LibFace::loadConfig(const map<string, string>& config) {
-    if(noRecognition()) {
-        return 1;
-    }
+//    if(noRecognition()) {
+//        return 1;
+//    }
+    cout << "LibFace::loadConfig" << endl;
     return d->recognitionCore->loadConfig(config);
 }
 

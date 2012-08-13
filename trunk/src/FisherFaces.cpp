@@ -347,7 +347,9 @@ int total_indentical_elements(vector <int> lbl){
     return count;
 }
 
-
+/**
+  * Fisherface training and testing are based on the libfacerec implementation.
+  */
 void Fisherfaces::training(InputArray src, InputArray label_array, int no_principal_components){
 
     if(src.total() == 0) {
