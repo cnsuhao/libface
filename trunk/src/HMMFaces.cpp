@@ -85,7 +85,6 @@ public:
     // Face data members, stored in the DB
     // Array of face images. It is assumed that all elements of faceImgArr always point to valid IplImages. Otherwise runtime errors will occur.
     vector<IplImage*> faceImgArr;
-    vector<IplImage*> faceTest;
 
     // All the id/tag which are stored in the database
     vector<int> indexMap;
@@ -297,9 +296,11 @@ pair<int, float> HMMfaces::recognize(IplImage* input) {
 }
 
 
-/***********************************************************************************************************/
+/**
+  * Helping function for training - Mainly training is done here.
+  */
 
-void HMMfaces::training(InputArray src, InputArray label_array, int no_principal_components){
+void HMMfaces::trainingHelp(){
 
     //training loop can be not converged
     const int max_iterations = 60;
@@ -394,21 +395,68 @@ void HMMfaces::training(InputArray src, InputArray label_array, int no_principal
 
 }
 
+/**
+ * Update the faceArray for training
+ */
+void HMMfaces::training(vector<Face*>* faces, int no_principal_components){
+
+    if(d->indexMap.size()) return;
+
+    if (faces->size() == 0) {
+        LOG(libfaceWARNING) << " No faces passed. Training impossible.";
+        return;
+    }
+
+    d->num_of_persons = 0;
+
+    for (unsigned i = 0; i < faces->size() ; ++i) {
+        if(faces->at(i)->getId() == -1) {
+            LOG(libfaceDEBUG) << "Has no specified ID.";
+
+            int newId = d->faceImgArr.size();
+
+            // We now have the greatest unoccupied ID.
+            LOG(libfaceDEBUG) << "Giving it the ID = " << newId;
+
+            d->faceImgArr.push_back(cvCloneImage(faces->at(i)->getFace()));
+            faces->at(i)->setId(newId);
+
+            // A new face with a new ID is added. So map it's DB storage index with it's ID
+            //d->indexIdMap[newId] = newId;
+            d->indexMap.push_back(newId);
+        }
+        else {
+            int id = faces->at(i)->getId();
+
+            vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
+            d->faceImgArr.push_back(cvCloneImage(faces->at(i)->getFace()));
+
+            if(it != d->indexMap.end()){
+
+                LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
+                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(faces->at(i)->getFace())));
+
+            }
+            else{
+                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(faces->at(i)->getFace())));
+                // A new face with a new ID is added. So map it's DB storage index with it's ID
+                d->indexMap.push_back(id);
+                d->num_of_persons++;
+            }
+        }
+    }
+
+    // Do the main training here.
+     trainingHelp();
+}
 
 int HMMfaces::testing(IplImage* img){
 
     float like_array[1000];
     IplImage* ipl = img;
 
-//    Mat matImage = src.getMat();
-//    IplImage* ipl;
-//    ipl = cvCreateImage(cvSize(120,120), IPL_DEPTH_8U, 1);
-//    ipl->imageData = (char *) matImage.data;
-
     int first = ipl->width;
     int second = ipl->height;
-
-    //cout << "First,Second: " << first << "," << second << endl;
 
     CvSize rect = cvSize(first,second);
     CvSize num_obs;
@@ -421,21 +469,14 @@ int HMMfaces::testing(IplImage* img){
 
     cvImgToObs_DCT( ipl, obsInfo->obs, d->m_dctSize, d->m_obsSize, d->m_delta );
 
-    cout << "Size: " << d->indexMap.size() << endl;
-    cout << "hmm size: " << d->m_hmm.size() << endl;
-
     for( int i = 0 ; i < d->indexMap.size() ; i++ )
     {
         CvEHMM* hmm = d->m_hmm.at(i)->GetIppiEHMM();
-        cout << "1" << endl;
         cvEstimateObsProb( obsInfo, hmm );
         like_array[i] = cvEViterbi( obsInfo, hmm );
     }
 
-
-
     cvReleaseObsInfo( &obsInfo );
-
 
     int three_first[3];
     for(int i = 0; i < MIN(3,d->indexMap.size()) ; i++ )
@@ -486,27 +527,12 @@ int HMMfaces::saveConfig(const string& dir) {
     return 0;
 }
 
-/**
-  *
-  */
-void  HMMfaces::updateTest(vector<Face *> *newFaceArr){
-
-    for (unsigned i = 0; i < newFaceArr->size() ; ++i) {
-
-            int id = newFaceArr->at(i)->getId();
-
-            d->faceTest.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));;
-    }
-}
-
-int HMMfaces::update(vector<Face*>* newFaceArr) {
+int HMMfaces::update(vector<Face*>* faces) {
 
     if(d->indexMap.size()) return 0;
 
-//    cout << "HMMfaces::update is called" << endl;
-
-    if (newFaceArr->size() == 0) {
-        LOG(libfaceWARNING) << " No faces passed. Not training.";
+    if (faces->size() == 0) {
+        LOG(libfaceWARNING) << " No faces passed. Training impossible.";
 
         return 0;
     }
@@ -516,8 +542,8 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
 
     d->num_of_persons = 0;
 
-    for (unsigned i = 0; i < newFaceArr->size() ; ++i) {
-        if(newFaceArr->at(i)->getId() == -1) {
+    for (unsigned i = 0; i < faces->size() ; ++i) {
+        if(faces->at(i)->getId() == -1) {
             LOG(libfaceDEBUG) << "Has no specified ID.";
 
             int newId = d->faceImgArr.size();
@@ -525,14 +551,14 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
             // We now have the greatest unoccupied ID.
             LOG(libfaceDEBUG) << "Giving it the ID = " << newId;
 
-            d->faceImgArr.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));
-            newFaceArr->at(i)->setId(newId);
+            d->faceImgArr.push_back(cvCloneImage(faces->at(i)->getFace()));
+            faces->at(i)->setId(newId);
 
             // A new face with a new ID is added. So map it's DB storage index with it's ID
             //d->indexIdMap[newId] = newId;
             d->indexMap.push_back(newId);
         } else {
-            int id = newFaceArr->at(i)->getId();
+            int id = faces->at(i)->getId();
 
 
             LOG(libfaceDEBUG) << " Given ID as " << id;
@@ -541,12 +567,12 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
 
             vector<int>::iterator it = find(d->indexMap.begin(), d->indexMap.end(), id);//d->indexMap.
 
-            //keeping all faces in the newFaceArr
-            d->faceImgArr.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));
+            //keeping all faces in the faces
+            d->faceImgArr.push_back(cvCloneImage(faces->at(i)->getFace()));
             //d->indexMap.push_back(id);
 
             //creating a map/multimap from the faceImgArr
-            //d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(newFaceArr->at(i)->getFace())));
+            //d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(faces->at(i)->getFace())));
 
             /**
               * Later we are going to use a new structure here
@@ -555,14 +581,14 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
             if(it != d->indexMap.end()) {
 
                 LOG(libfaceDEBUG) << "Specified ID already exists in the DB, merging 2 together.";
-                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(newFaceArr->at(i)->getFace())));
+                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(faces->at(i)->getFace())));
 
             } else {
                 // If this is a fresh ID, and not autoassigned
                 LOG(libfaceDEBUG) << "Specified ID does not exist in the DB, creating new face.";
 
-                //                d->faceImgArr.push_back(cvCloneImage(newFaceArr->at(i)->getFace()));
-                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(newFaceArr->at(i)->getFace())));
+                //                d->faceImgArr.push_back(cvCloneImage(faces->at(i)->getFace()));
+                d->all_faces.insert(pair<int,IplImage*>(id,cvCloneImage(faces->at(i)->getFace())));
                 // A new face with a new ID is added. So map it's DB storage index with it's ID
                 d->indexMap.push_back(id);
                 d->num_of_persons++;
@@ -573,10 +599,6 @@ int HMMfaces::update(vector<Face*>* newFaceArr) {
     update = clock() - update;
 
     LOG(libfaceDEBUG) << "Updating took: " << (double)update / ((double)CLOCKS_PER_SEC) << "sec.";
-
-//    cout << "Total Faces: " << d->faceImgArr.size() << endl;
-//    cout << "Map size: " << d->all_faces.size() << endl;
-//    cout << "Total ID: " << d->indexMap.size() << endl;
 
     return 0;
 }

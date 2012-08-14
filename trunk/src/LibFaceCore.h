@@ -141,7 +141,9 @@ public:
      * New Addition
      * Training phase of face recognition
      */
-    virtual void training(InputArray src, InputArray labels, int no_principal_components = 0) = 0;
+    virtual void training(vector<Face*>* newFaceArr, int no_principal_components = 0) = 0;
+
+    //virtual void training(vector<Face*>* newFaceArr) = 0;
 
     /**
      * New Addition
@@ -150,11 +152,6 @@ public:
     virtual int testing(InputArray src) = 0;
 
     virtual int testing(IplImage* img) = 0;
-
-    /**
-      * Specially for HMM
-      */
-    virtual void updateTest(vector<Face*>* newFaceArr) = 0;
 };
 
 // -------------------------------------------------------------------------------------------

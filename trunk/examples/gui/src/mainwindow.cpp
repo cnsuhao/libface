@@ -300,9 +300,6 @@ void MainWindow::openConfig()
 }
 
 void MainWindow::updateConfig() {
-
-    libFace->update(currentFaces);
-    libFace->testUpdate(testFaces);
 }
 
 void MainWindow::clearScene() {

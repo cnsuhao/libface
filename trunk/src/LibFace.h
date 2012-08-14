@@ -350,11 +350,6 @@ public:
      */
     vector<int> testing(std::vector<Face*>* faces);
 
-    /**
-      * For test purpose
-      */
-    int testUpdate(std::vector<Face*>* faces);
-
 
 private:
 
