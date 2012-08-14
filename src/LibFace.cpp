@@ -508,6 +508,8 @@ vector<pair<int, float> > LibFace::recognise(vector<Face*>* faces, int scaleFact
 
 void LibFace::training(vector<Face*>* faces, int scaleFactor){
 
+    d->recognitionCore->training(faces);
+
     vector<Mat> images;
     vector<int> labels;
 
@@ -522,34 +524,20 @@ void LibFace::training(vector<Face*>* faces, int scaleFactor){
         labels.push_back(face->getId());
     }
 
-    //    Mat tmp = images.at(0);
-    //    cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
-    //    cout << "Matrix = " << endl << " " << tmp << endl;
-
-    //    for (int i =  0 ; i < labels.size() ; i++)
-    //        cout << labels[i] << endl;
-
-    d->recognitionCore->training(images,labels);
-
 }
 
 vector<int> LibFace::testing(vector<Face*>* faces){
 
     vector<int> result;
-
     int size = faces->size();
 
     for (int i = 0 ; i < size ; i++) {
 
         Face* face = faces->at(i);
-
         IplImage* faceImg = face->getFace();
-
         int res;
 
-        // See which test function to call
         switch(d->type){
-
         case HMM:
             res = d->recognitionCore->testing(faceImg);
             break;
@@ -674,12 +662,6 @@ int LibFace::update(vector<Face*> *faces, int scaleFactor) {
     assignedIDs = d->recognitionCore->update(&newFaceArr);
 
     return assignedIDs;
-}
-
-int LibFace::testUpdate(std::vector<Face*> *faces){
-
-    d->recognitionCore->updateTest(faces);
-    return 0;
 }
 
 bool LibFace::noDetection() const {

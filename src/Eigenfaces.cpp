@@ -629,20 +629,30 @@ static Mat convertToRowMatrix(InputArray src, int matrix_type, double alpha=1, d
 }
 
 
-/**
-  * New Addition
-  */
-void Eigenfaces::training(InputArray src, InputArray label_array, int no_principal_components){
+/**********************************************************************************/
+void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
 
-    //cout << "In Eigenfaces ........................ " << endl;
+    vector<Mat> src;
+    vector<int> labels;
 
-    if(src.total() == 0) {
+    int size = faces->size();
+    for (int i = 0 ; i < size ; i++) {
+
+        Face* face = faces->at(i);
+
+        const IplImage* faceImg = face->getFace();
+
+        src.push_back(cvarrToMat(faceImg));
+        labels.push_back(face->getId());
+    }
+
+    // No face to process
+    if(faces->size() == 0 ){
         cout << "Training Data is Empty ... can't proceed" << endl;
         exit(0);
     }
 
-    vector<int> labels = label_array.getMat();
-    Mat calc = src.getMat(0);
+    Mat calc = src.at(0);
 
     d->FACE_WIDTH = calc.rows;
     d->FACE_HEIGHT = calc.cols;
@@ -668,17 +678,11 @@ void Eigenfaces::training(InputArray src, InputArray label_array, int no_princip
     transpose(pca.eigenvectors, d->m_eigenvectors); // eigenvectors by column
     d->m_labels = labels; // store labels for prediction
 
-
     // save projections
-    for(int sampleIdx = 0; sampleIdx < data.rows; sampleIdx++) {
+    for(int sampleIdx = 0; sampleIdx < data.rows; sampleIdx++){
         Mat p = subspaceProject(d->m_eigenvectors, d->m_mean, data.row(sampleIdx));
         d->m_projections.push_back(p);
     }
-
-    //Mat tmp = d->m_projections.at(0);
-    //cout << "Row: " << tmp.rows << " Col: " << tmp.cols << endl;
-    //cout << "Matrix = " << endl << " " << tmp << endl;
-
 }
 
 /**

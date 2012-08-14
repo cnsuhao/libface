@@ -156,20 +156,17 @@ public:
      * New Addition
      * Training phase of face recognition
      */
-    void training(InputArray src, InputArray labels, int no_principal_components = 0);
+    void training(vector<Face*>* newFaceArr, int no_principal_components = 0);
+
+    void trainingHelp();
 
     /**
      * New Addition
      * Testing phase of face recognition
      */
     int testing(InputArray src){return 0;}
-
     int testing(IplImage* img);
 
-    /**
-      *
-      */
-    void updateTest(vector<Face *> *newFaceArr);
 
 private:
 

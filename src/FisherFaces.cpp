@@ -347,25 +347,34 @@ int total_indentical_elements(vector <int> lbl){
     return count;
 }
 
-/**
-  * Fisherface training and testing are based on the libfacerec implementation.
-  */
-void Fisherfaces::training(InputArray src, InputArray label_array, int no_principal_components){
+/**********************************************************************************/
+void Fisherfaces::training(vector<Face*>* faces, int no_principal_components){
 
-    if(src.total() == 0) {
+    vector<Mat> src;
+    vector<int> labels;
+
+    int size = faces->size();
+    for (int i = 0 ; i < size ; i++) {
+
+        Face* face = faces->at(i);
+
+        const IplImage* faceImg = face->getFace();
+
+        src.push_back(cvarrToMat(faceImg));
+        labels.push_back(face->getId());
+    }
+
+    // No face to process
+    if(faces->size() == 0 ){
         cout << "Training Data is Empty ... can't proceed" << endl;
         exit(0);
     }
 
-    vector<int> labels = label_array.getMat();
-
-    // For calculation of Width and Height of the image
-    Mat calc = src.getMat(0);
-
+    Mat calc = src.at(0);
     d->FACE_WIDTH = calc.rows;
     d->FACE_HEIGHT = calc.cols;
 
-     Mat data = convertToRowMatrix(src, CV_64FC1);
+    Mat data = convertToRowMatrix(src, CV_64FC1);
     int N = data.rows;
 
     if(labels.size() != (size_t)N)
