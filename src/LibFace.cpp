@@ -543,7 +543,7 @@ vector<int> LibFace::testing(vector<Face*>* faces){
             break;
 
         default:    // Initialize both detector and Eigenfaces
-            res = d->recognitionCore->testing(cvarrToMat(faceImg));
+            res = d->recognitionCore->testing(faceImg);
             break;
         }
         result.push_back(res);

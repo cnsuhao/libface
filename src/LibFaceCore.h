@@ -141,6 +141,7 @@ public:
      * New Addition
      * Training phase of face recognition
      */
+
     virtual void training(vector<Face*>* newFaceArr, int no_principal_components = 0) = 0;
 
     //virtual void training(vector<Face*>* newFaceArr) = 0;
@@ -149,7 +150,6 @@ public:
      * New Addition
      * Testing phase of face recognition
      */
-    virtual int testing(InputArray src) = 0;
 
     virtual int testing(IplImage* img) = 0;
 };

@@ -162,9 +162,8 @@ public:
      * New Addition
      * Testing phase of face recognition
      */
-    int testing(InputArray src);
 
-    int testing(IplImage* img){return 0;}
+    int testing(IplImage* img);
 
 private:
 

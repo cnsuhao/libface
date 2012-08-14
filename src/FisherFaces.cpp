@@ -410,10 +410,9 @@ void Fisherfaces::training(vector<Face*>* faces, int no_principal_components){
 }
 
 
-int Fisherfaces::testing(InputArray src){
+int Fisherfaces::testing(IplImage *img){
 
-    Mat test = src.getMat();
-
+    Mat test = cvarrToMat(img);
     Mat q = subspaceProject(d->m_eigenvectors, d->m_mean, test.reshape(1,1));
     double minDist = DBL_MAX;
     int outputClass = -1;
