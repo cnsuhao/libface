@@ -436,7 +436,7 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
 Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
     struct stat stFileInfo;
-    d->configFile = dir + "/" + CONFIG_XML;
+    d->configFile = dir + "/" + "Eigen-" + CONFIG_XML ;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 
@@ -499,7 +499,7 @@ map<string, string> Eigenfaces::getConfig() {
 }
 
 int Eigenfaces::loadConfig(const string& dir) {
-    d->configFile = dir + "/" + CONFIG_XML;
+    d->configFile = dir + "/" + "Eigen-" + CONFIG_XML ;
 
     LOG(libfaceDEBUG) << "Load training data" << endl;
 

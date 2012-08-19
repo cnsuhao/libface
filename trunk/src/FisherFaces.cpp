@@ -168,7 +168,7 @@ Fisherfaces::FisherfacesPriv::~FisherfacesPriv() {
 
 Fisherfaces::Fisherfaces(const string& dir) : d(new FisherfacesPriv) {
     struct stat stFileInfo;
-    d->configFile = dir + "/" + CONFIG_XML;
+    d->configFile = dir + "/" + "Fisher-" + CONFIG_XML ;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 
@@ -231,7 +231,7 @@ map<string, string> Fisherfaces::getConfig() {
 }
 
 int Fisherfaces::loadConfig(const string& dir) {
-    d->configFile = dir + "/" + CONFIG_XML;
+    d->configFile = dir + "/" + "Fisher-" + CONFIG_XML ;
 
     LOG(libfaceDEBUG) << "Load training data" << endl;
 
@@ -243,22 +243,37 @@ int Fisherfaces::loadConfig(const string& dir) {
     }
 
     int nIds = cvReadIntByName(fileStorage, 0, "nIds", 0), i;
+
     d->FACE_WIDTH = cvReadIntByName(fileStorage, 0, "FACE_WIDTH",d->FACE_WIDTH);
     d->FACE_HEIGHT = cvReadIntByName(fileStorage, 0, "FACE_HEIGHT",d->FACE_HEIGHT);
     d->THRESHOLD = cvReadRealByName(fileStorage, 0, "THRESHOLD", d->THRESHOLD);
     //LibFaceUtils::printMatrix(d->projectedTrainFaceMat);
 
+    // If m_projections or m_labels are not empty make them empty
+    while(d->m_projections.size()) d->m_projections.pop_back();
+    while(d->m_labels.size()) d->m_labels.pop_back();
+
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
-        d->faceImgArr.push_back( (IplImage*)cvReadByName(fileStorage, 0, facename, 0) );
+        IplImage* tmp = (IplImage*)cvReadByName(fileStorage, 0, facename, 0);
+        d->m_projections.push_back(cvarrToMat(tmp));
     }
 
+    char eigen_name[20];
+    sprintf(eigen_name,"eigenvector");
+    IplImage* eigen_tmp = (IplImage*)cvReadByName(fileStorage, 0, eigen_name, 0);
+    d->m_eigenvectors = cvarrToMat(eigen_tmp);
+
+    char mean_name[20];
+    sprintf(mean_name,"mean");
+    IplImage* mean_tmp = (IplImage*)cvReadByName(fileStorage, 0, mean_name, 0);
+    d->m_mean = cvarrToMat(mean_tmp);
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
         sprintf(idname, "id_%d", i);
-        d->indexMap.push_back( cvReadIntByName(fileStorage, 0, idname, 0));
+       d->m_labels.push_back(cvReadIntByName(fileStorage, 0, idname, 0));
     }
 
     // Release file storage
@@ -463,6 +478,17 @@ int Fisherfaces::saveConfig(const string& dir) {
         IplImage tmp = d->m_projections.at(i);
         cvWrite(fileStorage, facename, &tmp, cvAttrList(0,0));
     }
+
+    //Writing the whole eigenface and mean makes it infeasible as the filesize can be huge
+    char eigen_name[20];
+    sprintf(eigen_name,"eigenvector");
+    IplImage eigen_tmp = d->m_eigenvectors;
+    cvWrite(fileStorage, eigen_name, &eigen_tmp, cvAttrList(0,0));
+
+    char mean_name[20];
+    sprintf(mean_name,"mean");
+    IplImage mean_tmp = d->m_mean;
+    cvWrite(fileStorage, mean_name, &mean_tmp, cvAttrList(0,0));
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
