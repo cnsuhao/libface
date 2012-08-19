@@ -74,8 +74,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 
 //    libFace = new LibFace(libface::FISHER,QDir::currentPath().toStdString());
-//    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
-    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
+    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
+//    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
 
     ui->configLocation->setText(QDir::currentPath());
 
@@ -156,7 +156,7 @@ void MainWindow::getTrainigData(){
      * Select a folder consisting of input images labeled in folders
      */
 
-    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/train");
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface-git/Edit/libface/examples/database/train");
     QStringList filters;
     QDir myDir(dir);
     QStringList folderList =  myDir.entryList (filters);
@@ -224,7 +224,7 @@ void MainWindow::getTestData(){
 
     cout << endl << "Testing Data ---------------------- " << endl << endl;
 
-    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/test");
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface-git/Edit/libface/examples/database/test");
     QStringList filters;
 
     filters << "*.png" << "*.jpg" << "*.pgm";
@@ -261,6 +261,7 @@ void MainWindow::getTestData(){
 void MainWindow::Training()
 {
 
+    cout << "Training Starts -----------" << endl;
     libFace->training(currentFaces,1);
 
 }
@@ -268,15 +269,22 @@ void MainWindow::Training()
 
 void MainWindow::Testing()
 {
-    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface/Edit/libface/examples/database/test");
+    QString dir("/home/mahfuz/Coding/Face_Recognition/Libface-git/Edit/libface/examples/database/test");
     QStringList filters;
     filters << "*.png" << "*.jpg" << "*.pgm";
     QDir myDir(dir);
     QStringList folderList =  myDir.entryList (filters);
 
+    cout << "Testing Starts " << endl;
+
     vector<int> result = libFace->testing(testFaces);
 
+    cout << "Testing Done" << endl;
+
     int total = testFaces->size();
+
+    cout << "Size: " << total << endl;
+
     for (int i = 0 ; i < total ; i++ ){
         cout << folderList.at(i).toAscii().data() << " -> " << result.at(i) << endl;
     }

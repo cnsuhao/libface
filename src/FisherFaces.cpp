@@ -407,6 +407,8 @@ void Fisherfaces::training(vector<Face*>* faces, int no_principal_components){
         Mat p = subspaceProject(d->m_eigenvectors, d->m_mean, data.row(i));
         d->m_projections.push_back(p);
     }
+
+    cout << "Fisherface - Training Done " << endl;
 }
 
 
