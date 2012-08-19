@@ -142,6 +142,8 @@ HMMfaces::HMMfacesPriv::HMMfacesPriv() : faceImgArr(), indexMap(), configFile(),
     m_delta = cvSize(4,4);
     m_obsSize = cvSize(3,3);
     m_dctSize = cvSize(12,12);
+
+    num_of_persons = 0;
 }
 
 HMMfaces::HMMfacesPriv::HMMfacesPriv(const HMMfacesPriv& that) : faceImgArr(), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
@@ -405,14 +407,15 @@ void HMMfaces::trainingHelp(){
  */
 void HMMfaces::training(vector<Face*>* faces, int no_principal_components){
 
-    if(d->indexMap.size()) return;
+    // It can be called only once for this reason
+    //if(d->indexMap.size()) return;
 
     if (faces->size() == 0) {
         LOG(libfaceWARNING) << " No faces passed. Training impossible.";
         return;
     }
 
-    d->num_of_persons = 0;
+    //d->num_of_persons = 0;
 
     for (unsigned i = 0; i < faces->size() ; ++i) {
         if(faces->at(i)->getId() == -1) {
@@ -521,7 +524,7 @@ int HMMfaces::saveConfig(const string& dir) {
 
     cout << "filename: " << filename << endl;
 
-    FILE* file = fopen( filename, "a+" );
+    FILE* file = fopen( filename, "w+" );
     if (!file) return false;
 
     fprintf(file, "%s %d\n", "<NumberOfHMM>", d->num_of_persons );
