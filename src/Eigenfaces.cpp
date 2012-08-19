@@ -511,22 +511,40 @@ int Eigenfaces::loadConfig(const string& dir) {
     }
 
     int nIds = cvReadIntByName(fileStorage, 0, "nIds", 0), i;
+
     d->FACE_WIDTH = cvReadIntByName(fileStorage, 0, "FACE_WIDTH",d->FACE_WIDTH);
     d->FACE_HEIGHT = cvReadIntByName(fileStorage, 0, "FACE_HEIGHT",d->FACE_HEIGHT);
     d->THRESHOLD = cvReadRealByName(fileStorage, 0, "THRESHOLD", d->THRESHOLD);
-    //LibFaceUtils::printMatrix(d->projectedTrainFaceMat);
+//    LibFaceUtils::printMatrix(d->projectedTrainFaceMat);
+
+    // If m_projections or m_labels are not empty make them empty
+    while(d->m_projections.size()) d->m_projections.pop_back();
+    while(d->m_labels.size()) d->m_labels.pop_back();
+
+    cout << "projection size: " << d->m_projections.size() << endl;
+    cout << "label size: " << d->m_labels.size() << endl;
 
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
-        d->faceImgArr.push_back( (IplImage*)cvReadByName(fileStorage, 0, facename, 0) );
+        IplImage* tmp = (IplImage*)cvReadByName(fileStorage, 0, facename, 0);
+        d->m_projections.push_back(cvarrToMat(tmp));
     }
 
+    char eigen_name[20];
+    sprintf(eigen_name,"eigenvector");
+    IplImage* eigen_tmp = (IplImage*)cvReadByName(fileStorage, 0, eigen_name, 0);
+    d->m_eigenvectors = cvarrToMat(eigen_tmp);
+
+    char mean_name[20];
+    sprintf(mean_name,"mean");
+    IplImage* mean_tmp = (IplImage*)cvReadByName(fileStorage, 0, mean_name, 0);
+    d->m_mean = cvarrToMat(mean_tmp);
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
         sprintf(idname, "id_%d", i);
-        d->indexMap.push_back( cvReadIntByName(fileStorage, 0, idname, 0));
+        d->m_labels.push_back(cvReadIntByName(fileStorage, 0, idname, 0));
     }
 
     // Release file storage
@@ -543,17 +561,25 @@ int Eigenfaces::loadConfig(const map<string, string>& c) {
 
     int nIds  = atoi(config["nIds"].c_str()), i;
 
+    // If m_projections or m_labels are not empty make them empty
+    while(d->m_projections.size()) d->m_projections.pop_back();
+    while(d->m_labels.size()) d->m_labels.pop_back();
+
     // Not sure what depth and # of channels should be in faceImgArr. Store them in config?
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
-        d->faceImgArr.push_back( LibFaceUtils::stringToImage(config[string(facename)], IPL_DEPTH_32F, 1) );
+        IplImage* tmp = LibFaceUtils::stringToImage(config[string(facename)], IPL_DEPTH_32F, 1);
+        d->m_projections.push_back(cvarrToMat(tmp));
+
+        //d->faceImgArr.push_back( LibFaceUtils::stringToImage(config[string(facename)], IPL_DEPTH_32F, 1) );
     }
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
         sprintf(idname, "id_%d", i);
-        d->indexMap.push_back( atoi(config[string(idname)].c_str()));
+        d->m_labels.push_back(atoi(config[string(idname)].c_str()));
+//        d->indexMap.push_back( atoi(config[string(idname)].c_str()));
     }
 
     return 0;
@@ -684,6 +710,7 @@ void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
         d->m_projections.push_back(p);
     }
 
+    cout << "Projection Size: " << d->m_projections.size() << endl;
     cout << "Eigenface - Training Done " << endl;
 }
 
@@ -692,10 +719,13 @@ void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
  */
 int Eigenfaces::testing(IplImage *img){
 
+    cout << "in eigenfaces::testing --------------------------" << endl;
+
     Mat test = cvarrToMat(img);
     Mat q = subspaceProject(d->m_eigenvectors, d->m_mean, test.reshape(1,1));
     double minDist = DBL_MAX;
     int outputClass = -1;
+
 
     for(int i = 0; i < d->m_projections.size(); i++) {
 
@@ -726,7 +756,6 @@ int Eigenfaces::saveConfig(const string& dir) {
 
     // Write some initial params and matrices
     cvWriteInt( fileStorage, "nIds", nIds );
-
     cvWriteInt( fileStorage, "FACE_WIDTH", d->FACE_WIDTH);
     cvWriteInt( fileStorage, "FACE_HEIGHT", d->FACE_HEIGHT);
     cvWriteReal( fileStorage, "THRESHOLD", d->THRESHOLD);
@@ -735,9 +764,24 @@ int Eigenfaces::saveConfig(const string& dir) {
     for ( i = 0; i < nIds; i++ ) {
         char facename[200];
         sprintf(facename, "person_%d", i);
+
+        // Writing Projection Data
         IplImage tmp = d->m_projections.at(i);
         cvWrite(fileStorage, facename, &tmp, cvAttrList(0,0));
+
+        //Need to write eigenvector and mean also
     }
+
+    //Writing the whole eigenface and mean makes it infeasible as the filesize can be huge
+    char eigen_name[20];
+    sprintf(eigen_name,"eigenvector");
+    IplImage eigen_tmp = d->m_eigenvectors;
+    cvWrite(fileStorage, eigen_name, &eigen_tmp, cvAttrList(0,0));
+
+    char mean_name[20];
+    sprintf(mean_name,"mean");
+    IplImage mean_tmp = d->m_mean;
+    cvWrite(fileStorage, mean_name, &mean_tmp, cvAttrList(0,0));
 
     for ( i = 0; i < nIds; i++ ) {
         char idname[200];
