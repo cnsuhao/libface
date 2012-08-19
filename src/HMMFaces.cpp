@@ -262,16 +262,6 @@ int HMMfaces::loadConfig(const string& dir) {
     FILE* file = fopen( filename, "r+" );
     if (!file) return false;
 
-    //    // if d->m_hmm is not empty then load in these variables
-    //    if(d->m_hmm.size()){
-    //        for(int i = 0 ; i < d->m_hmm.size() ; i++){
-    //            ContEHMM* tmp = d->m_hmm.at(i);
-    //            tmp->Load(file);
-    //            cout << "load config" << endl;
-    //        }
-    //    }
-    //    // else create new
-    //    else{
     char temp_char[128];
     int id;
 

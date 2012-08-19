@@ -377,9 +377,9 @@ int LibFace::loadConfig(const string& dir) {
 }
 
 int LibFace::loadConfig(const map<string, string>& config) {
-//    if(noRecognition()) {
-//        return 1;
-//    }
+    //    if(noRecognition()) {
+    //        return 1;
+    //    }
     cout << "LibFace::loadConfig" << endl;
     return d->recognitionCore->loadConfig(config);
 }
@@ -537,15 +537,8 @@ vector<int> LibFace::testing(vector<Face*>* faces){
         IplImage* faceImg = face->getFace();
         int res;
 
-        switch(d->type){
-        case HMM:
-            res = d->recognitionCore->testing(faceImg);
-            break;
+        res = d->recognitionCore->testing(faceImg);
 
-        default:    // Initialize both detector and Eigenfaces
-            res = d->recognitionCore->testing(faceImg);
-            break;
-        }
         result.push_back(res);
     }
 

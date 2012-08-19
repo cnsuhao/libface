@@ -156,6 +156,7 @@ void MainWindow::getTrainigData(){
      * Select a folder consisting of input images labeled in folders
      */
 
+//    /home/mahfuz/Coding/Face_Recognition/Libkface-git/Edit/libkface/data/database
     QString dir("/home/mahfuz/Coding/Face_Recognition/Libface-git/Edit/libface/examples/database/train");
     QStringList filters;
     QDir myDir(dir);
