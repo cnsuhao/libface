@@ -28,7 +28,6 @@ ADD_LIBRARY(face ${LIB_TYPE}
                  LibFace.cpp
                  Haarcascades.cpp
 		         FisherFaces.cpp
-                 HMMCore.cpp
                  HMMFaces.cpp
                  )
 
