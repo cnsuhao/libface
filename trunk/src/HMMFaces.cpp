@@ -203,7 +203,7 @@ HMMfaces::HMMfaces(const string& dir) : d(new HMMfacesPriv) {
     } else {
         LOG(libfaceINFO) << "libface config file does not exist. Will create new config.";
     }
-//    cout << "HMMFace Constructor" << endl;
+    //    cout << "HMMFace Constructor" << endl;
 }
 
 
@@ -260,26 +260,33 @@ int HMMfaces::loadConfig(const string& dir) {
     FILE* file = fopen( filename, "r+" );
     if (!file) return false;
 
-    // if d->m_hmm is not empty then load in these variables
-    if(d->m_hmm.size()){
-        for(int i = 0 ; i < d->m_hmm.size() ; i++){
-            ContEHMM* tmp = d->m_hmm.at(i);
-            tmp->Load(file);
-            cout << "load config" << endl;
-        }
-    }
-    // else create new
-    else{
-        char temp_char[128];
-//        fprintf(file, "%s %d\n", "<NumberOfHMM>", d->num_of_persons );
-        fscanf(file, "%s %d\n", temp_char, &d->num_of_persons);
-        cout << "NumberofHMM : " << d->num_of_persons << endl;
-        for(int i = 0 ; i < d->num_of_persons ; i++){
-            ContEHMM* tmp = new ContEHMM();
-            tmp->Load(file);
-            d->m_hmm.push_back(tmp);
-            cout << ".............." << endl;
-        }
+    //    // if d->m_hmm is not empty then load in these variables
+    //    if(d->m_hmm.size()){
+    //        for(int i = 0 ; i < d->m_hmm.size() ; i++){
+    //            ContEHMM* tmp = d->m_hmm.at(i);
+    //            tmp->Load(file);
+    //            cout << "load config" << endl;
+    //        }
+    //    }
+    //    // else create new
+    //    else{
+    char temp_char[128];
+    int id;
+
+    fscanf(file, "%s %d\n", temp_char, &d->num_of_persons);
+    cout << "NumberofHMM : " << d->num_of_persons << endl;
+
+    for(int i = 0 ; i < d->num_of_persons ; i++){
+
+        // Read Face id for each HMM and insert into indexMap
+        fscanf(file,"%s %d\n",temp_char,&id);
+        d->indexMap.push_back(id);
+
+        ContEHMM* tmp = new ContEHMM();
+        tmp->Load(file);
+        d->m_hmm.push_back(tmp);
+        cout << ".............." << endl;
+        //        }
     }
 
     d->config_loaded = true;
@@ -391,8 +398,6 @@ void HMMfaces::trainingHelp(){
         }
 
     }
-    cout << "Training Done ......................." << endl;
-
 }
 
 /**
@@ -446,8 +451,12 @@ void HMMfaces::training(vector<Face*>* faces, int no_principal_components){
         }
     }
 
+    cout << "size indexmap: " << d->indexMap.size() << endl;
+
     // Do the main training here.
-     trainingHelp();
+    trainingHelp();
+
+    cout << "HMMFace - Training Done " << endl;
 }
 
 int HMMfaces::testing(IplImage* img){
@@ -518,6 +527,10 @@ int HMMfaces::saveConfig(const string& dir) {
     fprintf(file, "%s %d\n", "<NumberOfHMM>", d->num_of_persons );
 
     for(int i = 0 ; i < d->m_hmm.size() ; i++){
+
+        // Store the face ID
+        fprintf(file, "%s %d\n", "<FaceID>", d->indexMap.at(i) );
+
         ContEHMM* tmp = d->m_hmm.at(i);
         tmp->Save(file);
     }

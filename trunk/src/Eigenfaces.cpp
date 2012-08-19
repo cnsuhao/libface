@@ -683,6 +683,8 @@ void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
         Mat p = subspaceProject(d->m_eigenvectors, d->m_mean, data.row(sampleIdx));
         d->m_projections.push_back(p);
     }
+
+    cout << "Eigenface - Training Done " << endl;
 }
 
 /**
