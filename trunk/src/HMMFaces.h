@@ -172,6 +172,7 @@ public:
       */
     string testingTag(IplImage *img);
 
+    TrainingRequirement getTrainingRequirement();
 
 private:
 
