@@ -58,6 +58,8 @@
 #include <sys/stat.h>
 #include <iostream>
 
+#include <time.h>
+
 using namespace std;
 
 namespace libface {
@@ -658,6 +660,9 @@ static Mat convertToRowMatrix(InputArray src, int matrix_type, double alpha=1, d
 /**********************************************************************************/
 void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
 
+    clock_t update;
+    update = clock();
+
     vector<Mat> src;
     vector<int> labels;
 
@@ -709,6 +714,9 @@ void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
         Mat p = subspaceProject(d->m_eigenvectors, d->m_mean, data.row(sampleIdx));
         d->m_projections.push_back(p);
     }
+
+    update = clock() - update;
+    printf("Whole Process took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
 
     cout << "Projection Size: " << d->m_projections.size() << endl;
     cout << "Eigenface - Training Done " << endl;

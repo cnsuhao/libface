@@ -88,6 +88,7 @@ public:
     int             x2;
     int             y2;
     int             id;
+    string          tagName;
     int             width;
     int             height;
     IplImage*       face;
@@ -183,6 +184,10 @@ void Face::setId(int id) {
 	d->id = id;
 }
 
+void Face::setName(string tag){
+    d->tagName = tag;
+}
+
 void Face::setFace(IplImage* face) {
     // if another image was already set as d->face, release it
     if(d->face)
@@ -220,6 +225,10 @@ int Face::getY2() const {
 
 int Face::getId() const {
 	return d->id;
+}
+
+string Face::getName(){
+    return d->tagName;
 }
 
 } // namespace libface

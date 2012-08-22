@@ -58,6 +58,7 @@
 #include <map>
 
 //#include <QMap>
+#include <ctime>
 
 using namespace std;
 
@@ -302,7 +303,7 @@ pair<int, float> HMMfaces::recognize(IplImage* input) {
 void HMMfaces::trainingHelp(){
 
     //training loop can be not converged
-    const int max_iterations = 60;
+    const int max_iterations = 20;
 
     int vect_len = d->m_obsSize.height * d->m_obsSize.width;
 
@@ -313,6 +314,11 @@ void HMMfaces::trainingHelp(){
             tmp->CreateHMM(d->m_stnum,d->m_mixnum,vect_len);
             d->m_hmm.push_back(tmp);
         }
+
+    clock_t update;
+    update = clock();
+
+//    double total_obs_vector = 0.0,total_train = 0.0;
 
     //cout << "Size HMM: " << d->m_hmm.size() << endl;
     for(int i = 0 ; i < d->indexMap.size(); i++){
@@ -328,7 +334,10 @@ void HMMfaces::trainingHelp(){
         pair<multimap<int,IplImage*>::iterator, multimap<int,IplImage*>::iterator> range;
         range = d->all_faces.equal_range(id);
 
-        // Loop through range of maps of key id
+//        clock_t obs_vector;
+//        obs_vector = clock();
+
+        // Loop through range of maps of key id (for all images of a person)
         int j = 0;
         for (multimap<int,IplImage*>::iterator it = range.first; it != range.second; ++it)
         {
@@ -351,12 +360,17 @@ void HMMfaces::trainingHelp(){
             j++;
         }
 
+//        obs_vector = clock() - obs_vector;
+//        total_obs_vector += (double)obs_vector;
 
         cvInitMixSegm( obsInfoArray, num_images, hmm );
 
         bool trained = false;
         float old_likelihood = 0;
         int counter = 0;
+
+//        clock_t train;
+//        train = clock();
 
         while( (!trained) && (counter < max_iterations) )
         {
@@ -374,7 +388,7 @@ void HMMfaces::trainingHelp(){
                 cvEstimateObsProb( obsInfoArray[j], hmm );
                 likelihood += cvEViterbi( obsInfoArray[j], hmm );
             }
-            likelihood /= num_images*obsInfoArray[0]->obs_size;
+            likelihood /= num_images * obsInfoArray[0]->obs_size;
 
             cvMixSegmL2( obsInfoArray, num_images, hmm);
 
@@ -389,7 +403,14 @@ void HMMfaces::trainingHelp(){
             cvReleaseObsInfo( &(obsInfoArray[j]) );
         }
 
+//        train = clock() - train;
+//        total_train += (double) train;
     }
+    update = clock() - update;
+
+    printf("Whole Process took: %f sec.\n", (double)update / ((double)CLOCKS_PER_SEC));
+//    printf("Observation Vector took: %f sec.\n", total_obs_vector / ((double)CLOCKS_PER_SEC));
+//    printf("Training took: %f sec.\n", total_train / ((double)CLOCKS_PER_SEC));
 }
 
 /**
