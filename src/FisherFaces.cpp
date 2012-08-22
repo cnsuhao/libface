@@ -119,11 +119,12 @@ public:
 
     // Identifier
     Identifier idType;
+    TrainingRequirement trainReq;
 };
 
 
 Fisherfaces::FisherfacesPriv::FisherfacesPriv() : faceImgArr(), indexMap(), configFile(), CUT_OFF(10000000.0), UPPER_DIST(10000000), LOWER_DIST(10000000), THRESHOLD(1000000.0), RMS_THRESHOLD(10.0), FACE_WIDTH(120), FACE_HEIGHT(120) {
-
+    trainReq = AllImagesOfAllPersons;
 }
 
 Fisherfaces::FisherfacesPriv::FisherfacesPriv(const FisherfacesPriv& that) : faceImgArr(), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
@@ -213,6 +214,10 @@ Fisherfaces::~Fisherfaces() {
 
 int Fisherfaces::count() const {
     return d->faceImgArr.size();
+}
+
+TrainingRequirement Fisherfaces::getTrainingRequirement(){
+    return d->trainReq;
 }
 
 map<string, string> Fisherfaces::getConfig() {

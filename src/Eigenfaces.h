@@ -175,6 +175,8 @@ public:
         return str;
     }
 
+    TrainingRequirement getTrainingRequirement();
+
 
 private:
 

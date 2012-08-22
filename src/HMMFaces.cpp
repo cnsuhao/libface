@@ -125,6 +125,7 @@ public:
 
     // Identifier
     Identifier idType;
+    TrainingRequirement trainReq;
 };
 
 
@@ -149,6 +150,7 @@ HMMfaces::HMMfacesPriv::HMMfacesPriv() : faceImgArr(), indexMap(), configFile(),
     m_dctSize = cvSize(12,12);
 
     num_of_persons = 0;
+    trainReq = AllImagesOfOnePerson;
 }
 
 HMMfaces::HMMfacesPriv::HMMfacesPriv(const HMMfacesPriv& that) : faceImgArr(), indexMap(that.indexMap), configFile(that.configFile), CUT_OFF(that.CUT_OFF), UPPER_DIST(that.UPPER_DIST), LOWER_DIST(that.LOWER_DIST), THRESHOLD(that.THRESHOLD), RMS_THRESHOLD(that.RMS_THRESHOLD), FACE_WIDTH(that.FACE_WIDTH), FACE_HEIGHT(that.FACE_HEIGHT) {
@@ -242,6 +244,10 @@ HMMfaces::~HMMfaces() {
 
 int HMMfaces::count() const {
     return d->faceImgArr.size();
+}
+
+TrainingRequirement HMMfaces::getTrainingRequirement(){
+    return d->trainReq;
 }
 
 map<string, string> HMMfaces::getConfig() {
