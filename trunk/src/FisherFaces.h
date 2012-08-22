@@ -163,7 +163,15 @@ public:
      * Testing phase of face recognition
      */
 
-    int testing(IplImage* img);
+    int testingID(IplImage* img);
+
+    string testingTag(IplImage* img)
+    {
+        string str;
+
+        return str;
+    }
+
 
 private:
 

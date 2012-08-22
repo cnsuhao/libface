@@ -48,6 +48,7 @@
 #include <string>
 #include <utility> // for pair
 #include <vector>
+#include <string>
 
 namespace libface
 {
@@ -164,12 +165,12 @@ public:
      * New Addition
      * Testing phase of face recognition
      */
-    int testing(IplImage* img);
+    int testingID(IplImage* img);
 
     /**
       * For tag name addition
       */
-    string testing(IplImage *img);
+    string testingTag(IplImage *img);
 
 
 private:

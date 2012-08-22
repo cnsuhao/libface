@@ -89,6 +89,7 @@ public:
 
     // All the id/tag which are stored in the database
     vector<int> indexMap;
+    vector<string> tagMap;
 
     /**
       * HMM Addition
@@ -479,7 +480,7 @@ void HMMfaces::training(vector<Face*>* faces, int no_principal_components){
     cout << "HMMFace - Training Done " << endl;
 }
 
-int HMMfaces::testing(IplImage* img){
+int HMMfaces::testingID(IplImage* img){
 
     float like_array[1000];
     IplImage* ipl = img;
@@ -526,6 +527,12 @@ int HMMfaces::testing(IplImage* img){
     }
 
     return three_first[0];
+}
+
+string HMMfaces::testingTag(IplImage* img){
+    string str;
+
+    return str;
 }
 
 int HMMfaces::saveConfig(const string& dir) {

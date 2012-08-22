@@ -54,6 +54,9 @@ using namespace cv;
 #include <map>
 #include <string>
 #include <vector>
+#include <string>
+
+using namespace std;
 
 #include "Log.h"
 
@@ -153,10 +156,18 @@ public:
 
     /**
      * New Addition
-     * Testing phase of face recognition
+     * Testing phase of face recognition - with int id
      */
 
-    virtual int testing(IplImage* img) = 0;
+    virtual int testingID(IplImage* img) = 0;
+
+    /**
+     * New Addition
+     * Testing phase of face recognition - with int id
+     */
+
+    virtual string testingTag(IplImage* img) = 0;
+
 };
 
 // -------------------------------------------------------------------------------------------

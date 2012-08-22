@@ -127,6 +127,7 @@ public:
     // Array of face images. It is assumed that all elements of faceImgArr always point to valid IplImages. Otherwise runtime errors will occur.
     vector<IplImage*> faceImgArr;
     vector<int> indexMap;
+    vector<string> tagMap;
 
     // Config data members
     string configFile;
@@ -731,7 +732,7 @@ void Eigenfaces::training(vector<Face*>* faces, int no_principal_components){
 /**
  * New Addition
  */
-int Eigenfaces::testing(IplImage *img){
+int Eigenfaces::testingID(IplImage *img){
 
     cout << "in eigenfaces::testing --------------------------" << endl;
 
