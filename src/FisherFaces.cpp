@@ -93,6 +93,7 @@ public:
     // Array of face images. It is assumed that all elements of faceImgArr always point to valid IplImages. Otherwise runtime errors will occur.
     vector<IplImage*> faceImgArr;
     vector<int> indexMap;
+    vector<string> tagMap;
 
     // Config data members
     string configFile;
@@ -433,7 +434,7 @@ void Fisherfaces::training(vector<Face*>* faces, int no_principal_components){
 }
 
 
-int Fisherfaces::testing(IplImage *img){
+int Fisherfaces::testingID(IplImage *img){
 
     Mat test = cvarrToMat(img);
     Mat q = subspaceProject(d->m_eigenvectors, d->m_mean, test.reshape(1,1));

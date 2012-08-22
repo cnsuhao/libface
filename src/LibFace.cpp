@@ -542,7 +542,9 @@ vector<int> LibFace::testing(vector<Face*>* faces){
         IplImage* faceImg = face->getFace();
         int res;
 
-        res = d->recognitionCore->testing(faceImg);
+        if(d->idType == ID)
+            res = d->recognitionCore->testingID(faceImg);
+
 
         result.push_back(res);
     }
