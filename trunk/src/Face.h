@@ -46,6 +46,9 @@
 #include <opencv/cv.h>
 #endif
 
+#include <string>
+using namespace std;
+
 namespace libface
 {
 
@@ -125,6 +128,12 @@ public:
     void setId(int id);
 
     /**
+      * New Addition - Sets the name of the face - tag name
+      * @param tag - Name of the string
+      */
+    void setName(string tag);
+
+    /**
      * Sets the image of the face.
      *
      * @param face pointer to the IplImage of the face.
@@ -186,6 +195,13 @@ public:
      * @return ID of the face.
      */
     int getId() const;
+
+    /**
+      * Gets the tagname of face
+      *
+      * @return tag of the face
+      */
+    string getName() const;
 
 private:
 
