@@ -60,6 +60,11 @@ using namespace cv;
 namespace libface
 {
 
+enum Identifier {
+    ID,
+    TAG
+};
+
 // forward declaration
 class Face;
 

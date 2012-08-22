@@ -115,6 +115,9 @@ public:
     Mat m_eigenvectors;
     Mat m_eigenvalues;
     Mat m_mean;
+
+    // Identifier
+    Identifier idType;
 };
 
 
@@ -166,9 +169,12 @@ Fisherfaces::FisherfacesPriv::~FisherfacesPriv() {
 }
 
 
-Fisherfaces::Fisherfaces(const string& dir) : d(new FisherfacesPriv) {
+Fisherfaces::Fisherfaces(const string& dir, Identifier id_type) : d(new FisherfacesPriv) {
     struct stat stFileInfo;
     d->configFile = dir + "/" + "Fisher-" + CONFIG_XML ;
+
+    // Identifier assignemnt
+    d->idType = id_type;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 

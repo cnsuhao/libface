@@ -61,7 +61,7 @@ public:
      *
      * @param dir The directory in which the DB is to be found/created.
      */
-    Fisherfaces(const std::string& dir = ".");
+    Fisherfaces(const std::string& dir = ".", Identifier id_type = ID);
 
     /**
      * Copy constructor.

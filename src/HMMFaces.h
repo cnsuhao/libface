@@ -61,7 +61,7 @@ public:
      *
      * @param dir The directory in which the DB is to be found/created.
      */
-    HMMfaces(const std::string& dir = ".");
+    HMMfaces(const std::string& dir = ".", Identifier id_type = ID);
 
     /**
      * Copy constructor.
@@ -165,6 +165,11 @@ public:
      * Testing phase of face recognition
      */
     int testing(IplImage* img);
+
+    /**
+      * For tag name addition
+      */
+    string testing(IplImage *img);
 
 
 private:

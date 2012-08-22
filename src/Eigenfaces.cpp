@@ -149,6 +149,9 @@ public:
     Mat m_eigenvectors;
     Mat m_eigenvalues;
     Mat m_mean;
+
+    // Identifier
+    Identifier idType;
 };
 
 
@@ -436,9 +439,12 @@ void Eigenfaces::EigenfacesPriv::learn(int index, IplImage* newFace) {
 
 }
 
-Eigenfaces::Eigenfaces(const string& dir) : d(new EigenfacesPriv) {
+Eigenfaces::Eigenfaces(const string& dir, Identifier id_type) : d(new EigenfacesPriv) {
     struct stat stFileInfo;
     d->configFile = dir + "/" + "Eigen-" + CONFIG_XML ;
+
+    // Identifier assignemnt
+    d->idType = id_type;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 
