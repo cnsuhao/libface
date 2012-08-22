@@ -74,7 +74,7 @@ public:
      * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
      * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades.
      */
-    LibFace(Mode type = ALL, const std::string& configDir = ".",
+    LibFace(Mode type = ALL, Identifier id_type = ID, const std::string& configDir = ".",
             const std::string& cascadeDir = std::string(OPENCVDIR)+"/haarcascades");
 
     /**

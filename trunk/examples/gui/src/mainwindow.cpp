@@ -74,7 +74,7 @@ MainWindow::MainWindow(QWidget* parent)
 
 
 //    libFace = new LibFace(libface::FISHER,QDir::currentPath().toStdString());
-    libFace = new LibFace(libface::HMM,QDir::currentPath().toStdString());
+    libFace = new LibFace(libface::HMM, libface::ID, QDir::currentPath().toStdString());
 //    libFace = new LibFace(libface::EIGEN,QDir::currentPath().toStdString());
 
     ui->configLocation->setText(QDir::currentPath());
@@ -305,7 +305,7 @@ void MainWindow::openConfig()
 
     ui->configLocation->setText(directory);
 
-    libFace = new LibFace(ALL,directory.toStdString());
+    libFace = new LibFace(ALL,libface::ID,directory.toStdString());
 }
 
 void MainWindow::updateConfig() {

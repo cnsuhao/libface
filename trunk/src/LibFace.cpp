@@ -73,7 +73,7 @@ public:
      * @param configDir Config directory of the libface library. If there is a libface.xml, the library will try to load it. Empty ("") by default.
      * @param cascadeDir Directory where haar cascade is. By default it is OPENCVDIR/haarcascades.
      */
-    LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir);
+    LibFacePriv(Mode argType, Identifier id_type, const string& argConfigDir, const string& argCascadeDir);
 
     /**
      * Copy constructor.
@@ -106,6 +106,7 @@ public:
     }
 
     Mode                    type;
+    Identifier              idType;
     string                  cascadeDir;
     LibFaceDetectCore*      detectionCore;
     LibFaceRecognitionCore* recognitionCore;
@@ -114,7 +115,9 @@ public:
 
 };
 
-LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, const string& argCascadeDir) : type(argType), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName() {
+LibFace::LibFacePriv::LibFacePriv(Mode argType, Identifier id_type, const string& argConfigDir, const string& argCascadeDir)
+    : type(argType), idType(id_type), cascadeDir(), detectionCore(0), recognitionCore(0), lastImage(0), lastFileName()
+{
     // We don't need face recognition if we just want detection, and vice versa.
     // So there is a case for everything.
     switch (type) {
@@ -125,22 +128,22 @@ LibFace::LibFacePriv::LibFacePriv(Mode argType, const string& argConfigDir, cons
         break;
     case EIGEN:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type EIGEN";
-        recognitionCore = new Eigenfaces(argConfigDir);
+        recognitionCore = new Eigenfaces(argConfigDir, id_type);
         break;
     case FISHER:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type FISHER";
-        recognitionCore = new Fisherfaces(argConfigDir);
+        recognitionCore = new Fisherfaces(argConfigDir, id_type);
         break;
     case HMM:
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type HMM";
-        recognitionCore = new HMMfaces(argConfigDir);
+        recognitionCore = new HMMfaces(argConfigDir, id_type);
         break;
     default:    // Initialize both detector and Eigenfaces
         LOG(libfaceDEBUG) << "LibFacePriv(...) : type default";
         cout << "LibFace mode: Default" << endl;
         cascadeDir = argCascadeDir;
         detectionCore = new FaceDetect(cascadeDir);
-        recognitionCore = new Eigenfaces(argConfigDir);
+        recognitionCore = new HMMfaces(argConfigDir, id_type);
         break;
     }
 }
@@ -274,7 +277,9 @@ LibFace::LibFacePriv::~LibFacePriv() {
     }
 }
 
-LibFace::LibFace(Mode type, const string& configDir, const string& cascadeDir) : d(new LibFacePriv(type, configDir, cascadeDir)) {
+LibFace::LibFace(Mode type, Identifier id_type, const string &configDir, const string &cascadeDir):
+    d(new LibFacePriv(type, id_type, configDir, cascadeDir))
+{
     LOG(libfaceINFO) << "Cascade directory located in : " << cascadeDir;
 }
 

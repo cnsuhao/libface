@@ -227,7 +227,7 @@ int Face::getId() const {
 	return d->id;
 }
 
-string Face::getName(){
+string Face::getName() const{
     return d->tagName;
 }
 

@@ -121,6 +121,9 @@ public:
     CvSize m_delta;
     CvSize m_obsSize;
     CvSize m_dctSize;
+
+    // Identifier
+    Identifier idType;
 };
 
 
@@ -193,9 +196,12 @@ HMMfaces::HMMfacesPriv::~HMMfacesPriv() {
 
 
 
-HMMfaces::HMMfaces(const string& dir) : d(new HMMfacesPriv) {
+HMMfaces::HMMfaces(const string& dir , Identifier id_type) : d(new HMMfacesPriv) {
     struct stat stFileInfo;
     d->configFile = dir + "/" + "hmm";
+
+    // Identifier assignemnt
+    d->idType = id_type;
 
     LOG(libfaceINFO) << "Config location: " << d->configFile;
 

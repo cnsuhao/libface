@@ -64,7 +64,7 @@ public:
      *
      * @param dir The directory in which the DB is to be found/created.
      */
-    Eigenfaces(const std::string& dir = ".");
+    Eigenfaces(const std::string& dir = ".", Identifier id_type = ID);
 
     /**
      * Copy constructor.
